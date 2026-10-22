@@ -108,11 +108,16 @@ can't build on the Linux filesystem.
 
 ## Publish on GitHub Pages
 
-`.github/workflows/pages.yml` tests, builds and deploys on every push to `main`.
+`.github/workflows/pages.yml` tests and builds on every push to `main`, then publishes the built site
+(`dist/`) on the `gh-pages` branch. `main` keeps only the source code.
 
-1. In the repository: **Settings → Pages → Build and deployment → Source: GitHub Actions**.
+1. One time, in the repository: **Settings → Pages → Build and deployment → Source: Deploy from a
+   branch → Branch: `gh-pages`, folder `/ (root)` → Save**.
 2. Push to `main`. The site goes to https://ricksonlivio.github.io/CoffeeAI/; the build uses relative
    paths (`base: './'`), so it also works under another repository name.
+
+Do not point Pages at `main`: there it would serve the source `index.html`, which loads `/src/main.tsx`
+and shows a blank page.
 
 GitHub Pages is free for public repositories.
 
