@@ -14,7 +14,6 @@ export default function PortfolioSheet({ onLearn }: { onLearn: () => void }) {
         <div className="rings" aria-hidden="true" />
         <div className="rings inner" aria-hidden="true" />
         <div>
-          <span className="kicker">&gt; JACK_IN · {pt ? 'PORTFÓLIO ONLINE' : 'PORTFOLIO ONLINE'}</span>
           <h1 id="hero-title" className="wordmark">CoffeeAI</h1>
           <p className="hero-name">{PROFILE.name}</p>
           <p className="hero-role"><span className="bracket">{PROFILE.role[lang]}</span></p>
@@ -29,7 +28,7 @@ export default function PortfolioSheet({ onLearn }: { onLearn: () => void }) {
         </div>
         <div className="hero-card">
           <img className="avatar" src={assets.avatar} alt={PROFILE.name} width={220} height={220} />
-          <span className="navi-tag"><span className="led led--ok" /> {pt ? 'Operador conectado' : 'Operator online'} · {PROFILE.location}</span>
+          <span className="navi-tag"><span className="led led--ok" /> {pt ? 'Operador conectado' : 'Operator online'} · {pt ? PROFILE.location.replace('Brazil', 'Brasil') : PROFILE.location}</span>
           <div className="stats">
             <div className="stat"><b>6+</b><span>{pt ? 'anos em dados & IA' : 'years in data & AI'}</span></div>
             <div className="stat"><b>7</b><span>{pt ? 'empresas' : 'companies'}</span></div>
@@ -126,23 +125,27 @@ export default function PortfolioSheet({ onLearn }: { onLearn: () => void }) {
             <ul className="arrows">
               {THESIS.points.map((p, i) => <li key={i}>{p[lang]}</li>)}
             </ul>
-            <p className="small muted" style={{ margin: 0 }}>
-              {pt ? 'Orientador' : 'Advisor'}: {THESIS.advisor} · {pt ? 'números da dissertação v3' : 'numbers from dissertation v3'}
-            </p>
             <div className="chips">{THESIS.stack.map((s) => <span key={s} className="chip chip--gold">{s}</span>)}</div>
           </article>
           <article className="panel">
             <h3>{pt ? 'Por que "Aprenda comigo"?' : 'Why "Learn with me"?'}</h3>
             <p>
               {pt
-                ? 'A aplicação da dissertação mostra o treino neurônio a neurônio: os dados indo para a frente, o erro voltando e cada peso mudando. Esta seção usa a mesma ideia, começando pelo modelo mais simples, o perceptron.'
-                : 'The dissertation app shows training neuron by neuron: data flowing forward, the error flowing back and each weight changing. This section uses the same idea, starting with the simplest model, the perceptron.'}
+                ? 'A aplicação da minha dissertação mostra o treino neurônio a neurônio: os dados indo para a frente, o erro voltando e cada peso mudando. Esta seção usa a mesma ideia, começando pelo modelo mais simples.'
+                : 'My dissertation app shows training neuron by neuron: data flowing forward, the error flowing back and each weight changing. This section uses the same idea, starting with the simplest model.'}
             </p>
-            <p>
-              {pt
-                ? 'A primeira aula ensina um perceptron a separar Charizard (Fogo) de Blastoise (Água) usando Velocidade e Defesa, com todas as contas lado a lado.'
-                : 'The first lesson teaches a perceptron to tell Charizard (Fire) from Blastoise (Water) using Speed and Defense, with every calculation shown side by side.'}
-            </p>
+            <ul className="arrows">
+              <li>
+                {pt
+                  ? 'Aula 1: um perceptron aprende a separar Charizard (Fogo) de Blastoise (Água) usando Velocidade e Defesa, com todas as contas lado a lado.'
+                  : 'Lesson 1: a perceptron learns to tell Charizard (Fire) from Blastoise (Water) using Speed and Defense, with every calculation side by side.'}
+              </li>
+              <li>
+                {pt
+                  ? 'Aula 2: um MLP com camada oculta e backpropagation reconhece o tipo Planta, que nenhum perceptron sozinho consegue isolar.'
+                  : 'Lesson 2: an MLP with a hidden layer and backpropagation recognizes the Grass type, which no single perceptron can isolate.'}
+              </li>
+            </ul>
             <button className="btn" onClick={onLearn}>{pt ? 'Começar a aula' : 'Start the lesson'} →</button>
           </article>
         </div>
@@ -177,7 +180,7 @@ export default function PortfolioSheet({ onLearn }: { onLearn: () => void }) {
               <li><span className="label">E-mail</span>{' '}<a href={`mailto:${PROFILE.email}`}>{PROFILE.email}</a></li>
               <li><span className="label">GitHub</span>{' '}<a href={PROFILE.github} target="_blank" rel="noopener noreferrer">@RicksonLivio</a></li>
               <li><span className="label">LinkedIn</span>{' '}<a href={PROFILE.linkedin} target="_blank" rel="noopener noreferrer">Rickson Livio</a></li>
-              <li><span className="label">{pt ? 'Local' : 'Location'}</span>{' '}{PROFILE.location}</li>
+              <li><span className="label">{pt ? 'Local' : 'Location'}</span>{' '}{pt ? PROFILE.location.replace('Brazil', 'Brasil') : PROFILE.location}</li>
             </ul>
             <div className="hero-actions">
               <a className="btn btn--gold" href={assets.resume} download="Rickson_Livio_Resume_2026.pdf">

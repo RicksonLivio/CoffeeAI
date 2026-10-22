@@ -2,9 +2,11 @@ import {
   LESSON_ETA, LESSON_INIT, LESSON_SAMPLES, X0, train,
   type EpochSummary, type Sample, type TrainStep, type Weights,
 } from './perceptron.ts';
+import { initNet, SCALE, STARTERS, trainMlp, type MlpTrainResult, type Net, type Poke } from './mlp.ts';
 
-/** Path of the cached model, relative to the site root (public/ in the repo). */
+/** Paths of the cached models, relative to the site root (public/ in the repo). */
 export const CACHED_MODEL_PATH = 'models/perceptron_pokemon/model.json';
+export const CACHED_MLP_PATH = 'models/mlp_pokemon/model.json';
 
 export interface CachedModel {
   name: string;
@@ -39,6 +41,55 @@ export function buildCachedModel(
     trace: r.steps,
     epochs: r.epochs,
     converged: r.converged,
+    final: r.final,
+  };
+}
+
+export interface CachedMlp {
+  name: string;
+  version: number;
+  task: string;
+  config: {
+    seed: number;
+    eta: number;
+    epochs: number;
+    hidden: number;
+    hidden_activation: 'sigmoid';
+    output: 'softmax';
+    loss: 'cross-entropy';
+    input_scale: number;
+    batch: 'full';
+  };
+  data: Poke[];
+  init: Net;
+  curve: MlpTrainResult['curve'];
+  snapshots: MlpTrainResult['snapshots'];
+  final: Net;
+}
+
+export const MLP_CONFIG = { seed: 2, eta: 2, epochs: 1500 };
+export const MLP_SNAPSHOTS = [0, 10, 25, 50, 100, 150, 200, 300, 500, 1000, 1500];
+
+export function buildCachedMlp(): CachedMlp {
+  const init = initNet(MLP_CONFIG.seed);
+  const r = trainMlp(STARTERS, init, MLP_CONFIG.eta, MLP_CONFIG.epochs, MLP_SNAPSHOTS, 5);
+  return {
+    name: 'mlp_pokemon',
+    version: 1,
+    task: 'Fire, Water or Grass from base Speed and Defense (the nine starter Pokémon)',
+    config: {
+      ...MLP_CONFIG,
+      hidden: 2,
+      hidden_activation: 'sigmoid',
+      output: 'softmax',
+      loss: 'cross-entropy',
+      input_scale: SCALE,
+      batch: 'full',
+    },
+    data: STARTERS,
+    init,
+    curve: r.curve,
+    snapshots: r.snapshots,
     final: r.final,
   };
 }

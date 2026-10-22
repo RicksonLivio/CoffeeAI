@@ -43,3 +43,18 @@ export function num(v: number, lang: Lang): string {
 export function par(v: number, lang: Lang): string {
   return v < 0 ? `(${num(v, lang)})` : num(v, lang);
 }
+
+/** Fixed number of decimals (tables of lesson 2), with a real minus sign. */
+export function fx(v: number, digits: number, lang: Lang): string {
+  if (!Number.isFinite(v)) return '—';
+  const r = Number(v.toFixed(digits));
+  const s = new Intl.NumberFormat(lang === 'pt' ? 'pt-BR' : 'en-US', {
+    minimumFractionDigits: digits, maximumFractionDigits: digits, useGrouping: false,
+  }).format(Math.abs(r));
+  return r < 0 ? `−${s}` : s;
+}
+
+/** fx wrapped in parentheses when negative. */
+export function pfx(v: number, digits: number, lang: Lang): string {
+  return Number(v.toFixed(digits)) < 0 ? `(${fx(v, digits, lang)})` : fx(v, digits, lang);
+}

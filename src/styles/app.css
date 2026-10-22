@@ -228,3 +228,46 @@ select {
   .shell { padding: 0 16px 56px; }
   .panel { padding: 18px 18px; }
 }
+
+/* ---------- Lesson index (collapsible) ---------- */
+.lesson { margin-top: 24px; }
+.lesson-card { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 20px; align-items: center; }
+.lesson-num {
+  width: 64px; height: 64px; display: grid; place-items: center;
+  font-family: var(--font-display); font-weight: 900; font-size: 1.4rem; color: var(--navy-900);
+  background: var(--grad-rank); box-shadow: var(--glow-gold);
+}
+.lesson-card h2 { margin: 0 0 4px; font-size: clamp(1.05rem, 2.2vw, 1.4rem); }
+.lesson-card p { margin: 0; color: var(--steel-200); font-size: .95rem; }
+.lesson-body { padding-top: 8px; }
+@media (max-width: 720px) { .lesson-card { grid-template-columns: auto minmax(0, 1fr); } .lesson-card .btn { grid-column: 1 / -1; } }
+
+/* ---------- Notes ---------- */
+.note {
+  display: flex; gap: 12px; align-items: flex-start; margin: 14px 0 0;
+  padding: 10px 14px; background: rgba(41, 211, 232, .06); border-left: 3px solid var(--cyan-400);
+  font-size: .9rem; color: var(--steel-200);
+}
+.note-icon {
+  flex: 0 0 auto; width: 20px; height: 20px; display: grid; place-items: center; margin-top: 2px;
+  font-family: var(--font-mono); font-weight: 600; font-size: .75rem; color: var(--navy-900); background: var(--cyan-400);
+  clip-path: polygon(25% 5%, 75% 5%, 100% 50%, 75% 95%, 25% 95%, 0 50%);
+}
+.note-title { display: block; font-family: var(--font-ui); text-transform: uppercase; letter-spacing: .1em; font-size: .75rem; color: var(--cyan-300); margin-bottom: 2px; }
+.note p { margin: 0; }
+
+/* ---------- Lesson 2 ---------- */
+.poke-pick { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 14px; }
+.poke-pick button {
+  font-family: var(--font-ui); font-weight: 700; letter-spacing: .06em; font-size: .82rem;
+  padding: 6px 12px; background: var(--navy-800); color: var(--steel-200); border: 1px solid var(--steel-600);
+}
+.poke-pick button.fire { border-left: 4px solid var(--fire); }
+.poke-pick button.water { border-left: 4px solid var(--water); }
+.poke-pick button.grass { border-left: 4px solid var(--grass); }
+.poke-pick button.active { color: var(--gold-400); border-color: var(--gold-500); box-shadow: var(--glow-gold); }
+.t-fire { color: var(--fire); }
+.t-water { color: #6fa4ff; }
+.t-grass { color: var(--grass); }
+.range-row { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+.range-row input[type="range"] { flex: 1 1 240px; }

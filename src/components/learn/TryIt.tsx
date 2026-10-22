@@ -73,8 +73,8 @@ export default function TryIt({ trained }: { trained: Weights }) {
         {target === 'venusaur' && (
           <p className="small muted" style={{ margin: 0 }}>
             {pt
-              ? 'Venusaur é do tipo Planta e não estava no treino. Com uma única saída 0/1, o perceptron só conhece dois lados: todo Pokémon cai em Fogo ou em Água. Reconhecer um terceiro tipo exige mais neurônios de saída.'
-              : 'Venusaur is a Grass type and was not in the training data. With a single 0/1 output, the perceptron only knows two sides: every Pokémon lands on Fire or Water. Recognizing a third type needs more output neurons.'}
+              ? 'Venusaur é do tipo Planta e não estava no treino. Com uma única saída 0/1, o perceptron só conhece dois lados: todo Pokémon cai em Fogo ou em Água. Na Aula 2 você vê por que mais saídas não bastam e como uma camada oculta resolve.'
+              : 'Venusaur is a Grass type and was not in the training data. With a single 0/1 output, the perceptron only knows two sides: every Pokémon lands on Fire or Water. Lesson 2 shows why more outputs are not enough and how a hidden layer solves it.'}
           </p>
         )}
       </div>

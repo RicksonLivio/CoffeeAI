@@ -199,15 +199,15 @@ export const STORY: { title: T; text: T }[] = [
   {
     title: { en: 'Level 3 · Models in production', pt: 'Fase 3 · Modelos em produção' },
     text: {
-      en: 'At Sólides, a churn model cut monthly churn from 10% to 4%. At Cognitivo.AI and Globo: demand forecasting that saved R$250,000 per quarter, WhatsApp agents and a fine-tuned Gemini running daily on Cloud Run.',
-      pt: 'Na Sólides, um modelo de churn levou o churn mensal de 10% para 4%. Na Cognitivo.AI e na Globo: previsão de demanda que economizou R$ 250.000 por trimestre, agentes no WhatsApp e um Gemini ajustado rodando todo dia no Cloud Run.',
+      en: 'At Sólides, a churn model cut monthly churn from 10% to 4%. At Cognitivo.AI, demand forecasting saved R$250,000 per quarter and WhatsApp agents raised conversion by 10%. At Globo, a fine-tuned Gemini classified user comments every day on Cloud Run.',
+      pt: 'Na Sólides, um modelo de churn levou o churn mensal de 10% para 4%. Na Cognitivo.AI, a previsão de demanda economizou R$ 250.000 por trimestre e agentes no WhatsApp aumentaram a conversão em 10%. Na Globo, um Gemini ajustado classificou comentários de usuários todos os dias no Cloud Run.',
     },
   },
   {
     title: { en: 'Current stage · Staff AI & research', pt: 'Fase atual · Staff AI & pesquisa' },
     text: {
-      en: 'Today I lead AI and MLOps at Nuvidio (deepfake and spoofing detection, CUDA/ONNX inference) and research explainable forecasting in my master’s at IFCE. This site is where I share what I learn.',
-      pt: 'Hoje lidero IA e MLOps na Nuvidio (detecção de deepfake e spoofing, inferência com CUDA/ONNX) e pesquiso previsão explicável no mestrado do IFCE. Este site é onde compartilho o que aprendo.',
+      en: 'Today I am Staff AI & MLOps Engineer at Nuvidio, where I created the AI and Data Science area (deepfake and spoofing detection, CUDA/ONNX inference), and I research explainable forecasting in my master’s at IFCE. This site is where I share what I learn.',
+      pt: 'Hoje sou Staff AI & MLOps Engineer na Nuvidio, onde criei a área de IA e Ciência de Dados (detecção de deepfake e spoofing, inferência com CUDA/ONNX), e pesquiso previsão explicável no mestrado do IFCE. Este site é onde compartilho o que aprendo.',
     },
   },
 ];
@@ -219,7 +219,6 @@ export const THESIS = {
     en: 'Intrinsic explainability through spectral decomposition for multi-step time-series forecasting, with formal guarantees from abductive explanations.',
     pt: 'Explicabilidade intrínseca via decomposição espectral para previsão de séries temporais multi-passo, com garantias formais por explicações abdutivas.',
   } as T,
-  advisor: 'Dr. Thiago Alves Rocha',
   program: { en: 'PPGCC · IFCE', pt: 'PPGCC · IFCE' } as T,
   points: [
     {
