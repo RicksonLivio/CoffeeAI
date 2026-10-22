@@ -1,0 +1,31 @@
+{
+  "name": "coffeeai",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "description": "CoffeeAI: web portfolio of Rickson Livio, with a Learn-with-me lesson on the perceptron",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc --noEmit -p tsconfig.json && vite build",
+    "typecheck": "tsc --noEmit -p tsconfig.json",
+    "test": "node --experimental-strip-types --no-warnings --test \"tests/**/*.test.ts\"",
+    "export-model": "node --experimental-strip-types --no-warnings scripts/export-model.ts",
+    "preview": "vite preview",
+    "audit": "npm audit --omit=dev"
+  },
+  "dependencies": {
+    "react": "18.3.1",
+    "react-dom": "18.3.1",
+    "recharts": "2.15.0"
+  },
+  "devDependencies": {
+    "@types/react": "18.3.17",
+    "@types/react-dom": "18.3.5",
+    "@vitejs/plugin-react": "4.3.4",
+    "typescript": "5.7.2",
+    "vite": "6.4.4"
+  },
+  "engines": {
+    "node": ">=22.6.0"
+  }
+}
