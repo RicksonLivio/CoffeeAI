@@ -124,3 +124,11 @@ test('the threshold 11 of the hand-made net can be anything in (4, 22]', () => {
   for (const c of [4.01, 11, 22]) for (const s of STARTERS) assert.equal(stepForward(withC(c), s.x1, s.x2).type, s.type, `c=${c} ${s.id}`);
   for (const c of [4, 22.01]) assert.ok(STARTERS.some((s) => stepForward(withC(c), s.x1, s.x2).type !== s.type), `c=${c}`);
 });
+
+test('without activations the hand-made Grass output is the same (22.5) for every Pokémon', () => {
+  for (const s of STARTERS) {
+    const h = HAND_NET.hidden.map((n) => n.w[0] * s.x1 + n.w[1] * s.x2 - n.theta);
+    const g = HAND_NET.output[2];
+    assert.equal(g.w[0] * h[0] + g.w[1] * h[1] - g.theta, 22.5);
+  }
+});

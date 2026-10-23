@@ -271,3 +271,29 @@ select {
 .t-grass { color: var(--grass); }
 .range-row { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
 .range-row input[type="range"] { flex: 1 1 240px; }
+
+/* ---------- Python example button + Mega Man style burst ---------- */
+.py-panel { display: flex; gap: 20px; align-items: center; justify-content: space-between; flex-wrap: wrap; margin-top: 24px; }
+.mm-burst { position: fixed; z-index: 100; width: 0; height: 0; pointer-events: none; }
+.mm-flash {
+  position: absolute; left: -40px; top: -40px; width: 80px; height: 80px; border-radius: 50%;
+  background: radial-gradient(circle, #fff 0 20%, rgba(255, 210, 94, .9) 40%, rgba(245, 181, 42, 0) 70%);
+  animation: mm-flash .35s ease-out forwards;
+}
+.mm-orb {
+  position: absolute; left: -11px; top: -11px; width: 22px; height: 22px;
+  animation: mm-fly 1.25s linear forwards;
+}
+.mm-orb i {
+  display: block; width: 100%; height: 100%; border-radius: 50%;
+  background: radial-gradient(circle, #fff 0 22%, #ffd25e 42%, #f5b52a 62%, rgba(245, 181, 42, 0) 72%);
+  box-shadow: 0 0 14px rgba(255, 210, 94, .9);
+  animation: mm-pulse .14s steps(1) infinite;
+}
+@keyframes mm-fly {
+  0% { transform: translate(0, 0); opacity: 1; }
+  85% { opacity: 1; }
+  100% { transform: translate(var(--dx), var(--dy)); opacity: 0; }
+}
+@keyframes mm-pulse { 0% { transform: scale(1); } 50% { transform: scale(.55); } }
+@keyframes mm-flash { from { transform: scale(.3); opacity: 1; } to { transform: scale(2.4); opacity: 0; } }

@@ -91,9 +91,11 @@ export default function Landscape({ runners, start, onStart, steps }: Props) {
   const [t, setT] = useState(0);
   const [playing, setPlaying] = useState(false);
   const [az, setAz] = useState(-0.75);
+  // elevation of the camera: 0.12 ≈ seen from the side, 1.45 ≈ seen from above
+  const [el, setEl] = useState(0.8);
   const [spin, setSpin] = useState(false);
   const raf = useRef<number | null>(null);
-  const drag = useRef<number | null>(null);
+  const drag = useRef<{ x: number; y: number } | null>(null);
 
   useEffect(() => { setT(0); }, [start, runners]);
 
@@ -177,16 +179,16 @@ export default function Landscape({ runners, start, onStart, steps }: Props) {
   }, [paths, t, grid, iso, start, lang]);
 
   const surfaceRef = useCanvas((ctx, w, h) => {
-    const el = 0.62;
     const scale = Math.min(w, h * 1.25) / 9.2;
-    const zs = 2.3;
+    const zs = 1.7;
     const cx = w / 2;
-    const cy = h * 0.6;
+    const cy = h * (0.62 - 0.12 * (el - 0.8));
     const ca = Math.cos(az), sa = Math.sin(az), ce = Math.cos(el), se = Math.sin(el);
     const proj = (a: number, b: number, z: number) => {
       const xr = a * ca - b * sa;
       const yr = a * sa + b * ca;
-      return { x: cx + xr * scale, y: cy - (z * zs * ce - yr * se) * scale * 0.9, d: yr * ce + z * se };
+      // camera direction (0, cos el, sin el): d = distance toward the camera, larger = closer
+      return { x: cx + xr * scale, y: cy - (z * zs * ce - yr * se) * scale * 0.9, d: yr * ce + z * zs * se };
     };
     const M = 40;
     const step = (HI - LO) / M;
@@ -197,7 +199,8 @@ export default function Landscape({ runners, start, onStart, steps }: Props) {
       const p = c.map((q) => proj(q.a, q.b, q.z));
       quads.push({ pts: p, d: p.reduce((s, q) => s + q.d, 0) / 4, z: c.reduce((s, q) => s + q.z, 0) / 4 });
     }
-    quads.sort((q1, q2) => q2.d - q1.d);
+    // painter's algorithm: far tiles first, close tiles on top
+    quads.sort((q1, q2) => q1.d - q2.d);
     for (const q of quads) {
       ctx.fillStyle = heightColor(q.z, 0.92);
       ctx.strokeStyle = 'rgba(5,8,15,0.45)';
@@ -222,8 +225,8 @@ export default function Landscape({ runners, start, onStart, steps }: Props) {
       ctx.beginPath(); ctx.arc(s.x, s.y, 6, 0, 2 * Math.PI); ctx.fill(); ctx.shadowBlur = 0;
     });
     ctx.fillStyle = '#a9b6c8'; ctx.font = '11px "JetBrains Mono", monospace';
-    ctx.fillText(pt ? 'altura = erro L(a, b) · arraste para girar' : 'height = loss L(a, b) · drag to rotate', 10, h - 10);
-  }, [paths, t, az, lang]);
+    ctx.fillText(pt ? 'altura = erro L(a, b) · arraste: ↔ gira, ↕ inclina' : 'height = loss L(a, b) · drag: ↔ spin, ↕ tilt', 10, h - 10);
+  }, [paths, t, az, el, lang]);
 
   function clickContour(e: React.MouseEvent<HTMLCanvasElement>) {
     const cv = e.currentTarget;
@@ -255,12 +258,26 @@ export default function Landscape({ runners, start, onStart, steps }: Props) {
           <p className="small muted" style={{ margin: '6px 0 0' }}>{pt ? 'Curvas de nível (vista de cima). Clique no mapa para mudar o ponto de partida.' : 'Contour lines (top view). Click the map to change the starting point.'}</p>
         </div>
         <div>
-          <canvas ref={surfaceRef} style={{ width: '100%', height: 380, cursor: 'grab', display: 'block' }}
-            onPointerDown={(e) => { drag.current = e.clientX; e.currentTarget.setPointerCapture(e.pointerId); }}
-            onPointerMove={(e) => { if (drag.current !== null) { setAz((a) => a + (e.clientX - drag.current!) * 0.01); drag.current = e.clientX; } }}
+          <canvas ref={surfaceRef} style={{ width: '100%', height: 380, cursor: 'grab', display: 'block', touchAction: 'none' }}
+            onPointerDown={(e) => { drag.current = { x: e.clientX, y: e.clientY }; e.currentTarget.setPointerCapture(e.pointerId); }}
+            onPointerMove={(e) => {
+              const d = drag.current;
+              if (!d) return;
+              setAz((a) => a + (e.clientX - d.x) * 0.01);
+              setEl((v) => Math.max(0.12, Math.min(1.45, v + (e.clientY - d.y) * 0.008)));
+              drag.current = { x: e.clientX, y: e.clientY };
+            }}
             onPointerUp={() => { drag.current = null; }}
             aria-label={pt ? 'Superfície 3D do erro' : '3D loss surface'} />
-          <p className="small muted" style={{ margin: '6px 0 0' }}>{pt ? 'Superfície 3D: a mesma função, vista de lado.' : '3D surface: the same function, seen from the side.'}</p>
+          <div className="range-row" style={{ marginTop: 6 }}>
+            <span className="label">{pt ? 'Girar' : 'Spin'}</span>
+            <input type="range" min={-3.14} max={3.14} step={0.01} value={((az + Math.PI) % (2 * Math.PI) + 2 * Math.PI) % (2 * Math.PI) - Math.PI}
+              onChange={(e) => setAz(Number(e.target.value))} aria-label={pt ? 'Girar na horizontal' : 'Rotate horizontally'} />
+            <span className="label">{pt ? 'Inclinar' : 'Tilt'}</span>
+            <input type="range" min={0.12} max={1.45} step={0.01} value={el} onChange={(e) => setEl(Number(e.target.value))}
+              aria-label={pt ? 'Girar na vertical' : 'Rotate vertically'} />
+          </div>
+          <p className="small muted" style={{ margin: '6px 0 0' }}>{pt ? 'Superfície 3D: a mesma função. Arraste ou use os controles para girar e inclinar.' : '3D surface: the same function. Drag or use the sliders to spin and tilt.'}</p>
         </div>
       </div>
       <div className="table-wrap" style={{ marginTop: 10 }}>

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import {
   CartesianGrid, Legend, Line, LineChart, ReferenceLine, ResponsiveContainer, Tooltip, XAxis, YAxis,
 } from 'recharts';
@@ -14,6 +14,7 @@ import { deepBackprop, deepCurve, deepPredict, toDeep, type DeepNet } from '../.
 import { sumExpr } from './CalcPanel';
 import CurvesDemo from './CurvesDemo';
 import EpochPlayer from './EpochPlayer';
+import { ErrorTrace, PerceptronNodes, SmoothSteps, SoftmaxExplain } from './Explainers';
 import Landscape, { type Runner } from './Landscape';
 import NetGraph, { type Pulse } from './NetGraph';
 import Note from './Note';
@@ -330,6 +331,7 @@ Grass:   w = (−1, −1), θ = −0.5   net = 0.5 − h1 − h2`}</div>
           ? 'A camada oculta cria novas variáveis. No plano (Velocidade, Defesa) o tipo Planta está no meio e nenhuma reta o isola; no plano (h1, h2) os três tipos viram três cantos, e aí retas simples separam tudo. Cada camada transforma o problema até ele ficar fácil para a camada seguinte.'
           : 'The hidden layer creates new variables. In the (Speed, Defense) plane Grass is in the middle and no line isolates it; in the (h1, h2) plane the three types become three corners, and simple lines separate everything. Each layer reshapes the problem until it is easy for the next one.'}
       </Note>
+      <PerceptronNodes />
     </section>
   );
 }
@@ -350,8 +352,17 @@ function Learning({ model }: { model: CachedMlp }) {
   const eta = model.config.eta;
   const venusaur = STARTERS.find((s) => s.id === 'venusaur')!;
   const init = model.init;
-  const b = useMemo(() => backprop(init, venusaur), [init, venusaur]);
-  const after = useMemo(() => sgdStep(init, b.grad, eta), [init, b, eta]);
+  // hand steps: each forward → backward cycle applies one update (Venusaur only); "reset" goes back to the start
+  const [k, setK] = useState(0);
+  const [stage, setStage] = useState<'idle' | 'forward' | 'backward' | 'updated'>('idle');
+  const stageTimer = useRef<number | null>(null);
+  const cur = useMemo(() => {
+    let n = init;
+    for (let i = 0; i < k; i++) n = sgdStep(n, backprop(n, venusaur).grad, eta);
+    return n;
+  }, [init, k, venusaur, eta]);
+  const b = useMemo(() => backprop(cur, venusaur), [cur, venusaur]);
+  const after = useMemo(() => sgdStep(cur, b.grad, eta), [cur, b, eta]);
   const fAfter = softForward(after, venusaur.x1, venusaur.x2);
   const lossAfter = loss(fAfter, 'grass');
   const names = flatNames(init);
@@ -359,10 +370,29 @@ function Learning({ model }: { model: CachedMlp }) {
   const f = b.forward;
   const d4 = (v: number) => fx(v, 4, lang);
   const p4 = (v: number) => pfx(v, 4, lang);
-
-  const [applied, setApplied] = useState(false);
-  const shownNet = applied ? after : init;
+  const applied = stage === 'updated';
+  const shownNet = applied ? after : cur;
   const shownF = applied ? fAfter : f;
+  useEffect(() => () => { if (stageTimer.current !== null) window.clearTimeout(stageTimer.current); }, []);
+  const goForward = () => {
+    if (stageTimer.current !== null) window.clearTimeout(stageTimer.current);
+    if (stage === 'updated') setK((x) => x + 1);
+    setStage('forward');
+    setPlay((p) => ({ id: p.id + 1, kind: 'forward' }));
+  };
+  const goBackward = () => {
+    if (stage === 'updated') return;
+    setStage('backward');
+    setPlay((p) => ({ id: p.id + 1, kind: 'backward' }));
+    if (stageTimer.current !== null) window.clearTimeout(stageTimer.current);
+    // when the red balls reach the inputs, every weight changes at once
+    stageTimer.current = window.setTimeout(() => setStage('updated'), 2300);
+  };
+  const reset = () => {
+    if (stageTimer.current !== null) window.clearTimeout(stageTimer.current);
+    setK(0);
+    setStage('idle');
+  };
   // what goes wrong if the output weights were updated before computing the hidden error
   const wrongOrder = useMemo(() => {
     const d = toDeep(init);
@@ -429,6 +459,10 @@ function Learning({ model }: { model: CachedMlp }) {
         </article>
       </div>
       <div className="panel" style={{ marginTop: 20 }}>
+        <h3>{pt ? 'O que é um degrau suave' : 'What a smooth step is'}</h3>
+        <SmoothSteps />
+      </div>
+      <div className="panel" style={{ marginTop: 20 }}>
         <h3>{pt ? 'Somando degraus suaves' : 'Adding smooth steps'}</h3>
         <CurvesDemo />
       </div>
@@ -485,36 +519,41 @@ update:  weight ← weight − η · ∂L/∂weight`}</div>
 
       {/* one step by hand */}
       <div className="panel" style={{ marginTop: 20 }}>
-        <h3>{pt ? `Um passo à mão: Venusaur com os pesos iniciais (η = ${num(eta, lang)})` : `One step by hand: Venusaur with the initial weights (η = ${num(eta, lang)})`}</h3>
+        <h3>{pt ? `Passos à mão: Venusaur, atualização ${k + 1} (η = ${num(eta, lang)})` : `Steps by hand: Venusaur, update ${k + 1} (η = ${num(eta, lang)})`}</h3>
         <div className="player">
-          <button className="btn btn--gold btn--sm" onClick={() => setPlay((p) => ({ id: p.id + 1, kind: 'forward' }))}>▶ {pt ? 'Para a frente' : 'Forward'}</button>
-          <button className="btn btn--sm" onClick={() => { setApplied(false); setPlay((p) => ({ id: p.id + 1, kind: 'backward' })); }}>◀ {pt ? 'Erro para trás' : 'Error backward'}</button>
-          <button className={`btn btn--sm ${applied ? '' : 'btn--ghost'}`} onClick={() => setApplied((a) => !a)}>
-            {applied ? (pt ? '↺ Pesos antigos' : '↺ Old weights') : (pt ? '✓ Atualizar pesos' : '✓ Update weights')}
-          </button>
-          <span className="small muted">{pt ? 'Pesos iniciais sorteados com semente fixa e arredondados a uma casa.' : 'Initial weights drawn with a fixed seed and rounded to one decimal.'}</span>
+          <button className="btn btn--gold btn--sm" onClick={goForward}>▶ {pt ? 'Para a frente' : 'Forward'}</button>
+          <button className="btn btn--sm" onClick={goBackward} disabled={stage === 'updated'}>◀ {pt ? 'Erro para trás' : 'Error backward'}</button>
+          <button className="btn btn--ghost btn--sm" onClick={reset} disabled={k === 0 && stage === 'idle'}>↺ {pt ? 'Resetar pesos' : 'Reset weights'}</button>
+          <span className="small muted">
+            {pt
+              ? 'Para a frente → erro para trás → os pesos mudam no grafo. Repita para a próxima atualização.'
+              : 'Forward → error backward → the weights change on the graph. Repeat for the next update.'}
+          </span>
         </div>
         <div className="grid grid-side" style={{ alignItems: 'start' }}>
           <div>
             <NetGraph net={toDeep(shownNet)} x={[venusaur.x1, venusaur.x2]} acts={[shownF.h, shownF.p]} winner={shownF.p.indexOf(Math.max(...shownF.p))}
-              play={play} digits={1} changed={applied} />
+              play={play} digits={1} changed={applied}
+              deltas={stage === 'backward' ? [b.deltaHidden, b.deltaOut] : undefined} />
             <p className="small muted" style={{ textAlign: 'center', margin: 0 }}>
               {applied
-                ? (pt ? `Pesos depois do passo (dourado). Venusaur agora: Planta ${fx(100 * fAfter.p[2], 1, lang)}%.` : `Weights after the step (gold). Venusaur now: Grass ${fx(100 * fAfter.p[2], 1, lang)}%.`)
-                : (pt ? 'Pesos iniciais. Clique em "Atualizar pesos" para aplicar o passo.' : 'Initial weights. Click "Update weights" to apply the step.')}
+                ? (pt ? `Atualização ${k + 1} aplicada: pesos novos em dourado. Venusaur agora: Planta ${fx(100 * fAfter.p[2], 1, lang)}%. Clique em "Para a frente" para continuar.` : `Update ${k + 1} applied: new weights in gold. Venusaur now: Grass ${fx(100 * fAfter.p[2], 1, lang)}%. Click "Forward" to continue.`)
+                : stage === 'backward'
+                  ? (pt ? 'O erro δ (vermelho) volta da saída para a camada oculta. Quando chegar às entradas, todos os pesos mudam.' : 'The error δ (red) goes back from the output to the hidden layer. When it reaches the inputs, all weights change.')
+                  : (pt ? (k === 0 ? 'Pesos iniciais, sorteados com semente fixa e arredondados a uma casa.' : `Pesos depois de ${k} atualização(ões).`) : (k === 0 ? 'Initial weights, drawn with a fixed seed and rounded to one decimal.' : `Weights after ${k} update(s).`))}
             </p>
           </div>
           <div className="calc">
             <div className="block on">
               <div className="title">1 · {pt ? 'Para a frente' : 'Forward'} · x = ({num(f.x[0], lang)}, {num(f.x[1], lang)})</div>
-              {init.hidden.map((n, j) => (
+              {cur.hidden.map((n, j) => (
                 <div key={j} className="line">
-                  z_h{j + 1} = {num(n.w[0], lang)}·{num(f.x[0], lang)} + {par(n.w[1], lang)}·{num(f.x[1], lang)} + {par(n.theta, lang)}·(−1) = {d4(f.zh[j])} ⟹ h{j + 1} = σ = <span className="res">{d4(f.h[j])}</span>
+                  z_h{j + 1} = {p4(n.w[0])}·{num(f.x[0], lang)} + {p4(n.w[1])}·{num(f.x[1], lang)} + {p4(n.theta)}·(−1) = {d4(f.zh[j])} ⟹ h{j + 1} = σ = <span className="res">{d4(f.h[j])}</span>
                 </div>
               ))}
-              {init.output.map((n, k) => (
-                <div key={k} className="line">
-                  z_{outNames[k]} = {par(n.w[0], lang)}·{d4(f.h[0])} + {par(n.w[1], lang)}·{d4(f.h[1])} + {par(n.theta, lang)}·(−1) = {d4(f.zo[k])}
+              {cur.output.map((n, q) => (
+                <div key={q} className="line">
+                  z_{outNames[q]} = {p4(n.w[0])}·{d4(f.h[0])} + {p4(n.w[1])}·{d4(f.h[1])} + {p4(n.theta)}·(−1) = {d4(f.zo[q])}
                 </div>
               ))}
               <div className="line">p = softmax = ({f.p.map(d4).join(' ; ')})</div>
@@ -533,7 +572,7 @@ update:  weight ← weight − η · ∂L/∂weight`}</div>
               <div className="title">3 · {pt ? 'Erro na camada oculta' : 'Hidden-layer error'}</div>
               {b.deltaHidden.map((v, j) => (
                 <div key={j} className="line">
-                  δh{j + 1} = ({init.output.map((n, k) => `${par(n.w[j], lang)}·${p4(b.deltaOut[k])}`).join(' + ')}) · {d4(f.h[j])} · (1 − {d4(f.h[j])}) = <span className="res">{d4(v)}</span>
+                  δh{j + 1} = ({cur.output.map((n, q) => `${p4(n.w[j])}·${p4(b.deltaOut[q])}`).join(' + ')}) · {d4(f.h[j])} · (1 − {d4(f.h[j])}) = <span className="res">{d4(v)}</span>
                 </div>
               ))}
             </div>
@@ -545,15 +584,15 @@ update:  weight ← weight − η · ∂L/∂weight`}</div>
             <thead><tr><th>{pt ? 'Peso' : 'Weight'}</th><th>{pt ? 'antes' : 'before'}</th><th>∂L/∂{pt ? 'peso' : 'weight'}</th><th>{pt ? 'conta' : 'arithmetic'}</th><th>{pt ? 'depois' : 'after'}</th></tr></thead>
             <tbody>
               {(['hidden', 'output'] as const).flatMap((layer) =>
-                init[layer].flatMap((n, j) => [...n.w, n.theta].map((w, i) => {
+                cur[layer].flatMap((n, j) => [...n.w, n.theta].map((w, i) => {
                   const g = i < n.w.length ? b.grad[layer][j].w[i] : b.grad[layer][j].theta;
                   const a = i < n.w.length ? after[layer][j].w[i] : after[layer][j].theta;
                   return (
                     <tr key={`${layer}${j}${i}`}>
                       <td>{names[layer][j][i]}</td>
-                      <td>{num(w, lang)}</td>
+                      <td>{d4(w)}</td>
                       <td>{d4(g)}</td>
-                      <td className="muted">{num(w, lang)} − {num(eta, lang)}·{p4(g)}</td>
+                      <td className="muted">{d4(w)} − {num(eta, lang)}·{p4(g)}</td>
                       <td className="gold">{d4(a)}</td>
                     </tr>
                   );
@@ -563,8 +602,8 @@ update:  weight ← weight − η · ∂L/∂weight`}</div>
         </div>
         <p className="small" style={{ marginTop: 12 }}>
           {pt
-            ? `Resultado: o erro do Venusaur caiu de ${d4(b.loss)} para ${d4(lossAfter)}, e a probabilidade de Planta foi de ${fx(100 * f.p[2], 1, lang)}% para ${fx(100 * fAfter.p[2], 1, lang)}%.`
-            : `Result: Venusaur's error dropped from ${d4(b.loss)} to ${d4(lossAfter)}, and the Grass probability went from ${fx(100 * f.p[2], 1, lang)}% to ${fx(100 * fAfter.p[2], 1, lang)}%.`}
+            ? `Resultado da atualização ${k + 1}: o erro do Venusaur vai de ${d4(b.loss)} para ${d4(lossAfter)}, e a probabilidade de Planta de ${fx(100 * f.p[2], 1, lang)}% para ${fx(100 * fAfter.p[2], 1, lang)}%.`
+            : `Result of update ${k + 1}: Venusaur's error goes from ${d4(b.loss)} to ${d4(lossAfter)}, and the Grass probability from ${fx(100 * f.p[2], 1, lang)}% to ${fx(100 * fAfter.p[2], 1, lang)}%.`}
         </p>
         <Note title={pt ? 'Um Pokémon por vez ou todos juntos?' : 'One Pokémon at a time or all together?'}>
           {pt
@@ -593,6 +632,7 @@ update:  weight ← weight − η · ∂L/∂weight`}</div>
             : `Proof with numbers (Venusaur, initial weights): in the right order, δh = (${wrongOrder.right.map((v) => fx(v, 4, lang)).join(' ; ')}). If the output weights were changed first, it would be (${wrongOrder.wrong.map((v) => fx(v, 4, lang)).join(' ; ')}): a different gradient, which no longer matches the error the network made.`}
         </p>
       </div>
+      <ErrorTrace init={init} eta={eta} />
 
       <div className="section-head" style={{ marginTop: 32 }}>
         <h2>{pt ? 'Passo a passo das épocas' : 'Epochs, step by step'}</h2>
@@ -633,7 +673,8 @@ function Training({ model }: { model: CachedMlp }) {
     }
     return best;
   }, [model.curve]);
-  const firstFull = model.curve.find((c) => c.accuracy === 1)?.epoch;
+  // exact epoch (the cached curve keeps one point every 5 epochs)
+  const firstFull = useMemo(() => deepCurve(toDeep(model.init), STARTERS, model.config.eta, 300, 1).curve.find((c) => c.accuracy === 1)?.epoch, [model]);
   const fin = model.final.hidden;
 
   return (
@@ -720,6 +761,8 @@ function Training({ model }: { model: CachedMlp }) {
         </Note>
       </div>
 
+      <SoftmaxExplain z={softForward(model.final, 80, 83).zo} who="Venusaur" context={pt ? 'rede de uma camada oculta' : 'one-hidden-layer network'} />
+
       <article className="panel panel--gold tip" style={{ marginTop: 20 }}>
         <span className="label">★ {pt ? 'Ponto-chave' : 'Key point'}</span>
         <p style={{ margin: '8px 0 0' }}>
@@ -743,8 +786,8 @@ function StepSize({ model }: { model: CachedMlp }) {
   const [start, setStart] = useState<[number, number]>([-2.3, -2.0]);
   const runners: Runner[] = useMemo(() => [0.1, 0.7, 1.5].map((eta, i) => ({ eta, color: RUNNER_COLORS[i], label: `η = ${fx(eta, 1, lang)}` })), [lang]);
   const etas = [0.2, model.config.eta, 10];
-  const runs = useMemo(() => etas.map((eta) => deepCurve(toDeep(model.init), STARTERS, eta, model.config.epochs, 5)), [model]); // eslint-disable-line react-hooks/exhaustive-deps
-  const merged = runs[0].curve.map((c, i) => ({ epoch: c.epoch, a: c.loss, b: runs[1].curve[i].loss, c: runs[2].curve[i].loss }));
+  const runs = useMemo(() => etas.map((eta) => deepCurve(toDeep(model.init), STARTERS, eta, model.config.epochs, 1)), [model]); // eslint-disable-line react-hooks/exhaustive-deps
+  const merged = runs[0].curve.filter((c) => c.epoch % 5 === 0).map((c) => ({ epoch: c.epoch, a: c.loss, b: runs[1].curve[c.epoch].loss, c: runs[2].curve[c.epoch].loss }));
   const firstFull = runs.map((r) => r.curve.find((c) => c.accuracy === 1)?.epoch);
   const finalAcc = runs.map((r) => r.curve[r.curve.length - 1].accuracy);
   const finalLoss = runs.map((r) => r.curve[r.curve.length - 1].loss);
@@ -865,7 +908,7 @@ function TwoLayersBody({ loaded }: { loaded: Loaded<CachedMlp2> }) {
   const m = loaded.model;
   const curve = m.curve.map((c) => ({ epoch: c.epoch, loss: c.loss, acc: 100 * c.accuracy }));
   const last = m.curve[m.curve.length - 1];
-  const firstFull = m.curve.find((c) => c.accuracy === 1)?.epoch;
+  const firstFull = useMemo(() => deepCurve(m.init, STARTERS, m.config.eta, 600, 1).curve.find((c) => c.accuracy === 1)?.epoch, [m]);
   const venusaur = STARTERS.find((q) => q.id === 'venusaur')!;
   const b0 = deepBackprop(m.init, venusaur);
   const mags = b0.delta.map((d) => Math.max(...d.map(Math.abs)));
@@ -894,6 +937,11 @@ function TwoLayersBody({ loaded }: { loaded: Loaded<CachedMlp2> }) {
             {pt
               ? `São ${nWeights} pesos, contra 15 da rede de uma camada. Treino: η = ${fx(m.config.eta, 1, lang)}, ${m.config.epochs} épocas, os nove Pokémon em cada época, pesos iniciais sorteados com semente fixa.`
               : `That is ${nWeights} weights, against 15 in the one-layer network. Training: η = ${fx(m.config.eta, 1, lang)}, ${m.config.epochs} epochs, the nine Pokémon in every epoch, initial weights drawn with a fixed seed.`}
+          </p>
+          <p className="small">
+            {pt
+              ? 'Cada um de h1, h2, g1, g2 e das três saídas é um perceptron: soma ponderada + bias, seguida da sua ativação (sigmoide nas ocultas, softmax na saída).'
+              : 'Each of h1, h2, g1, g2 and the three outputs is a perceptron: weighted sum + bias, followed by its activation (sigmoid in the hidden layers, softmax at the output).'}
           </p>
           <Note title={pt ? 'Para que outra camada?' : 'Why another layer?'}>
             {pt
@@ -973,6 +1021,8 @@ update:    all ${nWeights} weights together, weight ← weight − η·∂L/∂w
           </p>
         </article>
       </div>
+
+      <SoftmaxExplain z={fFinal.z[fFinal.z.length - 1]} who="Venusaur" context={pt ? 'rede com duas camadas ocultas' : 'two-hidden-layer network'} />
 
       <article className="panel panel--gold tip" style={{ marginTop: 20 }}>
         <span className="label">★ {pt ? 'Ponto-chave' : 'Key point'}</span>

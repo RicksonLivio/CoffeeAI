@@ -21,9 +21,13 @@ interface Props {
   changed?: boolean;
   /** names of the hidden layers' neurons, e.g. [['h1','h2'], ['g1','g2']] */
   names?: string[][];
+  /** error δ of each neuron (same shape as acts), drawn in red under the node */
+  deltas?: (number[] | null)[];
+  /** edges ("l:j:i" = layer l, neuron j, input i) and nodes ("l:j", −1 = inputs) to emphasize */
+  highlight?: { edges?: string[]; nodes?: string[] };
 }
 
-const H = 400;
+const H = 412;
 const R = 28;
 const C = {
   pos: '#29d3e8', neg: '#7b4dff', zero: '#5b6b82', text: '#e6ecf4', dim: '#a9b6c8',
@@ -38,7 +42,7 @@ function ys(n: number, bias: boolean): number[] {
   const top = 78;
   const bottom = bias ? 300 : 320;
   const out = n === 1 ? [(top + bottom) / 2] : Array.from({ length: n }, (_, i) => lerp(top, bottom, i / (n - 1)));
-  if (bias) out.push(362);
+  if (bias) out.push(386);
   return out;
 }
 
@@ -47,7 +51,9 @@ function ys(n: number, bias: boolean): number[] {
  * Same conventions as lesson 1: gold balls go forward, red balls carry the error back;
  * cyan edges are positive weights, violet negative, dashed zero.
  */
-export default function NetGraph({ net, x, acts, winner, labels = true, digits = 1, play, focus = null, changed = false, names }: Props) {
+export default function NetGraph({
+  net, x, acts, winner, labels = true, digits = 1, play, focus = null, changed = false, names, deltas, highlight,
+}: Props) {
   const { lang } = useLang();
   const pt = lang === 'pt';
   const [u, setU] = useState<number | null>(null);
@@ -73,10 +79,10 @@ export default function NetGraph({ net, x, acts, winner, labels = true, digits =
     };
   }, [play?.id, play?.kind, L]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  interface Edge { x1: number; y1: number; x2: number; y2: number; w: number; layer: number }
+  interface Edge { x1: number; y1: number; x2: number; y2: number; w: number; layer: number; key: string }
   const edges: Edge[] = [];
   net.layers.forEach((layer, l) => layer.forEach((n, j) => {
-    [...n.w, n.theta].forEach((w, i) => edges.push({ x1: colX[l], y1: colY[l][i], x2: colX[l + 1], y2: colY[l + 1][j], w, layer: l }));
+    [...n.w, n.theta].forEach((w, i) => edges.push({ x1: colX[l], y1: colY[l][i], x2: colX[l + 1], y2: colY[l + 1][j], w, layer: l, key: `${l}:${j}:${i}` }));
   }));
   const maxW = net.layers.map((_, l) => Math.max(1e-9, ...edges.filter((e) => e.layer === l).map((e) => Math.abs(e.w))));
 
@@ -91,6 +97,14 @@ export default function NetGraph({ net, x, acts, winner, labels = true, digits =
       balls.push({ x: lerp(e.x1 + R, e.x2 - R, t), y: lerp(e.y1, e.y2, t), c: fwd ? C.gold4 : C.red });
     }
   }
+
+  // while the animation runs, values appear layer by layer: forward from the input, errors from the output
+  const animSeg = u !== null && play ? Math.min(L, Math.floor(u * L)) : L;
+  const valueShown = (l: number) => !(play?.kind === 'forward' && u !== null) || l < animSeg;
+  const deltaShown = (l: number) => !(play?.kind === 'backward' && u !== null) || l >= L - 1 - animSeg;
+  const hiE = new Set(highlight?.edges ?? []);
+  const hiN = new Set(highlight?.nodes ?? []);
+  const anyHi = hiE.size + hiN.size > 0;
 
   const inNames = pt ? ['Velocidade', 'Defesa', 'bias'] : ['Speed', 'Defense', 'bias'];
   const outNames = pt ? ['Fogo', 'Água', 'Planta'] : ['Fire', 'Water', 'Grass'];
@@ -117,14 +131,17 @@ export default function NetGraph({ net, x, acts, winner, labels = true, digits =
         <text key={c} className="node-label" x={cx} y={26} textAnchor="middle" fontSize={11} fill={focus === c - 1 ? C.gold4 : C.dim}>{header(c)}</text>
       ))}
 
-      {edges.map((e, i) => (
-        <line key={i} x1={e.x1 + R} y1={e.y1} x2={e.x2 - R} y2={e.y2}
-          stroke={e.w === 0 ? C.zero : changed ? C.gold : e.w > 0 ? C.pos : C.neg}
-          strokeOpacity={e.w === 0 ? 0.35 : 0.72} strokeDasharray={e.w === 0 ? '3 5' : undefined}
-          strokeWidth={e.w === 0 ? 1 : 1.2 + 4 * (Math.abs(e.w) / maxW[e.layer])} />
-      ))}
+      {edges.map((e, i) => {
+        const hi = hiE.has(e.key);
+        return (
+          <line key={i} x1={e.x1 + R} y1={e.y1} x2={e.x2 - R} y2={e.y2}
+            stroke={hi ? C.red : e.w === 0 ? C.zero : changed ? C.gold : e.w > 0 ? C.pos : C.neg}
+            strokeOpacity={hi ? 1 : anyHi ? 0.18 : e.w === 0 ? 0.35 : 0.72} strokeDasharray={e.w === 0 && !hi ? '3 5' : undefined}
+            strokeWidth={hi ? 4 : e.w === 0 ? 1 : 1.2 + 4 * (Math.abs(e.w) / maxW[e.layer])} filter={hi ? 'url(#glow3)' : undefined} />
+        );
+      })}
       {labels && edges.map((e, i) => {
-        if (e.w === 0) return null;
+        if (e.w === 0 || (anyHi && !hiE.has(e.key))) return null;
         const t = tFor(e.layer);
         const mx = lerp(e.x1 + R, e.x2 - R, t);
         const my = lerp(e.y1, e.y2, t);
@@ -139,7 +156,7 @@ export default function NetGraph({ net, x, acts, winner, labels = true, digits =
 
       {[x[0], x[1], -1].map((v, i) => (
         <g key={`in${i}`}>
-          <circle cx={colX[0]} cy={colY[0][i]} r={R} fill={C.navy} stroke={ring(-1)} strokeWidth={2} strokeDasharray={i === 2 ? '5 4' : undefined} />
+          <circle cx={colX[0]} cy={colY[0][i]} r={R} fill={C.navy} stroke={hiN.has(`-1:${i}`) ? C.red : ring(-1)} strokeWidth={hiN.has(`-1:${i}`) ? 3.5 : 2} strokeDasharray={i === 2 ? '5 4' : undefined} />
           <text x={colX[0]} y={colY[0][i] + 5} textAnchor="middle" fontSize={15} fill={C.text} fontWeight={600}>{num(v, lang)}</text>
           <text className="node-label" x={colX[0] - R - 8} y={colY[0][i] + 4} textAnchor="end" fontSize={10.5} fill={C.dim}>{inNames[i].toUpperCase()}</text>
         </g>
@@ -156,18 +173,29 @@ export default function NetGraph({ net, x, acts, winner, labels = true, digits =
               if (isOut) {
                 return (
                   <g key={j}>
-                    <circle cx={cx} cy={cy} r={R + 2} fill={C.navy} strokeWidth={winner === j ? 3.5 : 2}
-                      stroke={winner === j ? OUT_COLOR[j] : focus === l ? C.gold : C.zero} filter={winner === j ? 'url(#glow3)' : undefined} />
-                    <text x={cx} y={cy + 5} textAnchor="middle" fontSize={14} fill={C.text} fontWeight={600}>{num(Number(val.toFixed(Math.max(digits, 2))), lang)}</text>
+                    <circle cx={cx} cy={cy} r={R + 2} fill={C.navy} strokeWidth={hiN.has(`${l}:${j}`) || winner === j ? 3.5 : 2}
+                      stroke={hiN.has(`${l}:${j}`) ? C.red : winner === j && valueShown(l) ? OUT_COLOR[j] : focus === l ? C.gold : C.zero}
+                      filter={winner === j || hiN.has(`${l}:${j}`) ? 'url(#glow3)' : undefined} />
+                    <text x={cx} y={cy + 5} textAnchor="middle" fontSize={14} fill={C.text} fontWeight={600}>{valueShown(l) ? num(Number(val.toFixed(Math.max(digits, 2))), lang) : '·'}</text>
                     <text className="node-label" x={cx + R + 12} y={cy + 4} fontSize={12} fill={OUT_COLOR[j]}>{outNames[j].toUpperCase()}</text>
+                    {deltas?.[l] && deltaShown(l) && (
+                      <text x={cx + R + 12} y={cy + 20} fontSize={11.5} fill={C.red} fontWeight={600}>δ {num(Number(deltas[l]![j].toFixed(3)), lang)}</text>
+                    )}
                   </g>
                 );
               }
               return (
                 <g key={j}>
-                  <circle cx={cx} cy={cy} r={R + 3} fill={C.navy} stroke={ring(l)} strokeWidth={2.5} filter={focus === l ? 'url(#glow3)' : undefined} />
+                  <circle cx={cx} cy={cy} r={R + 3} fill={C.navy} stroke={hiN.has(`${l}:${j}`) ? C.red : ring(l)} strokeWidth={hiN.has(`${l}:${j}`) ? 3.5 : 2.5}
+                    filter={focus === l || hiN.has(`${l}:${j}`) ? 'url(#glow3)' : undefined} />
                   <text x={cx} y={cy - 4} textAnchor="middle" fontSize={11} fill={C.dim}>{names?.[l]?.[j] ?? `h${j + 1}`}</text>
-                  <text x={cx} y={cy + 13} textAnchor="middle" fontSize={14} fill={C.gold4} fontWeight={600}>{num(Number(val.toFixed(Math.max(digits, 2))), lang)}</text>
+                  <text x={cx} y={cy + 13} textAnchor="middle" fontSize={14} fill={C.gold4} fontWeight={600}>{valueShown(l) ? num(Number(val.toFixed(Math.max(digits, 2))), lang) : '·'}</text>
+                  {deltas?.[l] && deltaShown(l) && (
+                    <g>
+                      <rect x={cx - 34} y={cy + R + 6} width={68} height={17} fill={C.navy} stroke={C.red} strokeOpacity={0.6} />
+                      <text x={cx} y={cy + R + 19} textAnchor="middle" fontSize={11.5} fill={C.red} fontWeight={600}>δ {num(Number(deltas[l]![j].toFixed(3)), lang)}</text>
+                    </g>
+                  )}
                 </g>
               );
             })}

@@ -135,11 +135,14 @@ export default function EpochPlayer({ init, eta, epochs, id, names }: Props) {
         <div>
           <NetGraph net={shownNet} x={[s.x1, s.x2]} acts={shownF.a.slice(1)} winner={shownF.p.indexOf(Math.max(...shownF.p))}
             play={pulse} digits={1} changed={updated} names={names}
+            deltas={phase === 0 || updated ? undefined : b.delta.map((d, l) => (l === nL - 1 || phase >= 2 ? d : null))}
             focus={phase === 0 ? null : phase === 1 ? nL - 1 : phase === 2 ? 0 : null} />
           <p className="small muted" style={{ textAlign: 'center', margin: 0 }}>
             {updated
               ? (pt ? `Pesos novos (em dourado), já usados pela época ${epoch + 1}. Maior mudança nesta época: ${d4(maxStep)}.` : `New weights (gold), used from epoch ${epoch + 1}. Largest change this epoch: ${d4(maxStep)}.`)
-              : (pt ? `Pesos do início da época ${epoch}. Eles só mudam na fase 5.` : `Weights at the start of epoch ${epoch}. They only change in phase 5.`)}
+              : phase === 0
+                ? (pt ? `Época ${epoch}: os valores acendem camada por camada, da entrada para a saída. Pesos do início da época.` : `Epoch ${epoch}: values light up layer by layer, from input to output. Weights from the start of the epoch.`)
+                : (pt ? `Em vermelho, o erro δ de cada neurônio${phase === 1 ? ' da saída' : ', voltando da saída para a entrada'}. Os pesos só mudam na fase 5.` : `In red, the error δ of each neuron${phase === 1 ? ' at the output' : ', going back from the output to the input'}. Weights only change in phase 5.`)}
           </p>
         </div>
 

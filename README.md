@@ -73,6 +73,24 @@ Parts added after that:
   `public/models/mlp2_pokemon/model.json`) with the same detailed player and the error shrinking layer by
   layer.
 
+More explanations: what a smooth step (sigmoid) is, every hidden neuron as a perceptron and where the
+activation goes (without it the hand-made Grass output is 22.5 for every Pokémon), a 5-step trace of one
+error correction from the output to the first weight, the steps-by-hand panel where each forward →
+backward cycle applies an update (with "reset weights"), and how softmax turns the three outputs into
+probabilities that add up to 1, for both networks.
+
+### Python examples
+
+Each lesson ends with a **Python code example** button (with a Mega Man style burst of yellow orbs on
+click) that downloads a plain-Python simulation, no extra libraries:
+
+| File | What it prints |
+|---|---|
+| `public/code/perceptron_pokemon.py` | lesson 1 epoch by epoch (net, y, e, updates), Venusaur, η = 1 / 0.1 / 0.01 |
+| `public/code/mlp_pokemon.py` | lesson 2 parts 1–5; `--plot` draws the curves and the 3D surface if matplotlib is installed |
+
+`tests/python-scripts.test.ts` runs both scripts and checks their output against the lesson numbers.
+
 `tests/mlp.test.ts` and `tests/deep.test.ts` check the claims: the hull argument, the non-convergence of the single perceptron,
 the hand-made network on all nine Pokémon, the backpropagation gradient against a numerical gradient (one
 and two hidden layers), the update order, the step-size outcomes and the trained networks getting all nine
@@ -107,7 +125,7 @@ yourself" section always trains live, since it takes microseconds.
 | `src/components/LearnSheet.tsx` | lesson index with collapsible lessons |
 | `src/components/learn/*` | Lesson1, Lesson2, animated perceptron and MLP graphs, calculations, charts, lab, notes |
 | `src/styles/tokens.css`, `app.css` | Cyber-Net tokens (unchanged) and the site layout |
-| `public/` | photo, resume PDF, Pokémon cards, cached model, favicon |
+| `public/` | photo, resume PDF, Pokémon cards, cached models, Python examples (`code/`), favicons |
 
 ## Run locally
 
