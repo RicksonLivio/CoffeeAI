@@ -89,7 +89,7 @@ export const JOBS: Job[] = [
     current: true,
     items: [
       { en: 'Trains models for spoofing detection, deepfake detection and lip-sync.', pt: 'Treina modelos de detecção de spoofing, de deepfake e de lip-sync.' },
-      { en: 'Created and structured the AI and Data Science area, including a GCP data lake for CI/CD model training and team data.', pt: 'Criou e estruturou a área de IA e Ciência de Dados, incluindo um data lake no GCP para treino de modelos com CI/CD e dados do time.' },
+      { en: 'Helped structure the AI and Data Science area, including a GCP data lake for CI/CD model training and team data.', pt: 'Auxílio na estruturação da área de IA e Ciência de Dados, incluindo um data lake no GCP para treino de modelos com CI/CD e dados do time.' },
       { en: 'Optimized model inference speed with CUDA and ONNX on state-of-the-art (SOTA) models.', pt: 'Otimizou a velocidade de inferência com CUDA e ONNX em modelos do estado da arte (SOTA).' },
     ],
     stack: ['CUDA', 'ONNX', 'GCP', 'CI/CD'],
@@ -206,8 +206,8 @@ export const STORY: { title: T; text: T }[] = [
   {
     title: { en: 'Current stage · Staff AI & research', pt: 'Fase atual · Staff AI & pesquisa' },
     text: {
-      en: 'Today I am Staff AI & MLOps Engineer at Nuvidio, where I created the AI and Data Science area (deepfake and spoofing detection, CUDA/ONNX inference), and I research explainable forecasting in my master’s at IFCE. This site is where I share what I learn.',
-      pt: 'Hoje sou Staff AI & MLOps Engineer na Nuvidio, onde criei a área de IA e Ciência de Dados (detecção de deepfake e spoofing, inferência com CUDA/ONNX), e pesquiso previsão explicável no mestrado do IFCE. Este site é onde compartilho o que aprendo.',
+      en: 'Today I am Staff AI & MLOps Engineer at Nuvidio, where I help structure the AI and Data Science area (deepfake and spoofing detection, CUDA/ONNX inference), and I research explainable forecasting in my master’s at IFCE. This site is where I share what I learn.',
+      pt: 'Hoje sou Staff AI & MLOps Engineer na Nuvidio, onde auxilio na estruturação da área de IA e Ciência de Dados (detecção de deepfake e spoofing, inferência com CUDA/ONNX), e pesquiso previsão explicável no mestrado do IFCE. Este site é onde compartilho o que aprendo.',
     },
   },
 ];

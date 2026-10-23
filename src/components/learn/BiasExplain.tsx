@@ -1,6 +1,4 @@
-import { useMemo } from 'react';
 import { fx, num, useLang } from '../../i18n';
-import { deepCurve, deepForward, initDeep } from '../../lib/deep';
 import { HAND_NET, STARTERS, stepForward } from '../../lib/mlp';
 import { buildCachedMlp } from '../../lib/model';
 import { LESSON_INIT, trainStep, CHARIZARD } from '../../lib/perceptron';
@@ -20,15 +18,6 @@ export default function BiasExplain() {
   const fC = stepForward(HAND_NET, c.x1, c.x2);
   const step1 = trainStep(LESSON_INIT, CHARIZARD, 1, 1, 0);
   const trainedTheta = buildCachedMlp().final.hidden.map((n) => n.theta);
-  // a single hidden neuron (2 → 1 → 3), same data, η = 2
-  const one = useMemo(() => {
-    const r = deepCurve(initDeep(2, [1, 3]), STARTERS, 2, 600, 1);
-    const hOf = (type: string) => {
-      const hs = STARTERS.filter((s) => s.type === type).map((s) => deepForward(r.final, s.x1, s.x2).a[1][0]);
-      return hs.reduce((a, b) => a + b, 0) / hs.length;
-    };
-    return { first: r.curve.find((q) => q.accuracy === 1)?.epoch, acc: r.curve[r.curve.length - 1].accuracy, h: { fire: hOf('fire'), water: hOf('water'), grass: hOf('grass') } };
-  }, []);
   const h1n = HAND_NET.hidden[0];
 
   return (
@@ -100,11 +89,7 @@ h1 = 1  ⟺  x1 − x2 − 11 ≥ 0  ⟺  x1 − x2 ≥ 11`)}</div>
                 'A step neuron only answers 0 or 1, so it only separates two groups, and Grass sits in a band between two lines. Each line is a neuron: we need two to close the band.')}
             </li>
             <li>
-              <b>{t('Com sigmoide, para estes nove, até um bastaria.', 'With a sigmoid, for these nine, even one would do.')}</b>{' '}
-              {one.acc === 1
-                ? t(`Testei uma rede 2 → 1 → 3 com os mesmos dados e η = 2: ela acerta os nove a partir da época ${one.first}. Depois de 600 épocas, o único neurônio oculto vale em média ${fx(one.h.water, 2, lang)} para Água, ${fx(one.h.grass, 2, lang)} para Planta e ${fx(one.h.fire, 2, lang)} para Fogo: a sigmoide dá a Planta um valor no meio, e a saída separa esses três níveis.`,
-                  `I tested a 2 → 1 → 3 network with the same data and η = 2: it gets all nine right from epoch ${one.first}. After 600 epochs, the single hidden neuron averages ${fx(one.h.water, 2, lang)} for Water, ${fx(one.h.grass, 2, lang)} for Grass and ${fx(one.h.fire, 2, lang)} for Fire: the sigmoid gives Grass a middle value, and the output separates those three levels.`)
-                : t('Numa rede 2 → 1 → 3, o treino não chegou a acertar os nove neste teste.', 'In a 2 → 1 → 3 network, training did not reach all nine in this test.')}
+              <b>{t('Com sigmoide, para estes nove, até um bastaria.', 'With a sigmoid, for these nine, even one would do.')}</b>
             </li>
             <li>
               {t('Então h1 e h2 são a escolha didática: cada um vira uma pergunta clara ("é Fogo?", "é Água?"), dá para fazer a conta à mão e é a menor rede que funciona também com degrau. Em problemas reais, o número de neurônios ocultos é escolhido testando; mais neurônios dão mais formas possíveis, e mais chance de decorar os dados.',
