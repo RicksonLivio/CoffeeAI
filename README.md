@@ -12,7 +12,7 @@ reference screen in [`docs/design/megaman_theme.png`](docs/design/megaman_theme.
 | Tab | What it has |
 |---|---|
 | **01 Portfolio** | hero with photo, story as a quest log, work history timeline, skill gauges, certificates, master's research (Neural Fourier Head), education and contact |
-| **02 Learn with me** | collapsible lessons (closed until you open them; `#learn/1`, `#learn/2` open them from a link). Lesson 1: the perceptron. Lesson 2: the MLP |
+| **02 Learn with me** | collapsible lessons (closed until you open them; `#learn/1`, `#learn/2` open them from a link). Lesson 1: the perceptron. Lesson 2: the MLP. Lesson 3: notebook on gradient descent, backpropagation and the optimization landscape |
 | **03 Resume** | the PDF in the page, with download |
 
 The resume (`public/Resume_updated_2026.pdf`) can also be downloaded from the top bar on every tab.
@@ -79,6 +79,16 @@ error correction from the output to the first weight, the steps-by-hand panel wh
 backward cycle applies an update (with "reset weights"), and how softmax turns the three outputs into
 probabilities that add up to 1, for both networks.
 
+### Lesson 3: notebook, how we learn the weights
+
+A "notation notebook" with formulas rendered by KaTeX (`src/components/learn/Tex.tsx`, loaded only when the
+lesson is opened): the deep linear loss J(W₁, …, W_L) = Σ‖W_Lᵀ⋯W₁ᵀxᵢ − yᵢ‖², gradient descent for one layer
+(convex), backpropagation derived with partial derivatives and the chain rule (equations 4–8), why it is
+efficient compared with finite differences, and the landscape: non-convexity, the saddle at (0, 0) of
+J = (w₂w₁ − 1)² on contour lines and a 3D surface, Baldi & Hornik (1989), Kawaguchi (2016), and the caveat
+that "no bad local minima" does not hold for nonlinear networks in general (Yun, Sra & Jadbabaie, 2019;
+Safran & Shamir, 2018). `src/lib/linear.ts` and `tests/linear.test.ts` check every formula and number.
+
 ### Python examples
 
 Each lesson ends with a **Python code example** button (with a Mega Man style burst of yellow orbs on
@@ -89,10 +99,11 @@ click) that downloads a plain-Python simulation, no extra libraries:
 | `public/code/perceptron_pokemon.py` | lesson 1 epoch by epoch (net, y, e, updates), Venusaur, η = 1 / 0.1 / 0.01 |
 | `public/code/perceptron_pokemon_torch.py` | the same with tensors: manual version printing vectors and products, plus a quick vectorized one |
 | `public/code/mlp_pokemon.py` | lesson 2 parts 1–5; `--plot` draws the curves and the 3D surface if matplotlib is installed |
+| `public/code/backprop_notebook.py`, `backprop_notebook_torch.py` | lesson 3: backprop with matrices vs finite differences, the toy saddle, the bad saddle; eq. 8 vs autograd and exact Hessians in PyTorch |
 | `public/code/mlp_pokemon_torch.py` | manual PyTorch with matrices (prints X, W, Z, A, δ and gradients, checked against autograd) and a quick `nn.Sequential` + `CrossEntropyLoss` + `SGD` version, 1 and 2 hidden layers, with metrics |
 
-The `*_torch.py` files need `pip install torch`. `tests/python-scripts.test.ts` runs all four scripts and
-checks their output against the lesson numbers (the PyTorch ones are skipped where torch is not installed;
+The `*_torch.py` files need `pip install torch`. `tests/python-scripts.test.ts` runs the scripts and
+checks their output against the lesson numbers (all six; the PyTorch ones are skipped where torch is not installed;
 `PYTHON_TORCH=/path/to/python npm test` points them at another interpreter).
 
 Lesson 2 also reports, at the chosen epoch, the confusion matrix, accuracy, precision, recall (sensitivity),

@@ -297,3 +297,31 @@ select {
 }
 @keyframes mm-pulse { 0% { transform: scale(1); } 50% { transform: scale(.55); } }
 @keyframes mm-flash { from { transform: scale(.3); opacity: 1; } to { transform: scale(2.4); opacity: 0; } }
+
+/* ---------- Lesson 3: notebook (caderno de notação) ---------- */
+.tex .katex { font-size: 1.05em; color: var(--steel-100); }
+.tex-block { display: block; overflow-x: auto; overflow-y: hidden; margin: 12px 0; padding: 12px 18px;
+  background: rgba(5, 8, 15, .65); border-left: 3px solid var(--gold-500); }
+.tex-block .katex-display { margin: 0; }
+.tex-block .katex { font-size: 1.12em; color: var(--steel-100); }
+.tex-block .katex .tag { color: var(--steel-400); }
+.nb-page { position: relative; }
+.nb-page::before {
+  content: ""; position: absolute; inset: 0; pointer-events: none; opacity: .5;
+  background: repeating-linear-gradient(180deg, transparent 0 31px, rgba(41, 211, 232, .06) 31px 32px);
+}
+.nb-num { font-family: var(--font-mono); font-size: .75rem; color: var(--gold-400); letter-spacing: .14em; }
+.nb-card { position: relative; margin: 14px 0; padding: 14px 18px; background: rgba(13, 27, 42, .9); border: 1px solid var(--steel-600); }
+.nb-card > .nb-kind {
+  display: inline-block; margin-bottom: 6px; padding: 1px 10px; font-family: var(--font-ui); font-weight: 700;
+  text-transform: uppercase; letter-spacing: .12em; font-size: .72rem; color: var(--navy-900); background: var(--cyan-400);
+}
+.nb-card.def > .nb-kind { background: var(--cyan-400); }
+.nb-card.thm { border-color: var(--brass-600); }
+.nb-card.thm > .nb-kind { background: var(--grad-rank); }
+.nb-card.proof > .nb-kind { background: var(--steel-400); color: var(--steel-100); }
+.nb-card.ex > .nb-kind { background: var(--leaf-600); color: #fff; }
+.nb-card.warn { border-color: var(--alert-500); }
+.nb-card.warn > .nb-kind { background: var(--alert-500); color: #fff; }
+.nb-card p:last-child { margin-bottom: 0; }
+.qed { float: right; color: var(--gold-400); }

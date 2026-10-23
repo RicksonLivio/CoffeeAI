@@ -1,11 +1,29 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { fx, useLang } from '../../i18n';
-import { basinOf, descend, DOMAIN, GLOBAL, LOCAL, surface, type DescentPoint } from '../../lib/landscape';
+import { basinOf, descend, DOMAIN, GLOBAL, LOCAL, gradient, surface, type DescentPoint, type Fn2, type Grad2 } from '../../lib/landscape';
 
 export interface Runner {
   eta: number;
   color: string;
   label: string;
+  /** own starting point; without it the runner uses the clicked start */
+  start?: [number, number];
+}
+
+/** A loss surface over two weights, with what to mark and how to describe where a run ended. */
+export interface SurfaceSpec {
+  f: Fn2;
+  grad: Grad2;
+  domain: [number, number];
+  /** heights above this are drawn flat (keeps steep walls readable) */
+  zMax: number;
+  zMin: number;
+  markers: { a: number; b: number; label: [string, string] }[];
+  /** verdict for the table, from the whole path */
+  verdict: (path: DescentPoint[], pt: boolean) => string;
+  axes: [string, string];
+  /** curve drawn on the contour map, e.g. the valley of global minima */
+  curve?: [number, number][][];
 }
 
 interface Props {
@@ -13,15 +31,35 @@ interface Props {
   start: [number, number];
   onStart: (p: [number, number]) => void;
   steps: number;
+  spec?: SurfaceSpec;
 }
 
-const [LO, HI] = DOMAIN;
-const ZMIN = 0.05;
-const ZMAX = 1.95;
+const TOY: SurfaceSpec = {
+  f: surface,
+  grad: gradient,
+  domain: DOMAIN,
+  zMin: 0.05,
+  zMax: 1.95,
+  markers: [
+    { a: GLOBAL.a, b: GLOBAL.b, label: ['mínimo global', 'global minimum'] },
+    { a: LOCAL.a, b: LOCAL.b, label: ['mínimo local', 'local minimum'] },
+  ],
+  axes: ['a', 'b'],
+  verdict: (p, pt) => {
+    const end = p[p.length - 1];
+    const bs = basinOf(end);
+    const last2 = p.slice(-2);
+    const moving = last2.length === 2 && Math.hypot(last2[0].a - last2[1].a, last2[0].b - last2[1].b) > 0.05;
+    return bs === 'global' ? (pt ? 'mínimo global ✓' : 'global minimum ✓')
+      : bs === 'local' && !moving ? (pt ? 'presa no mínimo local' : 'stuck in the local minimum')
+        : moving ? (pt ? 'não para: pula de um lado para o outro' : 'never settles: bounces back and forth')
+          : (pt ? 'parou em outro ponto' : 'stopped elsewhere');
+  },
+};
 
 /** Height → colour: gold in the valleys, cyan on the slopes, navy on the hills (theme palette). */
-function heightColor(z: number, alpha = 1): string {
-  const t = Math.max(0, Math.min(1, (z - ZMIN) / (ZMAX - ZMIN)));
+function heightColor(z: number, zMin: number, zMax: number, alpha = 1): string {
+  const t = Math.max(0, Math.min(1, (z - zMin) / (zMax - zMin)));
   const stops: [number, [number, number, number]][] = [
     [0, [255, 210, 94]], [0.18, [245, 181, 42]], [0.38, [41, 211, 232]], [0.62, [30, 91, 216]], [1, [13, 27, 42]],
   ];
@@ -79,15 +117,21 @@ function isoSegments(grid: number[][], level: number, n: number): [number, numbe
   return seg;
 }
 
-export function useDescents(runners: Runner[], start: [number, number], steps: number): DescentPoint[][] {
-  return useMemo(() => runners.map((r) => descend(start[0], start[1], r.eta, steps)), [runners, start, steps]);
+export function useDescents(runners: Runner[], start: [number, number], steps: number, spec: SurfaceSpec = TOY): DescentPoint[][] {
+  return useMemo(() => runners.map((r) => {
+    const s0 = r.start ?? start;
+    return descend(s0[0], s0[1], r.eta, steps, spec.f, spec.grad);
+  }), [runners, start, steps, spec]);
 }
 
 /** Animated gradient descent over a toy error surface: contour map (click to choose the start) and 3D view. */
-export default function Landscape({ runners, start, onStart, steps }: Props) {
+export default function Landscape({ runners, start, onStart, steps, spec = TOY }: Props) {
   const { lang } = useLang();
   const pt = lang === 'pt';
-  const paths = useDescents(runners, start, steps);
+  const paths = useDescents(runners, start, steps, spec);
+  const [LO, HI] = spec.domain;
+  const clampZ = (z: number) => Math.min(z, spec.zMax);
+  const color = (z: number, a?: number) => heightColor(z, spec.zMin, spec.zMax, a);
   const [t, setT] = useState(0);
   const [playing, setPlaying] = useState(false);
   const [az, setAz] = useState(-0.75);
@@ -126,8 +170,8 @@ export default function Landscape({ runners, start, onStart, steps }: Props) {
   // grid of heights, shared by both views
   const N = 60;
   const grid = useMemo(() => Array.from({ length: N + 1 }, (_, i) => Array.from({ length: N + 1 }, (_, j) =>
-    surface(LO + ((HI - LO) * i) / N, LO + ((HI - LO) * j) / N))), []);
-  const levels = useMemo(() => Array.from({ length: 16 }, (_, k) => 0.15 + k * 0.1), []);
+    spec.f(LO + ((HI - LO) * i) / N, LO + ((HI - LO) * j) / N))), [spec, LO, HI]);
+  const levels = useMemo(() => Array.from({ length: 16 }, (_, k) => spec.zMin + 0.1 + ((spec.zMax - spec.zMin) * k) / 16), [spec]);
   const iso = useMemo(() => levels.map((lv) => isoSegments(grid, lv, N)), [grid, levels]);
 
   const contourRef = useCanvas((ctx, w, h) => {
@@ -137,7 +181,7 @@ export default function Landscape({ runners, start, onStart, steps }: Props) {
     const sy = (b: number) => size - ((b - LO) / (HI - LO)) * size;
     const cell = size / N;
     for (let i = 0; i < N; i++) for (let j = 0; j < N; j++) {
-      ctx.fillStyle = heightColor((grid[i][j] + grid[i + 1][j + 1]) / 2, 0.55);
+      ctx.fillStyle = color((grid[i][j] + grid[i + 1][j + 1]) / 2, 0.55);
       ctx.fillRect(ox + i * cell, size - (j + 1) * cell, cell + 0.6, cell + 0.6);
     }
     ctx.lineWidth = 1;
@@ -156,8 +200,16 @@ export default function Landscape({ runners, start, onStart, steps }: Props) {
       ctx.font = '600 12px "JetBrains Mono", monospace';
       ctx.fillText(txt, sx(a) + 8, sy(b) - 8);
     };
-    mark(GLOBAL.a, GLOBAL.b, pt ? 'mínimo global' : 'global minimum');
-    mark(LOCAL.a, LOCAL.b, pt ? 'mínimo local' : 'local minimum');
+    if (spec.curve) {
+      ctx.strokeStyle = '#ffd25e'; ctx.lineWidth = 2.5; ctx.setLineDash([7, 5]);
+      for (const c of spec.curve) {
+        ctx.beginPath();
+        c.forEach(([a, b], k) => (k ? ctx.lineTo(sx(a), sy(b)) : ctx.moveTo(sx(a), sy(b))));
+        ctx.stroke();
+      }
+      ctx.setLineDash([]);
+    }
+    spec.markers.forEach((m) => mark(m.a, m.b, m.label[pt ? 0 : 1]));
     paths.forEach((p, r) => {
       const upto = p.slice(0, Math.min(p.length, t + 1));
       ctx.strokeStyle = runners[r].color;
@@ -172,14 +224,18 @@ export default function Landscape({ runners, start, onStart, steps }: Props) {
       ctx.shadowBlur = 0;
     });
     ctx.strokeStyle = '#e6ecf4'; ctx.lineWidth = 2;
-    ctx.beginPath(); ctx.arc(sx(start[0]), sy(start[1]), 8, 0, 2 * Math.PI); ctx.stroke();
+    for (const r of runners) {
+      const s0 = r.start ?? start;
+      ctx.beginPath(); ctx.arc(sx(s0[0]), sy(s0[1]), 8, 0, 2 * Math.PI); ctx.stroke();
+    }
     ctx.fillStyle = '#a9b6c8'; ctx.font = '11px "JetBrains Mono", monospace';
-    ctx.fillText(pt ? 'peso a →' : 'weight a →', ox + size - 86, size - 6);
-    ctx.save(); ctx.translate(ox + 12, 80); ctx.rotate(-Math.PI / 2); ctx.fillText(pt ? 'peso b →' : 'weight b →', 0, 0); ctx.restore();
-  }, [paths, t, grid, iso, start, lang]);
+    ctx.fillText(`${pt ? 'peso' : 'weight'} ${spec.axes[0]} →`, ox + size - 86, size - 6);
+    ctx.save(); ctx.translate(ox + 12, 80); ctx.rotate(-Math.PI / 2); ctx.fillText(`${pt ? 'peso' : 'weight'} ${spec.axes[1]} →`, 0, 0); ctx.restore();
+  }, [paths, t, grid, iso, start, lang, spec]);
 
   const surfaceRef = useCanvas((ctx, w, h) => {
-    const scale = Math.min(w, h * 1.25) / 9.2;
+    const scale = (Math.min(w, h * 1.25) / 9.2) * (3 / HI);
+    const zNorm = (z: number) => ((clampZ(z) - spec.zMin) / (spec.zMax - spec.zMin)) * 1.9 * (HI / 3);
     const zs = 1.7;
     const cx = w / 2;
     const cy = h * (0.62 - 0.12 * (el - 0.8));
@@ -188,21 +244,22 @@ export default function Landscape({ runners, start, onStart, steps }: Props) {
       const xr = a * ca - b * sa;
       const yr = a * sa + b * ca;
       // camera direction (0, cos el, sin el): d = distance toward the camera, larger = closer
-      return { x: cx + xr * scale, y: cy - (z * zs * ce - yr * se) * scale * 0.9, d: yr * ce + z * zs * se };
+      const zz = zNorm(z);
+      return { x: cx + xr * scale, y: cy - (zz * zs * ce - yr * se) * scale * 0.9, d: yr * ce + zz * zs * se };
     };
     const M = 40;
     const step = (HI - LO) / M;
     const quads: { pts: { x: number; y: number }[]; d: number; z: number }[] = [];
     for (let i = 0; i < M; i++) for (let j = 0; j < M; j++) {
       const a0 = LO + i * step, b0 = LO + j * step;
-      const c = [[a0, b0], [a0 + step, b0], [a0 + step, b0 + step], [a0, b0 + step]].map(([a, b]) => ({ a, b, z: surface(a, b) }));
+      const c = [[a0, b0], [a0 + step, b0], [a0 + step, b0 + step], [a0, b0 + step]].map(([a, b]) => ({ a, b, z: spec.f(a, b) }));
       const p = c.map((q) => proj(q.a, q.b, q.z));
       quads.push({ pts: p, d: p.reduce((s, q) => s + q.d, 0) / 4, z: c.reduce((s, q) => s + q.z, 0) / 4 });
     }
     // painter's algorithm: far tiles first, close tiles on top
     quads.sort((q1, q2) => q1.d - q2.d);
     for (const q of quads) {
-      ctx.fillStyle = heightColor(q.z, 0.92);
+      ctx.fillStyle = color(q.z, 0.92);
       ctx.strokeStyle = 'rgba(5,8,15,0.45)';
       ctx.lineWidth = 0.6;
       ctx.beginPath();
@@ -217,16 +274,16 @@ export default function Landscape({ runners, start, onStart, steps }: Props) {
       ctx.strokeStyle = runners[r].color;
       ctx.lineWidth = 2.2;
       ctx.beginPath();
-      upto.forEach((q, k) => { const s = proj(q.a, q.b, q.loss + 0.03); if (k) ctx.lineTo(s.x, s.y); else ctx.moveTo(s.x, s.y); });
+      upto.forEach((q, k) => { const s = proj(q.a, q.b, q.loss + 0.03 * spec.zMax / 1.95); if (k) ctx.lineTo(s.x, s.y); else ctx.moveTo(s.x, s.y); });
       ctx.stroke();
       const q = upto[upto.length - 1];
-      const s = proj(q.a, q.b, q.loss + 0.05);
+      const s = proj(q.a, q.b, q.loss + 0.05 * spec.zMax / 1.95);
       ctx.fillStyle = runners[r].color; ctx.shadowColor = runners[r].color; ctx.shadowBlur = 12;
       ctx.beginPath(); ctx.arc(s.x, s.y, 6, 0, 2 * Math.PI); ctx.fill(); ctx.shadowBlur = 0;
     });
     ctx.fillStyle = '#a9b6c8'; ctx.font = '11px "JetBrains Mono", monospace';
     ctx.fillText(pt ? 'altura = erro L(a, b) · arraste: ↔ gira, ↕ inclina' : 'height = loss L(a, b) · drag: ↔ spin, ↕ tilt', 10, h - 10);
-  }, [paths, t, az, el, lang]);
+  }, [paths, t, az, el, lang, spec]);
 
   function clickContour(e: React.MouseEvent<HTMLCanvasElement>) {
     const cv = e.currentTarget;
@@ -270,10 +327,12 @@ export default function Landscape({ runners, start, onStart, steps }: Props) {
             onPointerUp={() => { drag.current = null; }}
             aria-label={pt ? 'Superfície 3D do erro' : '3D loss surface'} />
           <div className="range-row" style={{ marginTop: 6 }}>
-            <span className="label">{pt ? 'Girar' : 'Spin'}</span>
+            <span className="label" style={{ minWidth: 70 }}>{pt ? 'Girar' : 'Spin'}</span>
             <input type="range" min={-3.14} max={3.14} step={0.01} value={((az + Math.PI) % (2 * Math.PI) + 2 * Math.PI) % (2 * Math.PI) - Math.PI}
               onChange={(e) => setAz(Number(e.target.value))} aria-label={pt ? 'Girar na horizontal' : 'Rotate horizontally'} />
-            <span className="label">{pt ? 'Inclinar' : 'Tilt'}</span>
+          </div>
+          <div className="range-row">
+            <span className="label" style={{ minWidth: 70 }}>{pt ? 'Inclinar' : 'Tilt'}</span>
             <input type="range" min={0.12} max={1.45} step={0.01} value={el} onChange={(e) => setEl(Number(e.target.value))}
               aria-label={pt ? 'Girar na vertical' : 'Rotate vertically'} />
           </div>
@@ -287,13 +346,7 @@ export default function Landscape({ runners, start, onStart, steps }: Props) {
             {paths.map((p, r) => {
               const now = p[Math.min(p.length - 1, t)];
               const end = p[p.length - 1];
-              const bs = basinOf(end);
-              const last2 = p.slice(-2);
-              const moving = last2.length === 2 && Math.hypot(last2[0].a - last2[1].a, last2[0].b - last2[1].b) > 0.05;
-              const where = bs === 'global' ? (pt ? 'mínimo global ✓' : 'global minimum ✓')
-                : bs === 'local' && !moving ? (pt ? 'presa no mínimo local' : 'stuck in the local minimum')
-                : moving ? (pt ? 'não para: pula de um lado para o outro' : 'never settles: bounces back and forth')
-                : (pt ? 'parou em outro ponto' : 'stopped elsewhere');
+              const where = spec.verdict(p, pt);
               return (
                 <tr key={r}>
                   <td><span style={{ color: runners[r].color }}>●</span> {runners[r].label}</td>

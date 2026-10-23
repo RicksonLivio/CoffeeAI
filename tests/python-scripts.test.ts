@@ -50,3 +50,21 @@ test('mlp_pokemon_torch.py: manual gradients equal autograd; both versions reach
   assert.ok(out.includes('L = média de −ln p_certo = 1.2514'));
   assert.equal((out.match(/acurácia 1\.000\n  probabilidades do Venusaur/g) ?? []).length, 4);
 });
+
+test('backprop_notebook.py: backprop equals finite differences; the toy and the saddles', { skip: !py && 'python3 not found' }, () => {
+  const out = run('backprop_notebook.py');
+  for (const s of ['custo: diferença finita = 20 avaliações de J para 10 pesos', '0    0.5000    0.5000    0.5625   -0.7500   -0.7500',
+    '1    0.5750    0.5750    0.4481', 'autovalores (-2.0, 2.0): sela estrita', 'autovalores (0.0, 4.0)', 'parada na sela (∇J = 0)',
+    'J < 0,001 no passo 45', 'J < 0,001 no passo 26', '[[0.0, 0.0, 0.0], [0.0, 0.0, 0.0], [0.0, 0.0, 0.0]]']) assert.ok(out.includes(s), s);
+  const diff = Number(/maior diferença: ([0-9.e+-]+)/.exec(out)![1]);
+  assert.ok(diff < 1e-7);
+});
+
+test('backprop_notebook_torch.py: eq. 8 equals autograd; Hessians at the saddles', { skip: !hasTorch && 'torch not installed' }, () => {
+  const out = runTorch('backprop_notebook_torch.py');
+  const diffs = [...out.matchAll(/camadas, larguras .*: maior diferença = ([0-9.e+-]+)/g)].map((m) => Number(m[1]));
+  assert.equal(diffs.length, 3);
+  for (const d of diffs) assert.ok(d < 1e-10);
+  assert.ok(out.includes('autovalores tensor([-2.,  2.]) -> sela estrita'));
+  assert.ok(out.includes('autovalores tensor([0., 0., 0.]) -> sela ruim'));
+});
