@@ -156,7 +156,7 @@ button { font: inherit; }
 /* ---------- Lesson ---------- */
 .formula {
   font-family: var(--font-mono); font-size: .88rem; color: var(--steel-100);
-  background: rgba(5, 8, 15, .6); border-left: 3px solid var(--gold-500); padding: 10px 14px; margin: 8px 0; overflow-x: auto; white-space: pre;
+  background: rgba(5, 8, 15, .6); border-left: 3px solid var(--gold-500); padding: 10px 14px; margin: 8px 0; overflow-x: auto; white-space: pre-wrap; overflow-wrap: anywhere;
 }
 .rules { margin: 0; padding-left: 0; }
 .rules li { margin-bottom: 6px; }

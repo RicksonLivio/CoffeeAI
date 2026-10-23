@@ -10,11 +10,12 @@ import {
 } from '../../lib/mlp';
 import { classify, train, type Sample } from '../../lib/perceptron';
 import type { CachedMlp, CachedMlp2 } from '../../lib/model';
-import { deepBackprop, deepCurve, deepPredict, toDeep, type DeepNet } from '../../lib/deep';
+import { deepBackprop, deepCurve, deepForward, deepPredict, toDeep, type DeepNet } from '../../lib/deep';
 import { sumExpr } from './CalcPanel';
 import CurvesDemo from './CurvesDemo';
 import EpochPlayer from './EpochPlayer';
 import { ErrorTrace, PerceptronNodes, SmoothSteps, SoftmaxExplain } from './Explainers';
+import { CurveNote, MetricsReport, ThreeClassError, ZeroOneRange } from './Metrics';
 import Landscape, { type Runner } from './Landscape';
 import NetGraph, { type Pulse } from './NetGraph';
 import Note from './Note';
@@ -295,7 +296,7 @@ Grass:   w = (−1, −1), θ = −0.5   net = 0.5 − h1 − h2`}</div>
           <button className="btn btn--gold btn--sm" onClick={() => setPlay((p) => ({ id: p.id + 1, kind: 'forward' }))}>▶ {pt ? 'Propagar' : 'Forward'}</button>
           <span className="small muted">{pt ? 'Rede com os pesos escolhidos à mão, mostrando' : 'Network with the hand-picked weights, showing'} {POKE_NAME[s.id]}</span>
         </div>
-        <NetGraph net={toDeep(HAND_NET)} x={[s.x1, s.x2]} acts={[f.h, f.o]} winner={f.type ? TYPES.indexOf(f.type) : null} play={play} digits={1} />
+        <NetGraph net={toDeep(HAND_NET)} x={[s.x1, s.x2]} acts={[f.h, f.o]} winner={f.type ? TYPES.indexOf(f.type) : null} play={play} digits={1} outAct={pt ? 'degrau' : 'step'} />
         <div className="legend" style={{ justifyContent: 'center' }}>
           <span><i style={{ background: '#29d3e8' }} />{pt ? 'peso positivo' : 'positive weight'}</span>
           <span><i style={{ background: '#7b4dff' }} />{pt ? 'peso negativo' : 'negative weight'}</span>
@@ -372,6 +373,9 @@ function Learning({ model }: { model: CachedMlp }) {
   const p4 = (v: number) => pfx(v, 4, lang);
   const applied = stage === 'updated';
   const shownNet = applied ? after : cur;
+  // stable objects for the graph, so the weight tween runs once per update
+  const deepCur = useMemo(() => toDeep(cur), [cur]);
+  const deepShown = useMemo(() => toDeep(shownNet), [shownNet]);
   const shownF = applied ? fAfter : f;
   useEffect(() => () => { if (stageTimer.current !== null) window.clearTimeout(stageTimer.current); }, []);
   const goForward = () => {
@@ -394,6 +398,7 @@ function Learning({ model }: { model: CachedMlp }) {
     setStage('idle');
   };
   // what goes wrong if the output weights were updated before computing the hidden error
+  const f0 = useMemo(() => softForward(init, venusaur.x1, venusaur.x2), [init, venusaur]);
   const wrongOrder = useMemo(() => {
     const d = toDeep(init);
     const g = deepBackprop(d, venusaur);
@@ -517,6 +522,9 @@ update:  weight ← weight − η · ∂L/∂weight`}</div>
         </article>
       </div>
 
+      <ThreeClassError p={f0.p} h={f0.h} v={init.output.map((n) => n.w)} />
+      <ZeroOneRange />
+
       {/* one step by hand */}
       <div className="panel" style={{ marginTop: 20 }}>
         <h3>{pt ? `Passos à mão: Venusaur, atualização ${k + 1} (η = ${num(eta, lang)})` : `Steps by hand: Venusaur, update ${k + 1} (η = ${num(eta, lang)})`}</h3>
@@ -532,8 +540,8 @@ update:  weight ← weight − η · ∂L/∂weight`}</div>
         </div>
         <div className="grid grid-side" style={{ alignItems: 'start' }}>
           <div>
-            <NetGraph net={toDeep(shownNet)} x={[venusaur.x1, venusaur.x2]} acts={[shownF.h, shownF.p]} winner={shownF.p.indexOf(Math.max(...shownF.p))}
-              play={play} digits={1} changed={applied}
+            <NetGraph net={deepShown} x={[venusaur.x1, venusaur.x2]} acts={[shownF.h, shownF.p]} winner={shownF.p.indexOf(Math.max(...shownF.p))}
+              play={play} digits={2} changed={applied} from={applied ? deepCur : undefined} outAct="softmax"
               deltas={stage === 'backward' ? [b.deltaHidden, b.deltaOut] : undefined} />
             <p className="small muted" style={{ textAlign: 'center', margin: 0 }}>
               {applied
@@ -714,6 +722,7 @@ function Training({ model }: { model: CachedMlp }) {
             ? `A rede acerta os nove pela primeira vez na época ${firstFull}. Depois o erro sobe de ${fx(bump.from, 4, lang)} (época ${bump.fromEpoch}) para ${fx(bump.to, 4, lang)} (época ${bump.epoch}) antes de voltar a cair. Com η = ${num(model.config.eta, lang)} o passo é grande e às vezes passa do ponto; um η menor seria mais estável, porém mais lento. No fim, o erro médio é ${fx(last.loss, 4, lang)} e a rede acerta os nove.`
             : `The network first gets all nine right at epoch ${firstFull}. Then the loss climbs from ${fx(bump.from, 4, lang)} (epoch ${bump.fromEpoch}) to ${fx(bump.to, 4, lang)} (epoch ${bump.epoch}) before falling again. With η = ${model.config.eta} the step is large and sometimes overshoots; a smaller η would be steadier but slower. At the end, the mean loss is ${fx(last.loss, 4, lang)} and the network gets all nine right.`}
         </Note>
+        <CurveNote />
       </div>
 
       <div className="grid grid-2" style={{ marginTop: 20 }}>
@@ -753,7 +762,7 @@ function Training({ model }: { model: CachedMlp }) {
       <div className="panel" style={{ marginTop: 20 }}>
         <h3>{pt ? `A rede na época ${snap.epoch}, mostrando ${POKE_NAME[s.id]}` : `The network at epoch ${snap.epoch}, showing ${POKE_NAME[s.id]}`}</h3>
         <PokePicker value={id} onChange={setId} />
-        <NetGraph net={toDeep(snap.net)} x={[s.x1, s.x2]} acts={[f.h, f.p]} winner={f.p.indexOf(Math.max(...f.p))} digits={1} />
+        <NetGraph net={toDeep(snap.net)} x={[s.x1, s.x2]} acts={[f.h, f.p]} winner={f.p.indexOf(Math.max(...f.p))} digits={1} outAct="softmax" />
         <Note title={pt ? 'O que a camada oculta aprendeu' : 'What the hidden layer learned'}>
           {pt
             ? `Ninguém disse à rede para comparar Velocidade com Defesa, mas no fim do treino h1 tem pesos ${fx(fin[0].w[0], 1, lang)} e ${fx(fin[0].w[1], 1, lang)}, e h2 tem ${fx(fin[1].w[0], 1, lang)} e ${fx(fin[1].w[1], 1, lang)}: cada um mede Velocidade − Defesa, com sinais opostos, como os detectores de Fogo e de Água que montei à mão na parte 2. (Entradas divididas por ${SCALE}.)`
@@ -761,6 +770,8 @@ function Training({ model }: { model: CachedMlp }) {
         </Note>
       </div>
 
+      <MetricsReport probs={(q) => softForward(snap.net, q.x1, q.x2).p}
+        title={pt ? `Resultado: métricas de acerto na época ${snap.epoch} (mude a época no controle acima)` : `Result: accuracy metrics at epoch ${snap.epoch} (change the epoch with the slider above)`} />
       <SoftmaxExplain z={softForward(model.final, 80, 83).zo} who="Venusaur" context={pt ? 'rede de uma camada oculta' : 'one-hidden-layer network'} />
 
       <article className="panel panel--gold tip" style={{ marginTop: 20 }}>
@@ -1022,6 +1033,8 @@ update:    all ${nWeights} weights together, weight ← weight − η·∂L/∂w
         </article>
       </div>
 
+      <MetricsReport probs={(q) => deepForward(m.final, q.x1, q.x2).p}
+        title={pt ? `Resultado: métricas de acerto no fim do treino (época ${m.config.epochs})` : `Result: accuracy metrics at the end of training (epoch ${m.config.epochs})`} />
       <SoftmaxExplain z={fFinal.z[fFinal.z.length - 1]} who="Venusaur" context={pt ? 'rede com duas camadas ocultas' : 'two-hidden-layer network'} />
 
       <article className="panel panel--gold tip" style={{ marginTop: 20 }}>

@@ -2,14 +2,14 @@ import { useEffect, useState } from 'react';
 import { useLang } from '../i18n';
 import Lesson1 from './learn/Lesson1';
 import Lesson2 from './learn/Lesson2';
-import PythonButton from './learn/PythonButton';
+import PythonButton, { type CodeFile } from './learn/PythonButton';
 
 interface LessonInfo {
   n: number;
   title: [string, string];
   summary: [string, string];
   Body: () => JSX.Element;
-  code: { file: string; about: [string, string] };
+  code: CodeFile[];
 }
 
 const LESSONS: LessonInfo[] = [
@@ -21,13 +21,26 @@ const LESSONS: LessonInfo[] = [
       'One neuron learns to tell Charizard (Fire) from Blastoise (Water) using Speed and Defense. You follow every calculation, from the first error to convergence.',
     ],
     Body: Lesson1,
-    code: {
-      file: 'perceptron_pokemon.py',
-      about: [
-        'O perceptron da aula em Python puro: imprime cada época com net, saída, erro e o ajuste dos pesos, testa o Venusaur e compara η = 1, 0,1 e 0,01.',
-        'The lesson’s perceptron in plain Python: prints every epoch with net, output, error and weight update, tests Venusaur and compares η = 1, 0.1 and 0.01.',
-      ],
-    },
+    code: [
+      {
+        file: 'perceptron_pokemon.py',
+        label: ['sem bibliotecas', 'no libraries'],
+        about: [
+          'Python puro: imprime cada época com net, saída, erro e o ajuste dos pesos, testa o Venusaur e compara η = 1, 0,1 e 0,01.',
+          'Plain Python: prints every epoch with net, output, error and weight update, tests Venusaur and compares η = 1, 0.1 and 0.01.',
+        ],
+        run: 'python3 perceptron_pokemon.py',
+      },
+      {
+        file: 'perceptron_pokemon_torch.py',
+        label: ['PyTorch', 'PyTorch'],
+        about: [
+          'A mesma aula com tensores: versão manual que imprime vetores e produtos passo a passo, e versão rápida, vetorizada.',
+          'The same lesson with tensors: a manual version that prints vectors and products step by step, and a quick vectorized one.',
+        ],
+        run: 'pip install torch && python3 perceptron_pokemon_torch.py',
+      },
+    ],
   },
   {
     n: 2,
@@ -37,13 +50,26 @@ const LESSONS: LessonInfo[] = [
       'Why a perceptron cannot call Venusaur a Grass type, how a hidden layer solves it, and how backpropagation trains the network.',
     ],
     Body: Lesson2,
-    code: {
-      file: 'mlp_pokemon.py',
-      about: [
-        'As cinco partes da aula em Python puro: o perceptron que não isola Planta, a rede feita à mão, o MLP com backpropagation (a primeira época conta por conta), o tamanho do passo e a rede com duas camadas ocultas. Com --plot e o matplotlib instalado, desenha as curvas e a superfície 3D.',
-        'The five parts of the lesson in plain Python: the perceptron that cannot isolate Grass, the hand-made network, the MLP with backpropagation (the first epoch step by step), step size and the two-hidden-layer network. With --plot and matplotlib installed, it draws the curves and the 3D surface.',
-      ],
-    },
+    code: [
+      {
+        file: 'mlp_pokemon.py',
+        label: ['sem bibliotecas', 'no libraries'],
+        about: [
+          'Python puro com as cinco partes da aula: o perceptron que não isola Planta, a rede feita à mão, o MLP com backpropagation conta por conta, o tamanho do passo e duas camadas ocultas. Com --plot e o matplotlib, desenha os gráficos.',
+          'Plain Python with the five parts of the lesson: the perceptron that cannot isolate Grass, the hand-made network, the MLP with backpropagation step by step, step size and two hidden layers. With --plot and matplotlib, it draws the charts.',
+        ],
+        run: 'python3 mlp_pokemon.py',
+      },
+      {
+        file: 'mlp_pokemon_torch.py',
+        label: ['PyTorch', 'PyTorch'],
+        about: [
+          'Versão manual com matrizes (imprime X, W, Z, A, δ e gradientes da primeira época e confere contra o autograd) e versão rápida com nn.Sequential, CrossEntropyLoss e SGD, para 1 e 2 camadas ocultas, com acurácia, precisão, recall e F1.',
+          'Manual version with matrices (prints X, W, Z, A, δ and gradients of the first epoch and checks them against autograd) and a quick version with nn.Sequential, CrossEntropyLoss and SGD, for 1 and 2 hidden layers, with accuracy, precision, recall and F1.',
+        ],
+        run: 'pip install torch && python3 mlp_pokemon_torch.py',
+      },
+    ],
   },
 ];
 
@@ -92,7 +118,7 @@ export default function LearnSheet({ open, onToggle }: { open: number[]; onToggl
             {isOpen && (
               <div id={`lesson-${l.n}-body`}>
                 <l.Body />
-                <PythonButton file={l.code.file} about={l.code.about[i]} />
+                <PythonButton files={l.code} />
                 <div className="hero-actions" style={{ justifyContent: 'flex-end' }}>
                   <button className="btn btn--ghost btn--sm" onClick={() => { onToggle(l.n); document.getElementById(`lesson-${l.n}`)?.scrollIntoView(); }}>
                     ▴ {pt ? `Recolher a aula ${l.n}` : `Collapse lesson ${l.n}`}

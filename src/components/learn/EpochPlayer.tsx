@@ -134,7 +134,7 @@ export default function EpochPlayer({ init, eta, epochs, id, names }: Props) {
       <div className="grid grid-side" style={{ alignItems: 'start' }}>
         <div>
           <NetGraph net={shownNet} x={[s.x1, s.x2]} acts={shownF.a.slice(1)} winner={shownF.p.indexOf(Math.max(...shownF.p))}
-            play={pulse} digits={1} changed={updated} names={names}
+            play={pulse} digits={2} changed={updated} names={names} from={updated ? st.before : undefined} outAct="softmax"
             deltas={phase === 0 || updated ? undefined : b.delta.map((d, l) => (l === nL - 1 || phase >= 2 ? d : null))}
             focus={phase === 0 ? null : phase === 1 ? nL - 1 : phase === 2 ? 0 : null} />
           <p className="small muted" style={{ textAlign: 'center', margin: 0 }}>

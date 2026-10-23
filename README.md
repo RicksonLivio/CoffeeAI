@@ -87,9 +87,16 @@ click) that downloads a plain-Python simulation, no extra libraries:
 | File | What it prints |
 |---|---|
 | `public/code/perceptron_pokemon.py` | lesson 1 epoch by epoch (net, y, e, updates), Venusaur, η = 1 / 0.1 / 0.01 |
+| `public/code/perceptron_pokemon_torch.py` | the same with tensors: manual version printing vectors and products, plus a quick vectorized one |
 | `public/code/mlp_pokemon.py` | lesson 2 parts 1–5; `--plot` draws the curves and the 3D surface if matplotlib is installed |
+| `public/code/mlp_pokemon_torch.py` | manual PyTorch with matrices (prints X, W, Z, A, δ and gradients, checked against autograd) and a quick `nn.Sequential` + `CrossEntropyLoss` + `SGD` version, 1 and 2 hidden layers, with metrics |
 
-`tests/python-scripts.test.ts` runs both scripts and checks their output against the lesson numbers.
+The `*_torch.py` files need `pip install torch`. `tests/python-scripts.test.ts` runs all four scripts and
+checks their output against the lesson numbers (the PyTorch ones are skipped where torch is not installed;
+`PYTHON_TORCH=/path/to/python npm test` points them at another interpreter).
+
+Lesson 2 also reports, at the chosen epoch, the confusion matrix, accuracy, precision, recall (sensitivity),
+specificity, F1 and one-vs-rest AUC (`src/lib/metrics.ts`), computed on the nine training Pokémon.
 
 `tests/mlp.test.ts` and `tests/deep.test.ts` check the claims: the hull argument, the non-convergence of the single perceptron,
 the hand-made network on all nine Pokémon, the backpropagation gradient against a numerical gradient (one
@@ -162,3 +169,10 @@ GitHub Pages is free for public repositories.
 
 Pokémon card images and names belong to Nintendo, Creatures and GAME FREAK; Mega Man Battle Network
 belongs to Capcom. They are used here for teaching, with no commercial purpose.
+
+## Contributing
+
+Only the owner commits to `main`. `.github/CODEOWNERS` assigns every file to @RicksonLivio, and the
+`main` ruleset on GitHub requires a pull request approved by the code owner, so changes from anyone else
+wait for that approval. Local commits in this clone use the personal GitHub identity
+(`git config --local user.email 50837771+RicksonLivio@users.noreply.github.com`).

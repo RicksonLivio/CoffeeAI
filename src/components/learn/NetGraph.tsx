@@ -25,6 +25,10 @@ interface Props {
   deltas?: (number[] | null)[];
   /** edges ("l:j:i" = layer l, neuron j, input i) and nodes ("l:j", −1 = inputs) to emphasize */
   highlight?: { edges?: string[]; nodes?: string[] };
+  /** weights before the update: when given, the labels and widths slide from `from` to `net` */
+  from?: DeepNet;
+  /** activation of the output layer, shown in its header (softmax, step…) */
+  outAct?: string;
 }
 
 const H = 412;
@@ -52,12 +56,33 @@ function ys(n: number, bias: boolean): number[] {
  * cyan edges are positive weights, violet negative, dashed zero.
  */
 export default function NetGraph({
-  net, x, acts, winner, labels = true, digits = 1, play, focus = null, changed = false, names, deltas, highlight,
+  net: target, x, acts, winner, labels = true, digits = 1, play, focus = null, changed = false, names, deltas, highlight, from, outAct,
 }: Props) {
   const { lang } = useLang();
   const pt = lang === 'pt';
   const [u, setU] = useState<number | null>(null);
   const raf = useRef<number | null>(null);
+  // tween of the weights during an update (from → target), so the change is visible on the graph
+  const [k, setK] = useState(1);
+  useEffect(() => {
+    if (!from || window.matchMedia('(prefers-reduced-motion: reduce)').matches) { setK(1); return; }
+    const start = performance.now();
+    let id = 0;
+    const tick = (t: number) => {
+      const q = Math.min(1, (t - start) / 900);
+      setK(q);
+      if (q < 1) id = requestAnimationFrame(tick);
+    };
+    setK(0);
+    id = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(id);
+  }, [from, target]);
+  const net: DeepNet = from && k < 1
+    ? { layers: target.layers.map((layer, l) => layer.map((n, j) => ({
+      w: n.w.map((w, i) => from.layers[l][j].w[i] + (w - from.layers[l][j].w[i]) * k),
+      theta: from.layers[l][j].theta + (n.theta - from.layers[l][j].theta) * k,
+    }))) }
+    : target;
   const L = net.layers.length;
   const W = 260 + L * 230;
   const colX = Array.from({ length: L + 1 }, (_, c) => lerp(120, W - 130, c / L));
@@ -110,7 +135,7 @@ export default function NetGraph({
   const outNames = pt ? ['Fogo', 'Água', 'Planta'] : ['Fire', 'Water', 'Grass'];
   const header = (c: number) => {
     if (c === 0) return pt ? 'ENTRADA' : 'INPUT';
-    if (c === L) return pt ? 'SAÍDA' : 'OUTPUT';
+    if (c === L) return `${pt ? 'SAÍDA' : 'OUTPUT'}${outAct ? ` · ${outAct}` : ''}`;
     return L > 2 ? (pt ? `OCULTA ${c}` : `HIDDEN ${c}`) : (pt ? 'CAMADA OCULTA' : 'HIDDEN LAYER');
   };
   const ring = (layer: number) => (focus === layer ? C.gold : C.pos);

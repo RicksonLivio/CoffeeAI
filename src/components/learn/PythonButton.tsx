@@ -33,34 +33,37 @@ export function megaBurst(x: number, y: number) {
   window.setTimeout(() => root.remove(), 1500);
 }
 
-interface Props {
+export interface CodeFile {
   file: string;
-  /** what the script simulates, shown under the button */
-  about: string;
+  label: [string, string];
+  about: [string, string];
+  run: string;
 }
 
-/** Download button for the lesson's Python simulation; the click also plays the burst. */
-export default function PythonButton({ file, about }: Props) {
+/** Download buttons for the lesson's Python simulations; each click also plays the burst. */
+export default function PythonButton({ files }: { files: CodeFile[] }) {
   const { lang } = useLang();
   const pt = lang === 'pt';
-  const href = `${import.meta.env.BASE_URL}code/${file}`;
+  const i = pt ? 0 : 1;
   const onClick = (e: MouseEvent<HTMLAnchorElement>) => {
     const r = e.currentTarget.getBoundingClientRect();
     megaBurst(r.left + r.width / 2, r.top + r.height / 2);
   };
   return (
-    <div className="panel panel--gold py-panel">
-      <div>
-        <span className="label">{pt ? 'Para rodar no seu computador' : 'To run on your computer'}</span>
-        <h3 style={{ margin: '4px 0 6px' }}>{pt ? 'Exemplo de código Python' : 'Python code example'}</h3>
-        <p className="small" style={{ margin: 0 }}>{about}</p>
-        <p className="small mono muted" style={{ margin: '6px 0 0' }}>
-          {pt ? 'Sem bibliotecas extras:' : 'No extra libraries:'} python3 {file}
-        </p>
+    <div className="panel panel--gold" style={{ marginTop: 24 }}>
+      <span className="label">{pt ? 'Para rodar no seu computador' : 'To run on your computer'}</span>
+      <h3 style={{ margin: '4px 0 12px' }}>{pt ? 'Exemplo de código Python' : 'Python code example'}</h3>
+      <div className="grid grid-2">
+        {files.map((f) => (
+          <div key={f.file} className="py-panel" style={{ marginTop: 0, alignItems: 'flex-start', flexDirection: 'column' }}>
+            <p className="small" style={{ margin: 0 }}><b className="gold">{f.label[i]}</b> · {f.about[i]}</p>
+            <p className="small mono muted" style={{ margin: 0 }}>{f.run}</p>
+            <a className="btn btn--gold btn--sm" href={`${import.meta.env.BASE_URL}code/${f.file}`} download={f.file} onClick={onClick}>
+              ⬇ {pt ? 'Exemplo de código Python' : 'Python code example'} · {f.label[i]}
+            </a>
+          </div>
+        ))}
       </div>
-      <a className="btn btn--gold" href={href} download={file} onClick={onClick}>
-        ⬇ {pt ? 'Exemplo de código Python' : 'Python code example'}
-      </a>
     </div>
   );
 }
