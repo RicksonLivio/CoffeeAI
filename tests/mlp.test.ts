@@ -144,3 +144,14 @@ test('with the step, one hidden neuron gives only two values, so it cannot outpu
   const patterns = new Set(STARTERS.map((s) => stepForward(HAND_NET, s.x1, s.x2).h[0]));
   assert.ok(patterns.size <= 2);
 });
+
+test('cross-entropy of the initial network: mean 1.2079, slightly worse than a uniform guess (ln 3 = 1.0986)', () => {
+  const init = initNet(2);
+  const Ls = STARTERS.map((s) => -Math.log(softForward(init, s.x1, s.x2).p[TYPES.indexOf(s.type)]));
+  const mean = Ls.reduce((a, b) => a + b, 0) / Ls.length;
+  assert.ok(Math.abs(mean - 1.2079) < 1e-4);
+  assert.ok(mean > Math.log(3));
+  // product of the nine probabilities = exp(−sum): the log turns the product into a sum
+  const prod = STARTERS.reduce((a, s) => a * softForward(init, s.x1, s.x2).p[TYPES.indexOf(s.type)], 1);
+  assert.ok(Math.abs(Math.log(prod) + Ls.reduce((a, b) => a + b, 0)) < 1e-12);
+});

@@ -140,7 +140,7 @@ export function PerceptronNodes() {
 // --------------------------------------------------------------------------- //
 // Softmax: how the three outputs become numbers that add up to 1
 // --------------------------------------------------------------------------- //
-export function SoftmaxExplain({ z, who, context }: { z: number[]; who: string; context: string }) {
+export function SoftmaxExplain({ z, who, context, initial = false }: { z: number[]; who: string; context: string; initial?: boolean }) {
   const { lang } = useLang();
   const pt = lang === 'pt';
   const names = pt ? ['Fogo', 'Água', 'Planta'] : ['Fire', 'Water', 'Grass'];
@@ -151,7 +151,9 @@ export function SoftmaxExplain({ z, who, context }: { z: number[]; who: string; 
   const big = Math.max(...z);
   return (
     <div className="panel" style={{ marginTop: 20 }}>
-      <h3>{pt ? `Da saída ternária às probabilidades: softmax (${context})` : `From a three-way output to probabilities: softmax (${context})`}</h3>
+      <h3>{initial
+        ? (pt ? `Como as três saídas viram probabilidades: softmax (${context})` : `How the three outputs become probabilities: softmax (${context})`)
+        : (pt ? `Resultado: as probabilidades da rede treinada, pelo softmax (${context})` : `Result: the trained network’s probabilities, through the softmax (${context})`)}</h3>
       <div className="grid grid-2">
         <div>
           <p>
@@ -190,8 +192,8 @@ export function SoftmaxExplain({ z, who, context }: { z: number[]; who: string; 
           </div>
           <p className="small">
             {pt
-              ? `${who}, rede treinada: a maior probabilidade é ${names[win]} (${fx(100 * p[win], 1, lang)}%), e essa é a resposta da rede.`
-              : `${who}, trained network: the largest probability is ${names[win]} (${fx(100 * p[win], 1, lang)}%), and that is the network’s answer.`}
+              ? `${who}, ${initial ? 'pesos iniciais' : 'rede treinada'}: a maior probabilidade é ${names[win]} (${fx(100 * p[win], 1, lang)}%), e essa é a resposta da rede${initial ? ' antes de aprender. O treino vai mudar os pesos até Planta ficar com a maior fatia.' : '.'}`
+              : `${who}, ${initial ? 'initial weights' : 'trained network'}: the largest probability is ${names[win]} (${fx(100 * p[win], 1, lang)}%), and that is the network’s answer${initial ? ' before learning. Training will change the weights until Grass gets the largest share.' : '.'}`}
           </p>
           <Note title={pt ? 'Detalhe de implementação' : 'Implementation detail'}>
             {pt

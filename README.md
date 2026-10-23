@@ -57,6 +57,12 @@ Charmeleon, Charizard, Squirtle, Wartortle, Blastoise, Bulbasaur, Ivysaur, Venus
    `public/models/mlp_pokemon/model.json`, with the loss curve, the regions per epoch and the weights the
    hidden layer learned.
 
+Part 3 follows the learning order, concepts first and complete examples last: 3.1 from the step to the
+sigmoid, 3.2 softmax, 3.3 the loss and cross-entropy (what a loss is, why the logarithm, the full calculation
+for the nine Pokémon: mean 1.2079 at the start), 3.4 how to reduce it (gradient, backpropagation, update
+order), 3.5 complete examples (one error traced, steps by hand, epochs, the full run). Part 2 also puts the
+ideas (two lines, every neuron is a perceptron, the bias and x₀ = −1) before the worked example.
+
 Parts added after that:
 
 * **Why derivatives and the gradient vector:** hidden neurons have no target, so the output error has to

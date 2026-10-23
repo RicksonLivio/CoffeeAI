@@ -17,6 +17,7 @@ import EpochPlayer from './EpochPlayer';
 import { ErrorTrace, PerceptronNodes, SmoothSteps, SoftmaxExplain } from './Explainers';
 import { CurveNote, MetricsReport, ThreeClassError, ZeroOneRange } from './Metrics';
 import Landscape, { type Runner } from './Landscape';
+import LossExplain from './LossExplain';
 import NetGraph, { type Pulse } from './NetGraph';
 import Note from './Note';
 import BiasExplain from './BiasExplain';
@@ -236,8 +237,7 @@ function HiddenLayer() {
         <h2 id="l2-h-oculta">2 · {pt ? 'A ideia: uma camada oculta' : 'The idea: a hidden layer'}</h2>
         <span className="label">{pt ? 'pesos escolhidos à mão' : 'weights chosen by hand'}</span>
       </div>
-      <div className="grid grid-side">
-        <article className="panel">
+      <article className="panel" style={{ marginTop: 0 }}>
           <h3>{pt ? 'Duas retas em vez de uma' : 'Two lines instead of one'}</h3>
           <p>
             {pt
@@ -271,7 +271,12 @@ Grass:   w = (−1, −1), θ = −0.5   net = 0.5 − h1 − h2`}</div>
               : 'Because the data only has the inputs and the type; nobody says what h1 and h2 should compute. Here I chose the weights so you can see the idea. In part 3, the network finds similar weights on its own.'}
           </Note>
         </article>
-        <article className="panel">
+      <PerceptronNodes />
+      <BiasExplain />
+      <div className="section-head" style={{ marginTop: 36 }}>
+        <h2 style={{ fontSize: 'clamp(1rem, 2vw, 1.3rem)' }}>{pt ? 'Exemplo completo: a rede à mão, Pokémon por Pokémon' : 'Complete example: the hand-made network, Pokémon by Pokémon'}</h2>
+      </div>
+      <article className="panel">
           <h3>{pt ? 'Passo a passo' : 'Step by step'}</h3>
           <PokePicker value={id} onChange={(v) => { setId(v); setPlay((p) => ({ id: p.id + 1, kind: 'forward' })); }} />
           <div className="calc">
@@ -297,7 +302,6 @@ Grass:   w = (−1, −1), θ = −0.5   net = 0.5 − h1 − h2`}</div>
             </div>
           </div>
         </article>
-      </div>
 
       <div className="panel" style={{ marginTop: 20 }}>
         <div className="player">
@@ -335,13 +339,11 @@ Grass:   w = (−1, −1), θ = −0.5   net = 0.5 − h1 − h2`}</div>
           </p>
         </article>
       </div>
-      <BiasExplain />
       <Note title={pt ? 'O truque do MLP' : 'The MLP trick'}>
         {pt
           ? 'A camada oculta cria novas variáveis. No plano (Velocidade, Defesa) o tipo Planta está no meio e nenhuma reta o isola; no plano (h1, h2) os três tipos viram três cantos, e aí retas simples separam tudo. Cada camada transforma o problema até ele ficar fácil para a camada seguinte.'
           : 'The hidden layer creates new variables. In the (Speed, Defense) plane Grass is in the middle and no line isolates it; in the (h1, h2) plane the three types become three corners, and simple lines separate everything. Each layer reshapes the problem until it is easy for the next one.'}
       </Note>
-      <PerceptronNodes />
     </section>
   );
 }
@@ -417,8 +419,77 @@ function Learning({ model }: { model: CachedMlp }) {
 
   return (
     <>
-      <div className="grid grid-2">
-        <article className="panel panel--gold">
+      <div className="panel">
+        <span className="label">{pt ? 'Roteiro desta parte' : 'Roadmap of this part'}</span>
+        <ol className="rules" style={{ paddingLeft: 20, margin: '8px 0 0' }}>
+          <li>{pt ? '3.1 · Trocar o degrau pela sigmoide (porque precisamos de derivada).' : '3.1 · Replace the step with the sigmoid (because we need a derivative).'}</li>
+          <li>{pt ? '3.2 · Transformar as três saídas em probabilidades (softmax).' : '3.2 · Turn the three outputs into probabilities (softmax).'}</li>
+          <li>{pt ? '3.3 · Medir o erro com uma loss: a entropia cruzada.' : '3.3 · Measure the error with a loss: cross-entropy.'}</li>
+          <li>{pt ? '3.4 · Diminuir a loss: gradiente e backpropagation.' : '3.4 · Reduce the loss: gradient and backpropagation.'}</li>
+          <li>{pt ? '3.5 · Exemplos completos: um erro, passos à mão, épocas e o treino inteiro.' : '3.5 · Complete examples: one error, steps by hand, epochs and the whole training run.'}</li>
+        </ol>
+      </div>
+      <div className="section-head" style={{ marginTop: 36 }}>
+        <h2 style={{ fontSize: 'clamp(1rem, 2vw, 1.3rem)' }}>3.1 · {pt ? 'Da função degrau à sigmoide' : 'From the step function to the sigmoid'}</h2>
+      </div>
+      <article className="panel" style={{ marginTop: 20 }}>
+          <h3>{pt ? 'Por que trocar o degrau' : 'Why replace the step'}</h3>
+          <p>
+            {pt
+              ? 'Para ajustar a camada oculta, a rede precisa saber como o erro muda quando cada peso muda um pouquinho: a derivada. O degrau é plano em quase todo lugar (derivada zero) e dá um salto em 0. Ele não diz para que lado andar.'
+              : 'To adjust the hidden layer, the network needs to know how the error changes when each weight changes a little: the derivative. The step is flat almost everywhere (zero derivative) and jumps at 0. It does not say which way to go.'}
+          </p>
+          <ul className="arrows">
+            <li><b>{pt ? 'Sigmoide' : 'Sigmoid'}</b> {pt ? 'na camada oculta' : 'in the hidden layer'}: <span className="var">σ(z) = 1 / (1 + e^(−z))</span>. {pt ? 'É um degrau suave, vai de 0 a 1, com derivada σ(z)·(1 − σ(z)).' : 'A smooth step from 0 to 1, with derivative σ(z)·(1 − σ(z)).'}</li>
+            <li><b>Softmax</b> {pt ? 'na saída' : 'at the output'}: <span className="var">p_k = e^(z_k) / Σ e^(z_j)</span>. {pt ? 'Transforma as três saídas em probabilidades que somam 1.' : 'Turns the three outputs into probabilities that add up to 1.'}</li>
+            <li><b>{pt ? 'Entropia cruzada' : 'Cross-entropy'}</b> {pt ? 'como erro' : 'as the error'}: <span className="var">L = −ln p_{pt ? 'certo' : 'correct'}</span>. {pt ? 'Vale 0 quando a rede dá 100% ao tipo certo e cresce rápido quando ela erra com confiança.' : 'It is 0 when the network gives 100% to the right type and grows fast when it is confidently wrong.'}</li>
+          </ul>
+          <Note title={pt ? 'Entradas divididas por 100' : 'Inputs divided by 100'}>
+            {pt
+              ? `Velocidade 80 vira ${num(0.8, lang)}. Com valores perto de 1 a sigmoide começa na parte inclinada, onde aprende; com 80 ela já começaria "saturada" em 0 ou 1, com derivada quase zero. É a mesma lição dos pesos que pularam na Aula 1.`
+              : 'Speed 80 becomes 0.8. With values near 1 the sigmoid starts on its slope, where it learns; with 80 it would start "saturated" at 0 or 1, with a derivative close to zero. Same lesson as the jumping weights in lesson 1.'}
+          </Note>
+        </article>
+      <div className="panel" style={{ marginTop: 20 }}>
+        <h3>{pt ? 'O que é um degrau suave' : 'What a smooth step is'}</h3>
+        <SmoothSteps />
+      </div>
+      <ZeroOneRange />
+      <article className="panel" style={{ marginTop: 20 }}>
+          <h3>{pt ? 'Por que a camada oculta desenha curvas' : 'Why the hidden layer draws curves'}</h3>
+          <p>
+            {pt
+              ? 'Cada neurônio com sigmoide é um degrau suave ao longo de uma reta. Sozinho, ele só separa dois lados. Mas a saída soma vários degraus com pesos diferentes, e degraus deslocados, somados e subtraídos, formam morros, faixas e bordas curvas.'
+              : 'Each sigmoid neuron is a smooth step along a line. Alone, it only separates two sides. But the output adds several steps with different weights, and shifted steps, added and subtracted, make bumps, bands and curved borders.'}
+          </p>
+          <p>
+            {pt
+              ? 'No gráfico abaixo, dois neurônios em x = Velocidade − Defesa: um sobe em −11 e o outro desce em +11. A soma vale perto de 1 só no meio: um detector de Planta. Mexa em k, c e v para ver a forma mudar.'
+              : 'In the chart below, two neurons on x = Speed − Defense: one rises at −11 and the other falls at +11. Their sum is close to 1 only in the middle: a Grass detector. Move k, c and v to see the shape change.'}
+          </p>
+          <Note title={pt ? 'Aproximação universal' : 'Universal approximation'}>
+            {pt
+              ? 'Com neurônios ocultos suficientes, uma camada oculta com sigmoide aproxima qualquer função contínua numa região limitada, com o erro que você quiser (Cybenko, 1989; Hornik, 1991). O teorema garante que os pesos existem; achá-los é trabalho do treino.'
+              : 'With enough hidden neurons, one sigmoid hidden layer approximates any continuous function on a bounded region, to any accuracy you want (Cybenko, 1989; Hornik, 1991). The theorem guarantees the weights exist; finding them is the job of training.'}
+          </Note>
+        </article>
+      <div className="panel" style={{ marginTop: 20 }}>
+        <h3>{pt ? 'Somando degraus suaves: a simulação' : 'Adding smooth steps: the simulation'}</h3>
+        <CurvesDemo />
+      </div>
+      <div className="section-head" style={{ marginTop: 36 }}>
+        <h2 style={{ fontSize: 'clamp(1rem, 2vw, 1.3rem)' }}>3.2 · {pt ? 'Da saída às probabilidades: softmax' : 'From the outputs to probabilities: softmax'}</h2>
+      </div>
+      <SoftmaxExplain z={f0.zo} who="Venusaur" context={pt ? 'pesos iniciais' : 'initial weights'} initial />
+      <div className="section-head" style={{ marginTop: 36 }}>
+        <h2 style={{ fontSize: 'clamp(1rem, 2vw, 1.3rem)' }}>3.3 · {pt ? 'O erro: loss e entropia cruzada' : 'The error: loss and cross-entropy'}</h2>
+      </div>
+      <LossExplain init={init} final={model.final} eta={eta} />
+      <ThreeClassError p={f0.p} h={f0.h} v={init.output.map((n) => n.w)} />
+      <div className="section-head" style={{ marginTop: 36 }}>
+        <h2 style={{ fontSize: 'clamp(1rem, 2vw, 1.3rem)' }}>3.4 · {pt ? 'Como diminuir a loss: gradiente e backpropagation' : 'How to reduce the loss: gradient and backpropagation'}</h2>
+      </div>
+      <article className="panel panel--gold" style={{ marginTop: 20 }}>
           <h3>{pt ? 'Por que agora precisamos de derivadas e do vetor gradiente' : 'Why we now need derivatives and the gradient vector'}</h3>
           <p>
             {pt
@@ -453,54 +524,7 @@ function Learning({ model }: { model: CachedMlp }) {
               : 'It has the same shape as a gradient step for a single neuron: error × input. Backpropagation is that same calculation repeated layer by layer, with the derivatives bridging them.'}
           </Note>
         </article>
-        <article className="panel">
-          <h3>{pt ? 'Por que a camada oculta desenha curvas' : 'Why the hidden layer draws curves'}</h3>
-          <p>
-            {pt
-              ? 'Cada neurônio com sigmoide é um degrau suave ao longo de uma reta. Sozinho, ele só separa dois lados. Mas a saída soma vários degraus com pesos diferentes, e degraus deslocados, somados e subtraídos, formam morros, faixas e bordas curvas.'
-              : 'Each sigmoid neuron is a smooth step along a line. Alone, it only separates two sides. But the output adds several steps with different weights, and shifted steps, added and subtracted, make bumps, bands and curved borders.'}
-          </p>
-          <p>
-            {pt
-              ? 'No gráfico abaixo, dois neurônios em x = Velocidade − Defesa: um sobe em −11 e o outro desce em +11. A soma vale perto de 1 só no meio: um detector de Planta. Mexa em k, c e v para ver a forma mudar.'
-              : 'In the chart below, two neurons on x = Speed − Defense: one rises at −11 and the other falls at +11. Their sum is close to 1 only in the middle: a Grass detector. Move k, c and v to see the shape change.'}
-          </p>
-          <Note title={pt ? 'Aproximação universal' : 'Universal approximation'}>
-            {pt
-              ? 'Com neurônios ocultos suficientes, uma camada oculta com sigmoide aproxima qualquer função contínua numa região limitada, com o erro que você quiser (Cybenko, 1989; Hornik, 1991). O teorema garante que os pesos existem; achá-los é trabalho do treino.'
-              : 'With enough hidden neurons, one sigmoid hidden layer approximates any continuous function on a bounded region, to any accuracy you want (Cybenko, 1989; Hornik, 1991). The theorem guarantees the weights exist; finding them is the job of training.'}
-          </Note>
-        </article>
-      </div>
-      <div className="panel" style={{ marginTop: 20 }}>
-        <h3>{pt ? 'O que é um degrau suave' : 'What a smooth step is'}</h3>
-        <SmoothSteps />
-      </div>
-      <div className="panel" style={{ marginTop: 20 }}>
-        <h3>{pt ? 'Somando degraus suaves: a simulação' : 'Adding smooth steps: the simulation'}</h3>
-        <CurvesDemo />
-      </div>
-
-      <div className="grid grid-2" style={{ marginTop: 20 }}>
-        <article className="panel">
-          <h3>{pt ? 'Por que trocar o degrau' : 'Why replace the step'}</h3>
-          <p>
-            {pt
-              ? 'Para ajustar a camada oculta, a rede precisa saber como o erro muda quando cada peso muda um pouquinho: a derivada. O degrau é plano em quase todo lugar (derivada zero) e dá um salto em 0. Ele não diz para que lado andar.'
-              : 'To adjust the hidden layer, the network needs to know how the error changes when each weight changes a little: the derivative. The step is flat almost everywhere (zero derivative) and jumps at 0. It does not say which way to go.'}
-          </p>
-          <ul className="arrows">
-            <li><b>{pt ? 'Sigmoide' : 'Sigmoid'}</b> {pt ? 'na camada oculta' : 'in the hidden layer'}: <span className="var">σ(z) = 1 / (1 + e^(−z))</span>. {pt ? 'É um degrau suave, vai de 0 a 1, com derivada σ(z)·(1 − σ(z)).' : 'A smooth step from 0 to 1, with derivative σ(z)·(1 − σ(z)).'}</li>
-            <li><b>Softmax</b> {pt ? 'na saída' : 'at the output'}: <span className="var">p_k = e^(z_k) / Σ e^(z_j)</span>. {pt ? 'Transforma as três saídas em probabilidades que somam 1.' : 'Turns the three outputs into probabilities that add up to 1.'}</li>
-            <li><b>{pt ? 'Entropia cruzada' : 'Cross-entropy'}</b> {pt ? 'como erro' : 'as the error'}: <span className="var">L = −ln p_{pt ? 'certo' : 'correct'}</span>. {pt ? 'Vale 0 quando a rede dá 100% ao tipo certo e cresce rápido quando ela erra com confiança.' : 'It is 0 when the network gives 100% to the right type and grows fast when it is confidently wrong.'}</li>
-          </ul>
-          <Note title={pt ? 'Entradas divididas por 100' : 'Inputs divided by 100'}>
-            {pt
-              ? `Velocidade 80 vira ${num(0.8, lang)}. Com valores perto de 1 a sigmoide começa na parte inclinada, onde aprende; com 80 ela já começaria "saturada" em 0 ou 1, com derivada quase zero. É a mesma lição dos pesos que pularam na Aula 1.`
-              : 'Speed 80 becomes 0.8. With values near 1 the sigmoid starts on its slope, where it learns; with 80 it would start "saturated" at 0 or 1, with a derivative close to zero. Same lesson as the jumping weights in lesson 1.'}
-          </Note>
-        </article>
-        <article className="panel">
+      <article className="panel" style={{ marginTop: 20 }}>
           <h3>{pt ? 'A regra do backpropagation' : 'The backpropagation rule'}</h3>
           <p>
             {pt
@@ -529,10 +553,30 @@ update:  weight ← weight − η · ∂L/∂weight`}</div>
               : 'At the output, δo = p − d plays the role of the error e = d − y (with the sign flipped, because here we subtract the gradient). What is new is the hidden layer: its error is the sum of the output errors, weighted by the connections, times the sigmoid derivative. That is what "propagating the error back" means.'}
           </Note>
         </article>
+      <div className="panel panel--gold" style={{ marginTop: 20 }}>
+        <h3>{pt ? 'Como o backpropagation corrige os erros, e em que ordem' : 'How backpropagation corrects the errors, and in what order'}</h3>
+        <ol className="rules" style={{ paddingLeft: 20 }}>
+          <li>{pt ? 'Para a frente, com os pesos atuais: entradas → h → p.' : 'Forward, with the current weights: inputs → h → p.'}</li>
+          <li>{pt ? 'Erro na saída: δo = p − d. É aqui que a resposta certa entra.' : 'Output error: δo = p − d. This is where the right answer comes in.'}</li>
+          <li>{pt ? 'Erro levado para trás: δh = (Σ v·δo)·h(1 − h), usando os v que geraram a previsão.' : 'Error carried back: δh = (Σ v·δo)·h(1 − h), using the v that produced the prediction.'}</li>
+          <li>{pt ? 'Todos os gradientes: cada peso recebe δ do neurônio de chegada × a entrada que ele carrega.' : 'All the gradients: each weight gets the δ of the neuron it feeds × the input it carries.'}</li>
+          <li>{pt ? 'Atualização de todos os pesos de uma vez: peso ← peso − η·∂L/∂peso.' : 'Update all weights at once: weight ← weight − η·∂L/∂weight.'}</li>
+        </ol>
+        <p>
+          {pt
+            ? 'Então ele não atualiza "primeiro o peso da saída e depois o da camada oculta", nem o contrário. O cálculo anda de trás para a frente (passos 2 e 3), e a atualização acontece no fim, para todos ao mesmo tempo (passo 5).'
+            : 'So it does not update "the output weight first and then the hidden one", nor the reverse. The calculation runs from back to front (steps 2 and 3), and the update happens at the end, for all of them at once (step 5).'}
+        </p>
+        <p className="small" style={{ margin: 0 }}>
+          {pt
+            ? `Prova com números (Venusaur, pesos iniciais): na ordem certa, δh = (${wrongOrder.right.map((v) => fx(v, 4, lang)).join(' ; ')}). Se os pesos da saída fossem trocados antes, daria (${wrongOrder.wrong.map((v) => fx(v, 4, lang)).join(' ; ')}): outro gradiente, que já não corresponde ao erro que a rede cometeu.`
+            : `Proof with numbers (Venusaur, initial weights): in the right order, δh = (${wrongOrder.right.map((v) => fx(v, 4, lang)).join(' ; ')}). If the output weights were changed first, it would be (${wrongOrder.wrong.map((v) => fx(v, 4, lang)).join(' ; ')}): a different gradient, which no longer matches the error the network made.`}
+        </p>
       </div>
-
-      <ThreeClassError p={f0.p} h={f0.h} v={init.output.map((n) => n.w)} />
-      <ZeroOneRange />
+      <div className="section-head" style={{ marginTop: 36 }}>
+        <h2 style={{ fontSize: 'clamp(1rem, 2vw, 1.3rem)' }}>3.5 · {pt ? 'Exemplos completos, passo a passo' : 'Complete examples, step by step'}</h2>
+      </div>
+      <ErrorTrace init={init} eta={eta} />
 
       {/* one step by hand */}
       <div className="panel" style={{ marginTop: 20 }}>
@@ -629,30 +673,8 @@ update:  weight ← weight − η · ∂L/∂weight`}</div>
         </Note>
       </div>
 
-      <div className="panel panel--gold" style={{ marginTop: 20 }}>
-        <h3>{pt ? 'Como o backpropagation corrige os erros, e em que ordem' : 'How backpropagation corrects the errors, and in what order'}</h3>
-        <ol className="rules" style={{ paddingLeft: 20 }}>
-          <li>{pt ? 'Para a frente, com os pesos atuais: entradas → h → p.' : 'Forward, with the current weights: inputs → h → p.'}</li>
-          <li>{pt ? 'Erro na saída: δo = p − d. É aqui que a resposta certa entra.' : 'Output error: δo = p − d. This is where the right answer comes in.'}</li>
-          <li>{pt ? 'Erro levado para trás: δh = (Σ v·δo)·h(1 − h), usando os v que geraram a previsão.' : 'Error carried back: δh = (Σ v·δo)·h(1 − h), using the v that produced the prediction.'}</li>
-          <li>{pt ? 'Todos os gradientes: cada peso recebe δ do neurônio de chegada × a entrada que ele carrega.' : 'All the gradients: each weight gets the δ of the neuron it feeds × the input it carries.'}</li>
-          <li>{pt ? 'Atualização de todos os pesos de uma vez: peso ← peso − η·∂L/∂peso.' : 'Update all weights at once: weight ← weight − η·∂L/∂weight.'}</li>
-        </ol>
-        <p>
-          {pt
-            ? 'Então ele não atualiza "primeiro o peso da saída e depois o da camada oculta", nem o contrário. O cálculo anda de trás para a frente (passos 2 e 3), e a atualização acontece no fim, para todos ao mesmo tempo (passo 5).'
-            : 'So it does not update "the output weight first and then the hidden one", nor the reverse. The calculation runs from back to front (steps 2 and 3), and the update happens at the end, for all of them at once (step 5).'}
-        </p>
-        <p className="small" style={{ margin: 0 }}>
-          {pt
-            ? `Prova com números (Venusaur, pesos iniciais): na ordem certa, δh = (${wrongOrder.right.map((v) => fx(v, 4, lang)).join(' ; ')}). Se os pesos da saída fossem trocados antes, daria (${wrongOrder.wrong.map((v) => fx(v, 4, lang)).join(' ; ')}): outro gradiente, que já não corresponde ao erro que a rede cometeu.`
-            : `Proof with numbers (Venusaur, initial weights): in the right order, δh = (${wrongOrder.right.map((v) => fx(v, 4, lang)).join(' ; ')}). If the output weights were changed first, it would be (${wrongOrder.wrong.map((v) => fx(v, 4, lang)).join(' ; ')}): a different gradient, which no longer matches the error the network made.`}
-        </p>
-      </div>
-      <ErrorTrace init={init} eta={eta} />
-
       <div className="section-head" style={{ marginTop: 32 }}>
-        <h2>{pt ? 'Passo a passo das épocas' : 'Epochs, step by step'}</h2>
+        <h3 style={{ margin: 0 }}>{pt ? 'Passo a passo das épocas' : 'Epochs, step by step'}</h3>
         <span className="label">{pt ? 'como na Aula 1' : 'like lesson 1'}</span>
       </div>
       <p className="small" style={{ marginTop: 0 }}>
