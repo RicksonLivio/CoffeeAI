@@ -477,7 +477,7 @@ function Learning({ model }: { model: CachedMlp }) {
         <SmoothSteps />
       </div>
       <div className="panel" style={{ marginTop: 20 }}>
-        <h3>{pt ? 'Somando degraus suaves' : 'Adding smooth steps'}</h3>
+        <h3>{pt ? 'Somando degraus suaves: a simulação' : 'Adding smooth steps: the simulation'}</h3>
         <CurvesDemo />
       </div>
 
