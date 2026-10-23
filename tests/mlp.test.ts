@@ -132,3 +132,15 @@ test('without activations the hand-made Grass output is the same (22.5) for ever
     assert.equal(g.w[0] * h[0] + g.w[1] * h[1] - g.theta, 22.5);
   }
 });
+
+test('a single hidden sigmoid neuron (2 → 1 → 3) also learns the nine starters', async () => {
+  const { deepCurve, initDeep } = await import('../src/lib/deep.ts');
+  const r = deepCurve(initDeep(2, [1, 3]), STARTERS, 2, 600, 1);
+  assert.equal(r.curve[r.curve.length - 1].accuracy, 1);
+});
+
+test('with the step, one hidden neuron gives only two values, so it cannot output three types', () => {
+  // h ∈ {0, 1}: whatever the output weights, at most two different output patterns exist
+  const patterns = new Set(STARTERS.map((s) => stepForward(HAND_NET, s.x1, s.x2).h[0]));
+  assert.ok(patterns.size <= 2);
+});

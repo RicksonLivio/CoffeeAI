@@ -56,7 +56,7 @@ export function basinOf(p: DescentPoint, tol = 0.35): 'global' | 'local' | null 
 }
 
 // --------------------------------------------------------------------------- //
-// Lesson 3: the smallest deep linear network, f(x) = w2·w1·x, one example (x, y) = (1, 1)
+// Lesson 2, part 6 (notebook): the smallest deep linear network, f(x) = w2·w1·x, one example (x, y) = (1, 1)
 //   J(w1, w2) = (w2·w1·x − y)²
 // Global minima: the hyperbola w1·w2 = 1 (J = 0). Only other critical point: (0, 0), a saddle.
 // --------------------------------------------------------------------------- //

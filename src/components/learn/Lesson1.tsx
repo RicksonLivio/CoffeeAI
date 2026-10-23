@@ -98,8 +98,8 @@ Fixed bias (x0 = −1)  ──[ θ  ]──╯
           net = w1·x1 + w2·x2 + θ·(−1)`}</div>
             <Note title={pt ? 'O que é o bias?' : 'What is the bias?'}>
               {pt
-                ? 'θ funciona como um limiar: o neurônio só responde 1 quando w1·x1 + w2·x2 passa de θ. Ligar o bias a uma entrada fixa x0 = −1 deixa θ ser treinado como mais um peso, com a mesma regra.'
-                : 'θ works as a threshold: the neuron only answers 1 when w1·x1 + w2·x2 is above θ. Wiring the bias to a fixed input x0 = −1 lets θ be trained as one more weight, with the same rule.'}
+                ? 'θ funciona como um limiar: o neurônio só responde 1 quando w1·x1 + w2·x2 passa de θ. x0 = −1 não é peso: é uma entrada fixa, que nunca muda; o peso dela é θ. Ligar o bias a essa entrada deixa θ ser treinado como mais um peso, com a mesma regra. Por isso o termo que entra na soma é θ·(−1) = −θ, e quando o neurônio erra por não acender (e = 1), Δθ = η·e·(−1) é negativo: o limiar baixa, e pode ficar abaixo de zero, como no primeiro passo do Charizard (0,5 → −0,5).'
+                : 'θ works as a threshold: the neuron only answers 1 when w1·x1 + w2·x2 is above θ. x0 = −1 is not a weight: it is a fixed input that never changes; its weight is θ. Wiring the bias to that input lets θ be trained as one more weight, with the same rule. So the term that enters the sum is θ·(−1) = −θ, and when the neuron fails to fire (e = 1), Δθ = η·e·(−1) is negative: the threshold drops, and can go below zero, as in Charizard’s first step (0.5 → −0.5).'}
             </Note>
             <Note title={pt ? 'Fronteira de decisão' : 'Decision boundary'}>
               {pt

@@ -21,7 +21,7 @@ function Page({ id, n, title, children }: { id: string; n: number; title: string
   return (
     <section className="section" id={id} aria-labelledby={`${id}-h`}>
       <div className="section-head">
-        <h2 id={`${id}-h`}>{n} · {title}</h2>
+        <h3 id={`${id}-h`} style={{ margin: 0, fontSize: 'clamp(1rem, 2vw, 1.3rem)' }}>6.{n} · {title}</h3>
         <span className="nb-num">PÁG. {String(n).padStart(2, '0')}</span>
       </div>
       <div className="panel nb-page">{children}</div>
@@ -36,7 +36,8 @@ const hyperbola = (sign: 1 | -1): [number, number][] =>
     return [a, 1 / a] as [number, number];
   });
 
-export default function Lesson3() {
+/** Part 6 of lesson 2: the notation notebook (loaded on demand because it brings KaTeX). */
+export default function Notebook() {
   const { lang } = useLang();
   const pt = lang === 'pt';
   const t = (p: string, e: string) => (pt ? p : e);
@@ -84,13 +85,17 @@ export default function Lesson3() {
   const escape = useMemo(() => [descend(0.001, 0.001, 0.1, 150, linearJ, linearGrad), descend(0.05, 0.02, 0.1, 150, linearJ, linearGrad)].map(firstBelow), []);
 
   return (
-    <div className="lesson-body">
+    <section className="section" id="l2-caderno" aria-labelledby="l2-h-caderno">
+      <div className="section-head">
+        <h2 id="l2-h-caderno">6 · {t('Caderno: como aprendemos os pesos', 'Notebook: how we learn the weights')}</h2>
+        <span className="label">{t('derivadas, regra da cadeia e paisagem', 'derivatives, chain rule and landscape')}</span>
+      </div>
       <div className="parts">
-        <a href="#l3-problema" onClick={jump('l3-problema')}><b>1</b>{t('O problema', 'The problem')}</a>
-        <a href="#l3-uma" onClick={jump('l3-uma')}><b>2</b>{t('Uma camada: gradiente', 'One layer: gradient')}</a>
-        <a href="#l3-bp" onClick={jump('l3-bp')}><b>3</b>{t('Backpropagation', 'Backpropagation')}</a>
-        <a href="#l3-paisagem" onClick={jump('l3-paisagem')}><b>4</b>{t('A paisagem', 'The landscape')}</a>
-        <a href="#l3-resumo" onClick={jump('l3-resumo')}><b>5</b>{t('Resumo', 'Summary')}</a>
+        <a href="#l2-nb-problema" onClick={jump('l2-nb-problema')}><b>1</b>{t('O problema', 'The problem')}</a>
+        <a href="#l2-nb-uma" onClick={jump('l2-nb-uma')}><b>2</b>{t('Uma camada: gradiente', 'One layer: gradient')}</a>
+        <a href="#l2-nb-bp" onClick={jump('l2-nb-bp')}><b>3</b>{t('Backpropagation', 'Backpropagation')}</a>
+        <a href="#l2-nb-paisagem" onClick={jump('l2-nb-paisagem')}><b>4</b>{t('A paisagem', 'The landscape')}</a>
+        <a href="#l2-nb-resumo" onClick={jump('l2-nb-resumo')}><b>5</b>{t('Resumo', 'Summary')}</a>
       </div>
 
       <p className="lead" style={{ marginTop: 18 }}>
@@ -99,7 +104,7 @@ export default function Lesson3() {
       </p>
 
       {/* ------------------------------------------------------------------ */}
-      <Page id="l3-problema" n={1} title={t('O problema: minimizar o erro', 'The problem: minimize the loss')}>
+      <Page id="l2-nb-problema" n={1} title={t('O problema: minimizar o erro', 'The problem: minimize the loss')}>
         <Card kind="def" label={t('Definição 1 · rede linear profunda', 'Definition 1 · deep linear network')}>
           <p>{t('Uma rede com L camadas sem função de ativação multiplica a entrada por uma matriz por camada:', 'A network with L layers and no activation function multiplies the input by one matrix per layer:')}</p>
           <Tex block>{R`f(x) = W_L^{\top} \cdots W_2^{\top} W_1^{\top} x, \qquad W_\ell \in \R^{d_{\ell-1} \times d_\ell}, \quad x \in \R^{d_0}`}</Tex>
@@ -110,7 +115,7 @@ export default function Lesson3() {
           <table className="hud">
             <thead><tr><th>{t('Símbolo', 'Symbol')}</th><th>{t('Significado', 'Meaning')}</th></tr></thead>
             <tbody>
-              <tr><td><Tex>{R`N`}</Tex></td><td>{t('número de exemplos (na Aula 2, os 9 Pokémon)', 'number of examples (in lesson 2, the 9 Pokémon)')}</td></tr>
+              <tr><td><Tex>{R`N`}</Tex></td><td>{t('número de exemplos (nesta aula, os 9 Pokémon)', 'number of examples (in this lesson, the 9 Pokémon)')}</td></tr>
               <tr><td><Tex>{R`x_i,\ y_i`}</Tex></td><td>{t('entrada e resposta certa do exemplo i', 'input and right answer of example i')}</td></tr>
               <tr><td><Tex>{R`d_\ell`}</Tex></td><td>{t('número de neurônios da camada ℓ (d₀ = entradas, d_L = saídas)', 'number of neurons in layer ℓ (d₀ = inputs, d_L = outputs)')}</td></tr>
               <tr><td><Tex>{R`W_\ell`}</Tex></td><td>{t('matriz de pesos da camada ℓ; a coluna j tem os pesos do neurônio j', 'weight matrix of layer ℓ; column j holds the weights of neuron j')}</td></tr>
@@ -120,13 +125,13 @@ export default function Lesson3() {
           </table>
         </div>
         <Note title={t('Por que estudar a rede sem ativação?', 'Why study the network without activation?')}>
-          {t('O produto das matrizes é uma matriz só (a Aula 2 mostrou que camadas sem ativação "se juntam numa só"), então a rede só representa funções lineares. Mesmo assim, J como função dos fatores W₁, …, W_L não é convexa. É o laboratório mais simples onde a teoria consegue provar como o relevo do erro se comporta.',
-            'The product of the matrices is a single matrix (lesson 2 showed that layers without activation "merge into one"), so the network only represents linear functions. Even so, J as a function of the factors W₁, …, W_L is not convex. It is the simplest laboratory where theory can prove how the loss landscape behaves.')}
+          {t('O produto das matrizes é uma matriz só (a parte 2 mostrou que camadas sem ativação "se juntam numa só"), então a rede só representa funções lineares. Mesmo assim, J como função dos fatores W₁, …, W_L não é convexa. É o laboratório mais simples onde a teoria consegue provar como o relevo do erro se comporta.',
+            'The product of the matrices is a single matrix (part 2 showed that layers without activation "merge into one"), so the network only represents linear functions. Even so, J as a function of the factors W₁, …, W_L is not convex. It is the simplest laboratory where theory can prove how the loss landscape behaves.')}
         </Note>
       </Page>
 
       {/* ------------------------------------------------------------------ */}
-      <Page id="l3-uma" n={2} title={t('Uma camada: gradiente descendente', 'One layer: gradient descent')}>
+      <Page id="l2-nb-uma" n={2} title={t('Uma camada: gradiente descendente', 'One layer: gradient descent')}>
         <p>{t('Com L = 1 sobra uma matriz W. Chamando o resíduo de r_i = Wᵀx_i − y_i:', 'With L = 1 there is one matrix W. Calling the residual r_i = Wᵀx_i − y_i:')}</p>
         <Tex block>{R`J(W) = \sum_{i=1}^{N} \|r_i\|^2 = \sum_{i=1}^{N} \sum_{k} \Bigl( \sum_{j} W_{jk}\, x_{ij} - y_{ik} \Bigr)^{2}`}</Tex>
         <Card kind="proof" label={t('Derivação, peso a peso', 'Derivation, weight by weight')}>
@@ -152,7 +157,7 @@ export default function Lesson3() {
       </Page>
 
       {/* ------------------------------------------------------------------ */}
-      <Page id="l3-bp" n={3} title={t('Várias camadas: backpropagation', 'Several layers: backpropagation')}>
+      <Page id="l2-nb-bp" n={3} title={t('Várias camadas: backpropagation', 'Several layers: backpropagation')}>
         <p>
           {t('Com várias camadas o método continua sendo gradiente descendente. O que muda é como calcular ∇J sem se perder: isso é o backpropagation (Rumelhart, Hinton e Williams, 1986), ou seja, ',
             'With several layers the method is still gradient descent. What changes is how to compute ∇J without getting lost: that is backpropagation (Rumelhart, Hinton and Williams, 1986), that is, ')}
@@ -164,7 +169,7 @@ export default function Lesson3() {
         </Card>
         <Card kind="def" label={t('Definição 3 · o erro de cada camada', 'Definition 3 · the error of each layer')}>
           <Tex block>{R`\cy{\delta_\ell} := \frac{\partial J}{\partial z_\ell} \in \R^{d_\ell}`}</Tex>
-          <p className="small">{t('É o mesmo δ das Aulas 1 e 2: quanto o erro muda quando a soma de cada neurônio muda um pouco.', 'It is the same δ as in lessons 1 and 2: how much the loss changes when each neuron’s sum changes a little.')}</p>
+          <p className="small">{t('É o mesmo δ da Aula 1 e das partes 3 e 5: quanto o erro muda quando a soma de cada neurônio muda um pouco.', 'It is the same δ as in lesson 1 and parts 3 and 5: how much the loss changes when each neuron’s sum changes a little.')}</p>
         </Card>
         <Card kind="proof" label={t('Passo 1 · regra da cadeia para um peso', 'Step 1 · chain rule for one weight')}>
           <p>{t('O peso (W_ℓ)_ab só entra na soma do neurônio b da camada ℓ, (z_ℓ)_b = Σ_a (W_ℓ)_ab (h_ℓ₋₁)_a. Então:', 'The weight (W_ℓ)_ab only enters the sum of neuron b in layer ℓ, (z_ℓ)_b = Σ_a (W_ℓ)_ab (h_ℓ₋₁)_a. So:')}</p>
@@ -174,7 +179,7 @@ export default function Lesson3() {
           <p>{t('A soma (z_ℓ)_j afeta o erro através de todos os neurônios k da camada seguinte:', 'The sum (z_ℓ)_j affects the loss through every neuron k of the next layer:')}</p>
           <Tex block>{R`(\delta_\ell)_j = \sum_{k} \frac{\partial J}{\partial (z_{\ell+1})_k} \cdot \frac{\partial (z_{\ell+1})_k}{\partial (h_\ell)_j} \cdot \frac{\partial (h_\ell)_j}{\partial (z_\ell)_j} = \sigma'\bigl((z_\ell)_j\bigr) \sum_k (W_{\ell+1})_{jk}\, (\delta_{\ell+1})_k`}</Tex>
           <Tex block>{R`\cy{\delta_\ell = \bigl(W_{\ell+1}\,\delta_{\ell+1}\bigr) \odot \sigma'(z_\ell)} \tag{5}`}</Tex>
-          <p className="small">{t('⊙ é o produto elemento a elemento. Na rede linear σ′ = 1 e δ_ℓ = W_ℓ₊₁ δ_ℓ₊₁; com sigmoide, σ′ = σ(1 − σ), como na Aula 2.', '⊙ is the element-wise product. In the linear network σ′ = 1 and δ_ℓ = W_ℓ₊₁ δ_ℓ₊₁; with a sigmoid, σ′ = σ(1 − σ), as in lesson 2.')}</p>
+          <p className="small">{t('⊙ é o produto elemento a elemento. Na rede linear σ′ = 1 e δ_ℓ = W_ℓ₊₁ δ_ℓ₊₁; com sigmoide, σ′ = σ(1 − σ), como na parte 3.', '⊙ is the element-wise product. In the linear network σ′ = 1 and δ_ℓ = W_ℓ₊₁ δ_ℓ₊₁; with a sigmoid, σ′ = σ(1 − σ), as in part 3.')}</p>
         </Card>
         <Card kind="proof" label={t('Passo 3 · o começo e o fim', 'Step 3 · the start and the end')}>
           <p>{t('Na saída, com erro quadrático e saída linear, J = ‖h_L − y‖², então:', 'At the output, with squared error and a linear output, J = ‖h_L − y‖², so:')}</p>
@@ -218,8 +223,8 @@ export default function Lesson3() {
             <table className="hud">
               <thead><tr><th>{t('Rede', 'Network')}</th><th>{t('pesos P', 'weights P')}</th><th>{t('diferença finita', 'finite differences')}</th><th>backpropagation</th></tr></thead>
               <tbody>
-                <tr><td>{t('Aula 2, uma camada oculta', 'Lesson 2, one hidden layer')}</td><td>15</td><td>{t('30 avaliações', '30 evaluations')}</td><td>{t('1 ida + 1 volta', '1 forward + 1 backward')}</td></tr>
-                <tr><td>{t('Aula 2, duas camadas ocultas', 'Lesson 2, two hidden layers')}</td><td>21</td><td>{t('42 avaliações', '42 evaluations')}</td><td>{t('1 ida + 1 volta', '1 forward + 1 backward')}</td></tr>
+                <tr><td>{t('parte 3, uma camada oculta', 'part 3, one hidden layer')}</td><td>15</td><td>{t('30 avaliações', '30 evaluations')}</td><td>{t('1 ida + 1 volta', '1 forward + 1 backward')}</td></tr>
+                <tr><td>{t('parte 5, duas camadas ocultas', 'part 5, two hidden layers')}</td><td>21</td><td>{t('42 avaliações', '42 evaluations')}</td><td>{t('1 ida + 1 volta', '1 forward + 1 backward')}</td></tr>
                 <tr><td>{t('rede com 10⁸ pesos', 'network with 10⁸ weights')}</td><td>10⁸</td><td>{t('2 × 10⁸ avaliações', '2 × 10⁸ evaluations')}</td><td>{t('1 ida + 1 volta', '1 forward + 1 backward')}</td></tr>
               </tbody>
             </table>
@@ -232,7 +237,7 @@ export default function Lesson3() {
       </Page>
 
       {/* ------------------------------------------------------------------ */}
-      <Page id="l3-paisagem" n={4} title={t('A paisagem de otimização', 'The optimization landscape')}>
+      <Page id="l2-nb-paisagem" n={4} title={t('A paisagem de otimização', 'The optimization landscape')}>
         <p>{t('Três perguntas: J é convexa? O gradiente descendente acha o mínimo global? O que são os pontos de sela?', 'Three questions: is J convex? Does gradient descent find the global minimum? What are saddle points?')}</p>
         <Card kind="def" label={t('Definição 4 · pontos críticos', 'Definition 4 · critical points')}>
           <ul className="arrows small" style={{ margin: 0 }}>
@@ -296,14 +301,14 @@ export default function Lesson3() {
               'In general it is false: Yun, Sra and Jadbabaie (2019) prove that, even with a single hidden layer and the slightest nonlinearity, the empirical risk has spurious local minima in most cases; Safran and Shamir (2018) show that spurious minima are common in two-layer ReLU networks. "No bad local minima" is a property of linear networks.')}
           </p>
           <p className="small" style={{ margin: 0 }}>
-            {t('Isso combina com o que vimos na Aula 2: com η = 10 a rede com sigmoide travou num platô, e o relevo de brinquedo da parte 4 tem um mínimo local de verdade.',
-              'That matches what we saw in lesson 2: with η = 10 the sigmoid network got stuck on a plateau, and the toy landscape of part 4 has a real local minimum.')}
+            {t('Isso combina com o que vimos nesta aula: com η = 10 a rede com sigmoide travou num platô, e o relevo de brinquedo da parte 4 tem um mínimo local de verdade.',
+              'That matches what we saw in this lesson: with η = 10 the sigmoid network got stuck on a plateau, and the toy landscape of part 4 has a real local minimum.')}
           </p>
         </Card>
       </Page>
 
       {/* ------------------------------------------------------------------ */}
-      <Page id="l3-resumo" n={5} title={t('Resumo: como aprendemos os pesos', 'Summary: how we learn the weights')}>
+      <Page id="l2-nb-resumo" n={5} title={t('Resumo: como aprendemos os pesos', 'Summary: how we learn the weights')}>
         <div className="table-wrap">
           <table className="hud">
             <thead><tr><th>{t('Caso', 'Case')}</th><th>{t('Convexa?', 'Convex?')}</th><th>{t('Mínimos locais ruins?', 'Bad local minima?')}</th><th>{t('Selas', 'Saddles')}</th><th>{t('Fonte', 'Source')}</th></tr></thead>
@@ -320,13 +325,13 @@ export default function Lesson3() {
           <li>{t('Andamos contra o gradiente: W ← W − η∇J (equação 3).', 'We move against the gradient: W ← W − η∇J (equation 3).')}</li>
           <li>{t('O gradiente de todas as camadas sai de uma ida (guardando h e z) e uma volta (δ, equações 4 a 7), com custo que não cresce com o número de pesos: isso torna o treino eficiente.', 'The gradient of every layer comes from one forward pass (storing h and z) and one backward pass (δ, equations 4 to 7), at a cost that does not grow with the number of weights: that is what makes training efficient.')}</li>
           <li>{t('Nas redes lineares o relevo é bom: sem mínimos ruins, só selas, que atrasam mas raramente prendem (com pesos iniciais aleatórios, o gradiente descendente quase nunca para numa sela estrita; Lee et al., 2016).', 'In linear networks the landscape is benign: no bad minima, only saddles, which slow down but rarely trap (with random initial weights, gradient descent almost never stops at a strict saddle; Lee et al., 2016).')}</li>
-          <li>{t('Nas redes não lineares não há essa garantia; na prática, ajudam a escolha de η, os pesos iniciais, o momento, o Adam e repetir o treino.', 'In nonlinear networks there is no such guarantee; in practice, the choice of η, the initial weights, momentum, Adam and repeated runs help.')}</li>
+          <li>{t('Nas redes não lineares, como as das partes 3 e 5 desta aula, não há essa garantia; na prática, ajudam a escolha de η, os pesos iniciais, o momento, o Adam e repetir o treino.', 'In nonlinear networks, like those in parts 3 and 5 of this lesson, there is no such guarantee; in practice, the choice of η, the initial weights, momentum, Adam and repeated runs help.')}</li>
         </ol>
         <p className="small muted" style={{ margin: 0 }}>
           {t('Referências: Rumelhart, Hinton e Williams, Nature 323 (1986); Baldi e Hornik, Neural Networks 2 (1989); Kawaguchi, NeurIPS (2016); Choromanska et al., AISTATS (2015); Safran e Shamir, ICML (2018); Yun, Sra e Jadbabaie, ICLR (2019); Lee, Simchowitz, Jordan e Recht, COLT (2016); Linnainmaa (1970); Werbos (1974).',
             'References: Rumelhart, Hinton and Williams, Nature 323 (1986); Baldi and Hornik, Neural Networks 2 (1989); Kawaguchi, NeurIPS (2016); Choromanska et al., AISTATS (2015); Safran and Shamir, ICML (2018); Yun, Sra and Jadbabaie, ICLR (2019); Lee, Simchowitz, Jordan and Recht, COLT (2016); Linnainmaa (1970); Werbos (1974).')}
         </p>
       </Page>
-    </div>
+    </section>
   );
 }

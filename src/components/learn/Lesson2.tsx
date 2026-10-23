@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { lazy, Suspense, useEffect, useMemo, useRef, useState } from 'react';
 import {
   CartesianGrid, Legend, Line, LineChart, ReferenceLine, ResponsiveContainer, Tooltip, XAxis, YAxis,
 } from 'recharts';
@@ -19,6 +19,10 @@ import { CurveNote, MetricsReport, ThreeClassError, ZeroOneRange } from './Metri
 import Landscape, { type Runner } from './Landscape';
 import NetGraph, { type Pulse } from './NetGraph';
 import Note from './Note';
+import BiasExplain from './BiasExplain';
+
+// part 6 brings KaTeX (formulas): loaded only when the lesson is open
+const Notebook = lazy(() => import('./Notebook'));
 import RegionChart, { type RegionPoint } from './RegionChart';
 
 const TYPE_NAME: Record<Lang, Record<PokeType, string>> = {
@@ -60,6 +64,7 @@ export default function Lesson2() {
         <a href="#l2-aprende" onClick={jump('l2-aprende')}><b>3</b>{pt ? 'Como o MLP aprende' : 'How the MLP learns'}</a>
         <a href="#l2-passo" onClick={jump('l2-passo')}><b>4</b>{pt ? 'Tamanho do passo e mínimos' : 'Step size and minima'}</a>
         <a href="#l2-duas" onClick={jump('l2-duas')}><b>5</b>{pt ? 'Duas camadas ocultas' : 'Two hidden layers'}</a>
+        <a href="#l2-caderno" onClick={jump('l2-caderno')}><b>6</b>{pt ? 'Caderno: como aprendemos os pesos' : 'Notebook: how we learn the weights'}</a>
       </div>
       <Problem />
       <HiddenLayer />
@@ -79,6 +84,9 @@ export default function Lesson2() {
       </section>
       {cached && <StepSize model={cached.model} />}
       <TwoLayers />
+      <Suspense fallback={<div className="panel">{pt ? 'Carregando o caderno…' : 'Loading the notebook…'}</div>}>
+        <Notebook />
+      </Suspense>
     </div>
   );
 }
@@ -327,6 +335,7 @@ Grass:   w = (−1, −1), θ = −0.5   net = 0.5 − h1 − h2`}</div>
           </p>
         </article>
       </div>
+      <BiasExplain />
       <Note title={pt ? 'O truque do MLP' : 'The MLP trick'}>
         {pt
           ? 'A camada oculta cria novas variáveis. No plano (Velocidade, Defesa) o tipo Planta está no meio e nenhuma reta o isola; no plano (h1, h2) os três tipos viram três cantos, e aí retas simples separam tudo. Cada camada transforma o problema até ele ficar fácil para a camada seguinte.'

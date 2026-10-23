@@ -1,11 +1,9 @@
-import { lazy, Suspense, useEffect, useState } from 'react';
+import { Suspense, useEffect, useState } from 'react';
 import { useLang } from '../i18n';
 import Lesson1 from './learn/Lesson1';
 import Lesson2 from './learn/Lesson2';
 import PythonButton, { type CodeFile } from './learn/PythonButton';
 
-// lesson 3 brings KaTeX (formulas): loaded only when the lesson is opened
-const Lesson3 = lazy(() => import('./learn/Lesson3'));
 
 interface LessonInfo {
   n: number;
@@ -49,8 +47,8 @@ const LESSONS: LessonInfo[] = [
     n: 2,
     title: ['O MLP (perceptron multicamadas)', 'The MLP (multilayer perceptron)'],
     summary: [
-      'Por que um perceptron não consegue chamar o Venusaur de Planta, como uma camada oculta resolve, e como o backpropagation treina a rede.',
-      'Why a perceptron cannot call Venusaur a Grass type, how a hidden layer solves it, and how backpropagation trains the network.',
+      'Por que um perceptron não consegue chamar o Venusaur de Planta, como uma camada oculta resolve, como o backpropagation treina a rede e, no caderno final, as derivadas e a paisagem de otimização.',
+      'Why a perceptron cannot call Venusaur a Grass type, how a hidden layer solves it, how backpropagation trains the network and, in the final notebook, the derivatives and the optimization landscape.',
     ],
     Body: Lesson2,
     code: [
@@ -72,20 +70,9 @@ const LESSONS: LessonInfo[] = [
         ],
         run: 'pip install torch && python3 mlp_pokemon_torch.py',
       },
-    ],
-  },
-  {
-    n: 3,
-    title: ['Caderno: como aprendemos os pesos', 'Notebook: how we learn the weights'],
-    summary: [
-      'Gradiente descendente, backpropagation passo a passo com derivadas parciais e regra da cadeia, e a paisagem de otimização: convexidade, mínimos globais e pontos de sela (Baldi e Hornik, 1989; Kawaguchi, 2016).',
-      'Gradient descent, backpropagation step by step with partial derivatives and the chain rule, and the optimization landscape: convexity, global minima and saddle points (Baldi and Hornik, 1989; Kawaguchi, 2016).',
-    ],
-    Body: Lesson3,
-    code: [
       {
         file: 'backprop_notebook.py',
-        label: ['sem bibliotecas', 'no libraries'],
+        label: ['caderno · sem bibliotecas', 'notebook · no libraries'],
         about: [
           'Python puro: rede linear de 3 camadas com matrizes, backpropagation pelas equações (4) a (8), conferido contra diferenças finitas e com a contagem de avaliações; o exemplo de 2 pesos, a sela em (0, 0), a prova de não convexidade e a sela ruim com 3 pesos.',
           'Plain Python: a 3-layer linear network with matrices, backpropagation from equations (4) to (8), checked against finite differences with the evaluation count; the 2-weight example, the saddle at (0, 0), the non-convexity proof and the bad saddle with 3 weights.',
@@ -94,7 +81,7 @@ const LESSONS: LessonInfo[] = [
       },
       {
         file: 'backprop_notebook_torch.py',
-        label: ['PyTorch', 'PyTorch'],
+        label: ['caderno · PyTorch', 'notebook · PyTorch'],
         about: [
           'A fórmula fechada (8) com tensores, comparada ao autograd para L = 2, 3 e 5 camadas, a Hessiana exata nas selas com torch.autograd.functional.hessian e o treino da rede linear profunda.',
           'The closed form (8) with tensors, compared with autograd for L = 2, 3 and 5 layers, the exact Hessian at the saddles with torch.autograd.functional.hessian and training of the deep linear network.',

@@ -298,7 +298,7 @@ select {
 @keyframes mm-pulse { 0% { transform: scale(1); } 50% { transform: scale(.55); } }
 @keyframes mm-flash { from { transform: scale(.3); opacity: 1; } to { transform: scale(2.4); opacity: 0; } }
 
-/* ---------- Lesson 3: notebook (caderno de notação) ---------- */
+/* ---------- Lesson 2, part 6: notebook (caderno de notação) ---------- */
 .tex .katex { font-size: 1.05em; color: var(--steel-100); }
 .tex-block { display: block; overflow-x: auto; overflow-y: hidden; margin: 12px 0; padding: 12px 18px;
   background: rgba(5, 8, 15, .65); border-left: 3px solid var(--gold-500); }

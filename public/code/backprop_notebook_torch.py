@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
-CoffeeAI · Aula 3 · Caderno em PyTorch
-======================================
+CoffeeAI · Aula 2 · parte 6 · Caderno em PyTorch
+================================================
 
 Precisa do PyTorch:  pip install torch
     python3 backprop_notebook_torch.py

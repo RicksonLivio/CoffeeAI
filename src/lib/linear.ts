@@ -1,5 +1,5 @@
 /**
- * Lesson 3: deep linear networks and the chain rule, with plain matrices.
+ * Lesson 2, part 6 (notebook): deep linear networks and the chain rule, with plain matrices.
  *
  *   f(x) = W_Lᵀ ⋯ W_2ᵀ W_1ᵀ x,   W_ℓ ∈ ℝ^{d_{ℓ−1} × d_ℓ}
  *   J(W_1, …, W_L) = Σ_i ‖f(x_i) − y_i‖²

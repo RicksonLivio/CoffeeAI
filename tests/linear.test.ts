@@ -1,4 +1,4 @@
-// Checks every formula and number of lesson 3 (backpropagation and the optimization landscape).
+// Checks every formula and number of lesson 2, part 6 (backpropagation and the optimization landscape).
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {

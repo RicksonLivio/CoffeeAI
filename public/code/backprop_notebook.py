@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 """
-CoffeeAI · Aula 3 · Caderno: como aprendemos os pesos
-=====================================================
+CoffeeAI · Aula 2 · parte 6 · Caderno: como aprendemos os pesos
+===============================================================
 
-Simulação da Aula 3 de https://ricksonlivio.github.io/CoffeeAI/#learn/3
+Simulação da parte 6 da Aula 2 de https://ricksonlivio.github.io/CoffeeAI/#learn/2
 Python puro, sem bibliotecas extras:  python3 backprop_notebook.py
 
   1. rede linear profunda f(x) = W_Lᵀ ⋯ W_1ᵀ x e o erro J = Σ ‖f(x_i) − y_i‖²   (eq. 1)
