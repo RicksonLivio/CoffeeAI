@@ -2,16 +2,20 @@ import { useEffect, useMemo, useState } from 'react';
 import {
   CartesianGrid, Legend, Line, LineChart, ReferenceLine, ResponsiveContainer, Tooltip, XAxis, YAxis,
 } from 'recharts';
-import { assets, loadCachedMlp, type Loaded } from '../../api';
+import { assets, loadCachedMlp, loadCachedMlp2, type Loaded } from '../../api';
 import { fx, num, par, pfx, useLang, type Lang } from '../../i18n';
 import {
   backprop, fireWaterHull, HAND_NET, insideConvex, POKE_NAME, predict, SCALE, sgdStep, softForward, STARTERS,
   stepForward, TYPES, loss, type Net, type Poke, type PokeType,
 } from '../../lib/mlp';
 import { classify, train, type Sample } from '../../lib/perceptron';
-import type { CachedMlp } from '../../lib/model';
+import type { CachedMlp, CachedMlp2 } from '../../lib/model';
+import { deepBackprop, deepCurve, deepPredict, toDeep, type DeepNet } from '../../lib/deep';
 import { sumExpr } from './CalcPanel';
-import MlpGraph, { type Pulse } from './MlpGraph';
+import CurvesDemo from './CurvesDemo';
+import EpochPlayer from './EpochPlayer';
+import Landscape, { type Runner } from './Landscape';
+import NetGraph, { type Pulse } from './NetGraph';
 import Note from './Note';
 import RegionChart, { type RegionPoint } from './RegionChart';
 
@@ -52,6 +56,8 @@ export default function Lesson2() {
         <a href="#l2-problema" onClick={jump('l2-problema')}><b>1</b>{pt ? 'O problema do tipo Planta' : 'The Grass-type problem'}</a>
         <a href="#l2-oculta" onClick={jump('l2-oculta')}><b>2</b>{pt ? 'A camada oculta' : 'The hidden layer'}</a>
         <a href="#l2-aprende" onClick={jump('l2-aprende')}><b>3</b>{pt ? 'Como o MLP aprende' : 'How the MLP learns'}</a>
+        <a href="#l2-passo" onClick={jump('l2-passo')}><b>4</b>{pt ? 'Tamanho do passo e mínimos' : 'Step size and minima'}</a>
+        <a href="#l2-duas" onClick={jump('l2-duas')}><b>5</b>{pt ? 'Duas camadas ocultas' : 'Two hidden layers'}</a>
       </div>
       <Problem />
       <HiddenLayer />
@@ -69,6 +75,8 @@ export default function Lesson2() {
         </div>
         {cached ? <Learning model={cached.model} /> : <div className="panel">{pt ? 'Carregando o modelo…' : 'Loading the model…'}</div>}
       </section>
+      {cached && <StepSize model={cached.model} />}
+      <TwoLayers />
     </div>
   );
 }
@@ -286,7 +294,7 @@ Grass:   w = (−1, −1), θ = −0.5   net = 0.5 − h1 − h2`}</div>
           <button className="btn btn--gold btn--sm" onClick={() => setPlay((p) => ({ id: p.id + 1, kind: 'forward' }))}>▶ {pt ? 'Propagar' : 'Forward'}</button>
           <span className="small muted">{pt ? 'Rede com os pesos escolhidos à mão, mostrando' : 'Network with the hand-picked weights, showing'} {POKE_NAME[s.id]}</span>
         </div>
-        <MlpGraph net={HAND_NET} x={[s.x1, s.x2]} h={f.h} o={f.o} winner={f.type ? TYPES.indexOf(f.type) : null} play={play} digits={1} />
+        <NetGraph net={toDeep(HAND_NET)} x={[s.x1, s.x2]} acts={[f.h, f.o]} winner={f.type ? TYPES.indexOf(f.type) : null} play={play} digits={1} />
         <div className="legend" style={{ justifyContent: 'center' }}>
           <span><i style={{ background: '#29d3e8' }} />{pt ? 'peso positivo' : 'positive weight'}</span>
           <span><i style={{ background: '#7b4dff' }} />{pt ? 'peso negativo' : 'negative weight'}</span>
@@ -352,9 +360,80 @@ function Learning({ model }: { model: CachedMlp }) {
   const d4 = (v: number) => fx(v, 4, lang);
   const p4 = (v: number) => pfx(v, 4, lang);
 
+  const [applied, setApplied] = useState(false);
+  const shownNet = applied ? after : init;
+  const shownF = applied ? fAfter : f;
+  // what goes wrong if the output weights were updated before computing the hidden error
+  const wrongOrder = useMemo(() => {
+    const d = toDeep(init);
+    const g = deepBackprop(d, venusaur);
+    const outFirst: DeepNet = { layers: [d.layers[0], d.layers[1].map((n, k) => ({ w: n.w.map((w, j) => w - eta * g.grad.layers[1][k].w[j]), theta: n.theta }))] };
+    return { right: g.delta[0], wrong: deepBackprop(outFirst, venusaur).delta[0] };
+  }, [init, venusaur, eta]);
+
   return (
     <>
       <div className="grid grid-2">
+        <article className="panel panel--gold">
+          <h3>{pt ? 'Por que agora precisamos de derivadas e do vetor gradiente' : 'Why we now need derivatives and the gradient vector'}</h3>
+          <p>
+            {pt
+              ? 'Na Aula 1, a regra Δw = η·e·x funcionava porque o neurônio era a própria saída: o erro e = d − y era dele, e cada peso ligava uma entrada direto à resposta.'
+              : 'In lesson 1, the rule Δw = η·e·x worked because the neuron was the output itself: the error e = d − y belonged to it, and each weight linked an input straight to the answer.'}
+          </p>
+          <p>
+            {pt
+              ? 'No MLP, h1 e h2 não têm resposta certa: os dados dizem o tipo do Pokémon, não o que h1 deveria valer. Então não existe um "d − y" para a camada oculta. O único erro medido está na saída, e a pergunta passa a ser: quanto cada peso escondido contribuiu para esse erro?'
+              : 'In the MLP, h1 and h2 have no right answer: the data gives the Pokémon type, not what h1 should be. So there is no "d − y" for the hidden layer. The only measured error is at the output, and the question becomes: how much did each hidden weight contribute to that error?'}
+          </p>
+          <div className="formula">{pt
+            ? `∂L/∂w_j,i = Σ_k ∂L/∂z_k · ∂z_k/∂h_j · ∂h_j/∂z_j · ∂z_j/∂w_j,i
+          = Σ_k (p_k − d_k) ·  v_k,j    · h_j(1 − h_j) ·   x_i
+(k percorre as 3 saídas: h_j influencia todas elas)`
+            : `∂L/∂w_j,i = Σ_k ∂L/∂z_k · ∂z_k/∂h_j · ∂h_j/∂z_j · ∂z_j/∂w_j,i
+          = Σ_k (p_k − d_k) ·  v_k,j    · h_j(1 − h_j) ·   x_i
+(k runs over the 3 outputs: h_j affects all of them)`}</div>
+          <p>
+            {pt
+              ? 'O caminho do peso até o erro passa por várias contas em sequência, e a regra da cadeia diz que o efeito total é o produto das derivadas de cada etapa. Por isso a ativação precisa ter derivada: com o degrau, ∂h/∂z_h = 0 em quase todo ponto, o produto inteiro vira zero e nenhum peso escondido aprenderia.'
+              : 'The path from the weight to the error goes through several operations in a row, and the chain rule says the total effect is the product of the derivatives of each step. That is why the activation needs a derivative: with the step, ∂h/∂z_h = 0 almost everywhere, the whole product becomes zero and no hidden weight would learn.'}
+          </p>
+          <p style={{ margin: 0 }}>
+            {pt
+              ? 'Juntando as 15 derivadas ∂L/∂peso num só vetor temos o gradiente ∇L. Ele aponta para onde o erro sobe mais rápido; o treino anda no sentido contrário: pesos ← pesos − η·∇L. A diferença d − y não sumiu: ela continua na saída, como δ = p − d, e o gradiente a leva para trás.'
+              : 'Putting the 15 derivatives ∂L/∂weight in one vector gives the gradient ∇L. It points to where the loss rises fastest; training moves the other way: weights ← weights − η·∇L. The difference d − y did not disappear: it stays at the output, as δ = p − d, and the gradient carries it back.'}
+          </p>
+          <Note title={pt ? 'E a regra da Aula 1?' : 'And the lesson 1 rule?'}>
+            {pt
+              ? 'Ela tem a mesma forma de um passo de gradiente para um único neurônio: erro × entrada. O backpropagation é essa mesma conta repetida camada por camada, com as derivadas fazendo a ponte entre elas.'
+              : 'It has the same shape as a gradient step for a single neuron: error × input. Backpropagation is that same calculation repeated layer by layer, with the derivatives bridging them.'}
+          </Note>
+        </article>
+        <article className="panel">
+          <h3>{pt ? 'Por que a camada oculta desenha curvas' : 'Why the hidden layer draws curves'}</h3>
+          <p>
+            {pt
+              ? 'Cada neurônio com sigmoide é um degrau suave ao longo de uma reta. Sozinho, ele só separa dois lados. Mas a saída soma vários degraus com pesos diferentes, e degraus deslocados, somados e subtraídos, formam morros, faixas e bordas curvas.'
+              : 'Each sigmoid neuron is a smooth step along a line. Alone, it only separates two sides. But the output adds several steps with different weights, and shifted steps, added and subtracted, make bumps, bands and curved borders.'}
+          </p>
+          <p>
+            {pt
+              ? 'No gráfico abaixo, dois neurônios em x = Velocidade − Defesa: um sobe em −11 e o outro desce em +11. A soma vale perto de 1 só no meio: um detector de Planta. Mexa em k, c e v para ver a forma mudar.'
+              : 'In the chart below, two neurons on x = Speed − Defense: one rises at −11 and the other falls at +11. Their sum is close to 1 only in the middle: a Grass detector. Move k, c and v to see the shape change.'}
+          </p>
+          <Note title={pt ? 'Aproximação universal' : 'Universal approximation'}>
+            {pt
+              ? 'Com neurônios ocultos suficientes, uma camada oculta com sigmoide aproxima qualquer função contínua numa região limitada, com o erro que você quiser (Cybenko, 1989; Hornik, 1991). O teorema garante que os pesos existem; achá-los é trabalho do treino.'
+              : 'With enough hidden neurons, one sigmoid hidden layer approximates any continuous function on a bounded region, to any accuracy you want (Cybenko, 1989; Hornik, 1991). The theorem guarantees the weights exist; finding them is the job of training.'}
+          </Note>
+        </article>
+      </div>
+      <div className="panel" style={{ marginTop: 20 }}>
+        <h3>{pt ? 'Somando degraus suaves' : 'Adding smooth steps'}</h3>
+        <CurvesDemo />
+      </div>
+
+      <div className="grid grid-2" style={{ marginTop: 20 }}>
         <article className="panel">
           <h3>{pt ? 'Por que trocar o degrau' : 'Why replace the step'}</h3>
           <p>
@@ -409,11 +488,22 @@ update:  weight ← weight − η · ∂L/∂weight`}</div>
         <h3>{pt ? `Um passo à mão: Venusaur com os pesos iniciais (η = ${num(eta, lang)})` : `One step by hand: Venusaur with the initial weights (η = ${num(eta, lang)})`}</h3>
         <div className="player">
           <button className="btn btn--gold btn--sm" onClick={() => setPlay((p) => ({ id: p.id + 1, kind: 'forward' }))}>▶ {pt ? 'Para a frente' : 'Forward'}</button>
-          <button className="btn btn--sm" onClick={() => setPlay((p) => ({ id: p.id + 1, kind: 'backward' }))}>◀ {pt ? 'Erro para trás' : 'Error backward'}</button>
+          <button className="btn btn--sm" onClick={() => { setApplied(false); setPlay((p) => ({ id: p.id + 1, kind: 'backward' })); }}>◀ {pt ? 'Erro para trás' : 'Error backward'}</button>
+          <button className={`btn btn--sm ${applied ? '' : 'btn--ghost'}`} onClick={() => setApplied((a) => !a)}>
+            {applied ? (pt ? '↺ Pesos antigos' : '↺ Old weights') : (pt ? '✓ Atualizar pesos' : '✓ Update weights')}
+          </button>
           <span className="small muted">{pt ? 'Pesos iniciais sorteados com semente fixa e arredondados a uma casa.' : 'Initial weights drawn with a fixed seed and rounded to one decimal.'}</span>
         </div>
         <div className="grid grid-side" style={{ alignItems: 'start' }}>
-          <MlpGraph net={init} x={[venusaur.x1, venusaur.x2]} h={f.h} o={f.p} winner={f.p.indexOf(Math.max(...f.p))} play={play} digits={1} />
+          <div>
+            <NetGraph net={toDeep(shownNet)} x={[venusaur.x1, venusaur.x2]} acts={[shownF.h, shownF.p]} winner={shownF.p.indexOf(Math.max(...shownF.p))}
+              play={play} digits={1} changed={applied} />
+            <p className="small muted" style={{ textAlign: 'center', margin: 0 }}>
+              {applied
+                ? (pt ? `Pesos depois do passo (dourado). Venusaur agora: Planta ${fx(100 * fAfter.p[2], 1, lang)}%.` : `Weights after the step (gold). Venusaur now: Grass ${fx(100 * fAfter.p[2], 1, lang)}%.`)
+                : (pt ? 'Pesos iniciais. Clique em "Atualizar pesos" para aplicar o passo.' : 'Initial weights. Click "Update weights" to apply the step.')}
+            </p>
+          </div>
           <div className="calc">
             <div className="block on">
               <div className="title">1 · {pt ? 'Para a frente' : 'Forward'} · x = ({num(f.x[0], lang)}, {num(f.x[1], lang)})</div>
@@ -482,6 +572,38 @@ update:  weight ← weight − η · ∂L/∂weight`}</div>
             : 'A step with Venusaur alone helps Venusaur a lot, but may hurt the others. In the real training below, each epoch computes this gradient for all nine Pokémon and uses the average (full-batch gradient descent).'}
         </Note>
       </div>
+
+      <div className="panel panel--gold" style={{ marginTop: 20 }}>
+        <h3>{pt ? 'Como o backpropagation corrige os erros, e em que ordem' : 'How backpropagation corrects the errors, and in what order'}</h3>
+        <ol className="rules" style={{ paddingLeft: 20 }}>
+          <li>{pt ? 'Para a frente, com os pesos atuais: entradas → h → p.' : 'Forward, with the current weights: inputs → h → p.'}</li>
+          <li>{pt ? 'Erro na saída: δo = p − d. É aqui que a resposta certa entra.' : 'Output error: δo = p − d. This is where the right answer comes in.'}</li>
+          <li>{pt ? 'Erro levado para trás: δh = (Σ v·δo)·h(1 − h), usando os v que geraram a previsão.' : 'Error carried back: δh = (Σ v·δo)·h(1 − h), using the v that produced the prediction.'}</li>
+          <li>{pt ? 'Todos os gradientes: cada peso recebe δ do neurônio de chegada × a entrada que ele carrega.' : 'All the gradients: each weight gets the δ of the neuron it feeds × the input it carries.'}</li>
+          <li>{pt ? 'Atualização de todos os pesos de uma vez: peso ← peso − η·∂L/∂peso.' : 'Update all weights at once: weight ← weight − η·∂L/∂weight.'}</li>
+        </ol>
+        <p>
+          {pt
+            ? 'Então ele não atualiza "primeiro o peso da saída e depois o da camada oculta", nem o contrário. O cálculo anda de trás para a frente (passos 2 e 3), e a atualização acontece no fim, para todos ao mesmo tempo (passo 5).'
+            : 'So it does not update "the output weight first and then the hidden one", nor the reverse. The calculation runs from back to front (steps 2 and 3), and the update happens at the end, for all of them at once (step 5).'}
+        </p>
+        <p className="small" style={{ margin: 0 }}>
+          {pt
+            ? `Prova com números (Venusaur, pesos iniciais): na ordem certa, δh = (${wrongOrder.right.map((v) => fx(v, 4, lang)).join(' ; ')}). Se os pesos da saída fossem trocados antes, daria (${wrongOrder.wrong.map((v) => fx(v, 4, lang)).join(' ; ')}): outro gradiente, que já não corresponde ao erro que a rede cometeu.`
+            : `Proof with numbers (Venusaur, initial weights): in the right order, δh = (${wrongOrder.right.map((v) => fx(v, 4, lang)).join(' ; ')}). If the output weights were changed first, it would be (${wrongOrder.wrong.map((v) => fx(v, 4, lang)).join(' ; ')}): a different gradient, which no longer matches the error the network made.`}
+        </p>
+      </div>
+
+      <div className="section-head" style={{ marginTop: 32 }}>
+        <h2>{pt ? 'Passo a passo das épocas' : 'Epochs, step by step'}</h2>
+        <span className="label">{pt ? 'como na Aula 1' : 'like lesson 1'}</span>
+      </div>
+      <p className="small" style={{ marginTop: 0 }}>
+        {pt
+          ? `Cada época tem cinco fases. Os nove Pokémon passam pela rede, os erros voltam, a média dos gradientes é calculada e os ${15} pesos mudam juntos. Escolha um Pokémon para ver as contas dele; use +10 e +100 para pular épocas.`
+          : `Each epoch has five phases. The nine Pokémon go through the network, the errors come back, the mean gradient is computed and the ${15} weights change together. Pick a Pokémon to see its arithmetic; use +10 and +100 to skip epochs.`}
+      </p>
+      <EpochPlayer init={toDeep(model.init)} eta={model.config.eta} epochs={model.config.epochs} id="l2-epocas" names={[['h1', 'h2']]} />
 
       <Training model={model} />
     </>
@@ -590,7 +712,7 @@ function Training({ model }: { model: CachedMlp }) {
       <div className="panel" style={{ marginTop: 20 }}>
         <h3>{pt ? `A rede na época ${snap.epoch}, mostrando ${POKE_NAME[s.id]}` : `The network at epoch ${snap.epoch}, showing ${POKE_NAME[s.id]}`}</h3>
         <PokePicker value={id} onChange={setId} />
-        <MlpGraph net={snap.net} x={[s.x1, s.x2]} h={f.h} o={f.p} winner={f.p.indexOf(Math.max(...f.p))} digits={1} />
+        <NetGraph net={toDeep(snap.net)} x={[s.x1, s.x2]} acts={[f.h, f.p]} winner={f.p.indexOf(Math.max(...f.p))} digits={1} />
         <Note title={pt ? 'O que a camada oculta aprendeu' : 'What the hidden layer learned'}>
           {pt
             ? `Ninguém disse à rede para comparar Velocidade com Defesa, mas no fim do treino h1 tem pesos ${fx(fin[0].w[0], 1, lang)} e ${fx(fin[0].w[1], 1, lang)}, e h2 tem ${fx(fin[1].w[0], 1, lang)} e ${fx(fin[1].w[1], 1, lang)}: cada um mede Velocidade − Defesa, com sinais opostos, como os detectores de Fogo e de Água que montei à mão na parte 2. (Entradas divididas por ${SCALE}.)`
@@ -607,5 +729,259 @@ function Training({ model }: { model: CachedMlp }) {
         </p>
       </article>
     </>
+  );
+}
+
+// --------------------------------------------------------------------------- //
+// 4. Step size, local and global minima
+// --------------------------------------------------------------------------- //
+const RUNNER_COLORS = ['#7df0ff', '#e8312f', '#ffd25e'];
+
+function StepSize({ model }: { model: CachedMlp }) {
+  const { lang } = useLang();
+  const pt = lang === 'pt';
+  const [start, setStart] = useState<[number, number]>([-2.3, -2.0]);
+  const runners: Runner[] = useMemo(() => [0.1, 0.7, 1.5].map((eta, i) => ({ eta, color: RUNNER_COLORS[i], label: `η = ${fx(eta, 1, lang)}` })), [lang]);
+  const etas = [0.2, model.config.eta, 10];
+  const runs = useMemo(() => etas.map((eta) => deepCurve(toDeep(model.init), STARTERS, eta, model.config.epochs, 5)), [model]); // eslint-disable-line react-hooks/exhaustive-deps
+  const merged = runs[0].curve.map((c, i) => ({ epoch: c.epoch, a: c.loss, b: runs[1].curve[i].loss, c: runs[2].curve[i].loss }));
+  const firstFull = runs.map((r) => r.curve.find((c) => c.accuracy === 1)?.epoch);
+  const finalAcc = runs.map((r) => r.curve[r.curve.length - 1].accuracy);
+  const finalLoss = runs.map((r) => r.curve[r.curve.length - 1].loss);
+  const satH = useMemo(() => {
+    const st = deepBackprop(runs[2].final, STARTERS.find((q) => q.id === 'venusaur')!);
+    return st.forward.a[1];
+  }, [runs]);
+
+  return (
+    <section className="section" id="l2-passo" aria-labelledby="l2-h-passo">
+      <div className="section-head">
+        <h2 id="l2-h-passo">4 · {pt ? 'O tamanho do passo: mínimo local e mínimo global' : 'Step size: local and global minima'}</h2>
+        <span className="label">{pt ? 'curvas de nível e superfície 3D' : 'contour lines and 3D surface'}</span>
+      </div>
+      <div className="grid grid-2">
+        <article className="panel">
+          <h3>{pt ? 'O erro como um relevo' : 'The loss as a landscape'}</h3>
+          <p>
+            {pt
+              ? 'Imagine uma rede com só dois pesos, a e b. Para cada par (a, b) existe um erro L. Desenhando L como altura, o erro vira um relevo: vales são pesos bons, morros são pesos ruins. Treinar é descer esse relevo.'
+              : 'Imagine a network with only two weights, a and b. For each pair (a, b) there is a loss L. Drawing L as height, the loss becomes a landscape: valleys are good weights, hills are bad ones. Training means walking down it.'}
+          </p>
+          <p>
+            {pt
+              ? 'O gradiente ∇L aponta morro acima, pelo caminho mais íngreme. A cada passo andamos η vezes o gradiente no sentido contrário: (a, b) ← (a, b) − η·∇L. Só que o gradiente é local: ele enxerga a inclinação onde você está, não o mapa inteiro.'
+              : 'The gradient ∇L points uphill, along the steepest path. Each step moves η times the gradient the other way: (a, b) ← (a, b) − η·∇L. But the gradient is local: it sees the slope where you are, not the whole map.'}
+          </p>
+          <Note title={pt ? 'Curvas de nível' : 'Contour lines'}>
+            {pt
+              ? 'Como num mapa topográfico, cada linha liga pontos com o mesmo erro. Linhas juntas = encosta íngreme; linhas espaçadas = terreno plano. O gradiente é sempre perpendicular às linhas.'
+              : 'As on a topographic map, each line joins points with the same loss. Lines close together = steep slope; spread out = flat ground. The gradient is always perpendicular to the lines.'}
+          </Note>
+        </article>
+        <article className="panel">
+          <h3>{pt ? 'Três tamanhos de passo, mesmo ponto de partida' : 'Three step sizes, same starting point'}</h3>
+          <ul className="arrows">
+            <li><span style={{ color: RUNNER_COLORS[0] }}>η = {fx(0.1, 1, lang)}</span> · {pt ? 'passos curtos: desce com cuidado o vale mais próximo e fica lá, mesmo que exista um vale mais fundo do outro lado.' : 'short steps: carefully goes down the nearest valley and stays there, even if a deeper valley exists on the other side.'}</li>
+            <li><span style={{ color: RUNNER_COLORS[1] }}>η = {fx(0.7, 1, lang)}</span> · {pt ? 'o vale local é estreito; com esse passo a bola passa do fundo, sobe do outro lado e fica pulando de uma parede para a outra.' : 'the local valley is narrow; with this step the ball overshoots the bottom, climbs the other side and keeps bouncing from wall to wall.'}</li>
+            <li><span style={{ color: RUNNER_COLORS[2] }}>η = {fx(1.5, 1, lang)}</span> · {pt ? 'passos longos o bastante para sair do vale estreito e cair no vale largo, o mínimo global.' : 'steps long enough to leave the narrow valley and land in the wide one, the global minimum.'}</li>
+          </ul>
+          <Note title={pt ? 'Não é "quanto maior, melhor"' : 'It is not "the bigger, the better"'}>
+            {pt
+              ? 'O η = 1,5 só chegou ao mínimo global porque, nesse relevo, o vale global é largo e o local é estreito. Clique em outros pontos do mapa: de alguns lugares todos chegam, de outros nenhum. E com η grande demais a descida não converge em lugar nenhum. A escolha do passo é um equilíbrio entre velocidade, estabilidade e sorte.'
+              : 'η = 1.5 only reached the global minimum because, on this landscape, the global valley is wide and the local one is narrow. Click other points on the map: from some places all of them make it, from others none does. And with η too large the descent converges nowhere. Choosing the step balances speed, stability and luck.'}
+          </Note>
+        </article>
+      </div>
+      <div className="panel" style={{ marginTop: 20 }}>
+        <Landscape runners={runners} start={start} onStart={setStart} steps={120} />
+      </div>
+
+      <div className="grid grid-side" style={{ marginTop: 20 }}>
+        <article className="panel">
+          <h3>{pt ? 'O mesmo efeito no nosso MLP' : 'The same effect in our MLP'}</h3>
+          <ResponsiveContainer width="100%" height={260}>
+            <LineChart data={merged} margin={{ top: 10, right: 16, bottom: 18, left: 4 }}>
+              <CartesianGrid stroke="#2a3547" strokeDasharray="3 3" />
+              <XAxis dataKey="epoch" type="number" domain={[0, model.config.epochs]} stroke="#a9b6c8" fontSize={11}
+                label={{ value: pt ? 'época' : 'epoch', position: 'insideBottom', offset: -8, fill: '#a9b6c8', fontSize: 11 }} />
+              <YAxis scale="log" domain={['auto', 'auto']} stroke="#a9b6c8" fontSize={11} width={52} tickFormatter={(v) => fx(v, 3, lang)} />
+              <Tooltip contentStyle={{ background: '#0d1b2a', border: '1px solid #29d3e8', fontFamily: 'var(--font-mono)', fontSize: 12 }}
+                formatter={(v: number) => fx(v, 4, lang)} labelFormatter={(e) => `${pt ? 'época' : 'epoch'} ${e}`} />
+              <Legend formatter={(v) => `η = ${fx(etas[['a', 'b', 'c'].indexOf(v)], 1, lang)}`} />
+              <Line dataKey="a" stroke={RUNNER_COLORS[0]} dot={false} isAnimationActive={false} />
+              <Line dataKey="b" stroke={RUNNER_COLORS[2]} strokeWidth={2} dot={false} isAnimationActive={false} />
+              <Line dataKey="c" stroke={RUNNER_COLORS[1]} dot={false} isAnimationActive={false} />
+            </LineChart>
+          </ResponsiveContainer>
+        </article>
+        <article className="panel">
+          <h3>{pt ? 'O que aconteceu' : 'What happened'}</h3>
+          <p className="small">
+            {pt ? 'Mesma rede de 15 pesos, mesmos pesos iniciais, só o η muda:' : 'Same 15-weight network, same initial weights, only η changes:'}
+          </p>
+          <ul className="arrows small">
+            {etas.map((eta, i) => (
+              <li key={eta}>
+                η = {fx(eta, 1, lang)}: {firstFull[i] !== undefined
+                  ? (pt ? `acerta os nove pela primeira vez na época ${firstFull[i]}; erro final ${fx(finalLoss[i], 4, lang)}.` : `first gets all nine right at epoch ${firstFull[i]}; final loss ${fx(finalLoss[i], 4, lang)}.`)
+                  : (pt ? `nunca acerta os nove (termina com ${Math.round(finalAcc[i] * 9)}/9); erro final ${fx(finalLoss[i], 4, lang)}.` : `never gets all nine right (ends with ${Math.round(finalAcc[i] * 9)}/9); final loss ${fx(finalLoss[i], 4, lang)}.`)}
+              </li>
+            ))}
+          </ul>
+          <Note title={<>{pt ? 'Por que ' : 'Why '}<span style={{ textTransform: 'none' }}>η</span>{pt ? ' = 10 travou' : ' = 10 got stuck'}</>}>
+            {pt
+              ? `Os passos grandes empurraram os pesos ocultos para uma região em que as sigmoides saturam: no fim, para o Venusaur, h = (${satH.map((v) => fx(v, 4, lang)).join(' ; ')}). Com h perto de 0, h(1 − h) também é quase 0, o erro não chega mais à camada oculta e a rede fica presa respondendo o mesmo tipo para todos. É um "platô": o gradiente quase some, e descer fica impossível.`
+              : `The large steps pushed the hidden weights into a region where the sigmoids saturate: at the end, for Venusaur, h = (${satH.map((v) => fx(v, 4, lang)).join(' ; ')}). With h near 0, h(1 − h) is also almost 0, the error no longer reaches the hidden layer and the network is stuck giving every Pokémon the same type. It is a "plateau": the gradient almost vanishes, and going down becomes impossible.`}
+          </Note>
+          <Note title={pt ? 'Na prática' : 'In practice'}>
+            {pt
+              ? 'Redes de verdade têm milhares ou milhões de pesos, então ninguém vê o relevo inteiro. Para não ficar preso usam-se: η que diminui ao longo do treino, momento (a bola ganha "embalo"), otimizadores como o Adam, e vários treinos com pesos iniciais diferentes. Com muitos pesos, pesquisas indicam que os pontos de sela e os platôs atrapalham mais que os mínimos locais ruins (Dauphin et al., 2014).'
+              : 'Real networks have thousands or millions of weights, so nobody sees the whole landscape. To avoid getting stuck people use: η that shrinks during training, momentum (the ball gains "speed"), optimizers such as Adam, and several runs with different initial weights. With many weights, research suggests saddle points and plateaus get in the way more than bad local minima (Dauphin et al., 2014).'}
+          </Note>
+        </article>
+      </div>
+    </section>
+  );
+}
+
+// --------------------------------------------------------------------------- //
+// 5. Two hidden layers
+// --------------------------------------------------------------------------- //
+function TwoLayers() {
+  const { lang } = useLang();
+  const pt = lang === 'pt';
+  const [cached, setCached] = useState<Loaded<CachedMlp2> | null>(null);
+  useEffect(() => {
+    loadCachedMlp2().then(setCached);
+  }, []);
+  if (!cached) return <section className="section" id="l2-duas"><div className="panel">{pt ? 'Carregando o modelo…' : 'Loading the model…'}</div></section>;
+  return <TwoLayersBody loaded={cached} />;
+}
+
+function TwoLayersBody({ loaded }: { loaded: Loaded<CachedMlp2> }) {
+  const { lang } = useLang();
+  const pt = lang === 'pt';
+  const T = TYPE_NAME[lang];
+  const m = loaded.model;
+  const curve = m.curve.map((c) => ({ epoch: c.epoch, loss: c.loss, acc: 100 * c.accuracy }));
+  const last = m.curve[m.curve.length - 1];
+  const firstFull = m.curve.find((c) => c.accuracy === 1)?.epoch;
+  const venusaur = STARTERS.find((q) => q.id === 'venusaur')!;
+  const b0 = deepBackprop(m.init, venusaur);
+  const mags = b0.delta.map((d) => Math.max(...d.map(Math.abs)));
+  const nWeights = m.init.layers.reduce((acc, l) => acc + l.reduce((s2, n) => s2 + n.w.length + 1, 0), 0);
+  const fFinal = deepBackprop(m.final, venusaur).forward;
+
+  return (
+    <section className="section" id="l2-duas" aria-labelledby="l2-h-duas">
+      <div className="section-head">
+        <h2 id="l2-h-duas">5 · {pt ? 'Exemplo com duas camadas ocultas' : 'Example with two hidden layers'}</h2>
+        <span className="label">
+          <span className={`led ${loaded.source === 'cache' ? 'led--ok' : ''}`} />{' '}
+          {loaded.source === 'cache' ? (pt ? `modelo em cache · ${loaded.path}` : `cached model · ${loaded.path}`) : (pt ? 'treinado no navegador' : 'trained in the browser')}
+        </span>
+      </div>
+      <div className="grid grid-2">
+        <article className="panel">
+          <h3>{pt ? 'A rede: 2 → 2 → 2 → 3' : 'The network: 2 → 2 → 2 → 3'}</h3>
+          <ul className="arrows">
+            <li>{pt ? 'Entradas: Velocidade/100 e Defesa/100, como antes.' : 'Inputs: Speed/100 and Defense/100, as before.'}</li>
+            <li>{pt ? 'Camada oculta 1 (h1, h2): pesos w e θ, sigmoide.' : 'Hidden layer 1 (h1, h2): weights w and θ, sigmoid.'}</li>
+            <li>{pt ? 'Camada oculta 2 (g1, g2): lê h1 e h2, pesos u e β, sigmoide.' : 'Hidden layer 2 (g1, g2): reads h1 and h2, weights u and β, sigmoid.'}</li>
+            <li>{pt ? `Saída (${T.fire}, ${T.water}, ${T.grass}): lê g1 e g2, pesos v e φ, softmax.` : `Output (${T.fire}, ${T.water}, ${T.grass}): reads g1 and g2, weights v and φ, softmax.`}</li>
+          </ul>
+          <p className="small">
+            {pt
+              ? `São ${nWeights} pesos, contra 15 da rede de uma camada. Treino: η = ${fx(m.config.eta, 1, lang)}, ${m.config.epochs} épocas, os nove Pokémon em cada época, pesos iniciais sorteados com semente fixa.`
+              : `That is ${nWeights} weights, against 15 in the one-layer network. Training: η = ${fx(m.config.eta, 1, lang)}, ${m.config.epochs} epochs, the nine Pokémon in every epoch, initial weights drawn with a fixed seed.`}
+          </p>
+          <Note title={pt ? 'Para que outra camada?' : 'Why another layer?'}>
+            {pt
+              ? 'A primeira camada desenha retas suaves; a segunda combina essas retas em regiões (faixas, cantos, ilhas); a saída escolhe o tipo. Para estes nove Pokémon uma camada já bastava: o objetivo aqui é ver o mesmo algoritmo com mais um degrau na regra da cadeia.'
+              : 'The first layer draws smooth lines; the second combines those lines into regions (bands, corners, islands); the output picks the type. For these nine Pokémon one layer was already enough: the goal here is to see the same algorithm with one more link in the chain rule.'}
+          </Note>
+        </article>
+        <article className="panel">
+          <h3>{pt ? 'O backpropagation com duas camadas' : 'Backpropagation with two layers'}</h3>
+          <div className="formula">{pt
+            ? `para a frente:  h = σ(w·x − θ)
+                g = σ(u·h − β)
+                p = softmax(v·g − φ)
+saída:      δo = p − d
+oculta 2:   δg_j = (Σ_k v_k,j · δo_k) · g_j(1 − g_j)
+oculta 1:   δh_i = (Σ_j u_j,i · δg_j) · h_i(1 − h_i)
+gradientes: ∂L/∂v = δo·g   ∂L/∂u = δg·h   ∂L/∂w = δh·x   (bias: δ·(−1))
+ajuste:     os ${nWeights} pesos juntos: peso ← peso − η·∂L/∂peso`
+            : `forward:   h = σ(w·x − θ)
+           g = σ(u·h − β)
+           p = softmax(v·g − φ)
+output:    δo = p − d
+hidden 2:  δg_j = (Σ_k v_k,j · δo_k) · g_j(1 − g_j)
+hidden 1:  δh_i = (Σ_j u_j,i · δg_j) · h_i(1 − h_i)
+gradients: ∂L/∂v = δo·g   ∂L/∂u = δg·h   ∂L/∂w = δh·x   (bias: δ·(−1))
+update:    all ${nWeights} weights together, weight ← weight − η·∂L/∂weight`}</div>
+          <p className="small" style={{ margin: 0 }}>
+            {pt
+              ? 'A ordem é a mesma: o erro anda da saída para g, de g para h, sempre com os pesos antigos; só no fim os 21 pesos mudam.'
+              : 'The order is the same: the error moves from the output to g, from g to h, always with the old weights; only at the end do the 21 weights change.'}
+          </p>
+          <Note title={pt ? 'O erro enfraquece a cada camada' : 'The error weakens at each layer'}>
+            {pt
+              ? `Na época 1, para o Venusaur, o maior |δ| é ${fx(mags[2], 4, lang)} na saída, ${fx(mags[1], 4, lang)} na camada 2 e ${fx(mags[0], 4, lang)} na camada 1. A derivada da sigmoide, g(1 − g), nunca passa de 0,25, então cada camada multiplica o sinal por um número pequeno. Em redes muito profundas ele quase some: é o "gradiente que desaparece", uma das razões para as redes modernas usarem a ReLU.`
+              : `In epoch 1, for Venusaur, the largest |δ| is ${fx(mags[2], 4, lang)} at the output, ${fx(mags[1], 4, lang)} in layer 2 and ${fx(mags[0], 4, lang)} in layer 1. The sigmoid derivative, g(1 − g), never exceeds 0.25, so each layer multiplies the signal by a small number. In very deep networks it almost disappears: the "vanishing gradient", one reason modern networks use ReLU.`}
+          </Note>
+        </article>
+      </div>
+
+      <div className="section-head" style={{ marginTop: 32 }}>
+        <h2>{pt ? 'Passo a passo das épocas, duas camadas' : 'Epochs step by step, two layers'}</h2>
+      </div>
+      <EpochPlayer init={m.init} eta={m.config.eta} epochs={m.config.epochs} id="l2-epocas2" names={[['h1', 'h2'], ['g1', 'g2']]} />
+
+      <div className="grid grid-2" style={{ marginTop: 20 }}>
+        <article className="panel">
+          <h3>{pt ? 'Erro e acertos ao longo do treino' : 'Loss and accuracy during training'}</h3>
+          <ResponsiveContainer width="100%" height={240}>
+            <LineChart data={curve} margin={{ top: 10, right: 20, bottom: 18, left: 4 }}>
+              <CartesianGrid stroke="#2a3547" strokeDasharray="3 3" />
+              <XAxis dataKey="epoch" type="number" domain={[0, m.config.epochs]} stroke="#a9b6c8" fontSize={11}
+                label={{ value: pt ? 'época' : 'epoch', position: 'insideBottom', offset: -8, fill: '#a9b6c8', fontSize: 11 }} />
+              <YAxis yAxisId="l" scale="log" domain={['auto', 'auto']} stroke="#ffd25e" fontSize={11} width={52} tickFormatter={(v) => fx(v, 3, lang)} />
+              <YAxis yAxisId="a" orientation="right" domain={[0, 100]} stroke="#29d3e8" fontSize={11} unit="%" width={44} />
+              <Tooltip contentStyle={{ background: '#0d1b2a', border: '1px solid #29d3e8', fontFamily: 'var(--font-mono)', fontSize: 12 }}
+                formatter={(v: number, n: string) => (n === 'acc' ? [`${fx(v, 0, lang)}%`, pt ? 'acertos' : 'accuracy'] : [fx(v, 4, lang), pt ? 'erro L' : 'loss L'])}
+                labelFormatter={(e) => `${pt ? 'época' : 'epoch'} ${e}`} />
+              <Legend formatter={(v) => (v === 'acc' ? (pt ? 'acertos (%)' : 'accuracy (%)') : (pt ? 'erro médio L (log)' : 'mean loss L (log)'))} />
+              <Line yAxisId="l" dataKey="loss" stroke="#ffd25e" strokeWidth={2} dot={false} isAnimationActive={false} />
+              <Line yAxisId="a" dataKey="acc" stroke="#29d3e8" strokeWidth={1.6} dot={false} isAnimationActive={false} type="stepAfter" />
+            </LineChart>
+          </ResponsiveContainer>
+          <p className="small muted" style={{ margin: 0 }}>
+            {pt
+              ? `Acerta os nove pela primeira vez na época ${firstFull}; termina com erro médio ${fx(last.loss, 4, lang)} e ${Math.round(last.accuracy * 9)}/9 acertos.`
+              : `First gets all nine right at epoch ${firstFull}; ends with mean loss ${fx(last.loss, 4, lang)} and ${Math.round(last.accuracy * 9)}/9 correct.`}
+          </p>
+        </article>
+        <article className="panel">
+          <h3>{pt ? 'Regiões no fim do treino' : 'Regions at the end of training'}</h3>
+          <RegionChart x={PLANE} y={PLANE} ticks={PLANE_TICKS} xLabel={pt ? 'x1 · Velocidade' : 'x1 · Speed'} yLabel={pt ? 'x2 · Defesa' : 'x2 · Defense'}
+            points={toPoints(lang)} region={(a, c) => deepPredict(m.final, a, c)} />
+          <p className="small muted" style={{ margin: 0 }}>
+            {pt
+              ? `Venusaur no fim: ${T.fire} ${fx(100 * fFinal.p[0], 1, lang)}%, ${T.water} ${fx(100 * fFinal.p[1], 1, lang)}%, ${T.grass} ${fx(100 * fFinal.p[2], 1, lang)}%. A faixa de Planta aparece entre Fogo e Água, como na rede de uma camada.`
+              : `Venusaur at the end: ${T.fire} ${fx(100 * fFinal.p[0], 1, lang)}%, ${T.water} ${fx(100 * fFinal.p[1], 1, lang)}%, ${T.grass} ${fx(100 * fFinal.p[2], 1, lang)}%. The Grass band sits between Fire and Water, as in the one-layer network.`}
+          </p>
+        </article>
+      </div>
+
+      <article className="panel panel--gold tip" style={{ marginTop: 20 }}>
+        <span className="label">★ {pt ? 'Ponto-chave' : 'Key point'}</span>
+        <p style={{ margin: '8px 0 0' }}>
+          {pt
+            ? 'Com uma ou com duas camadas ocultas, o treino é o mesmo ciclo: propaga para a frente, mede o erro na saída, leva o erro para trás com a regra da cadeia e atualiza todos os pesos juntos, com um passo η escolhido com cuidado. Mais camadas dão mais formas possíveis, mas também um sinal de erro mais fraco nas primeiras camadas.'
+            : 'With one or two hidden layers, training is the same cycle: propagate forward, measure the error at the output, carry it back with the chain rule and update all weights together, with a carefully chosen step η. More layers allow more shapes, but also a weaker error signal in the first layers.'}
+        </p>
+      </article>
+    </section>
   );
 }

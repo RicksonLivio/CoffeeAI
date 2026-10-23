@@ -3,7 +3,9 @@
 // still match what src/lib/ produces, so code and cache cannot drift apart.
 // Run with: npm run export-model
 import { writeFileSync, mkdirSync } from 'node:fs';
-import { buildCachedMlp, buildCachedModel, CACHED_MLP_PATH, CACHED_MODEL_PATH } from '../src/lib/model.ts';
+import {
+  buildCachedMlp, buildCachedMlp2, buildCachedModel, CACHED_MLP2_PATH, CACHED_MLP_PATH, CACHED_MODEL_PATH,
+} from '../src/lib/model.ts';
 
 function write(path: string, obj: unknown) {
   const out = new URL(`../public/${path}`, import.meta.url);
@@ -19,3 +21,8 @@ const m = buildCachedMlp();
 write(CACHED_MLP_PATH, m);
 const last = m.curve[m.curve.length - 1];
 console.log(`wrote public/${CACHED_MLP_PATH}: ${m.config.epochs} epochs, loss=${last.loss.toFixed(4)}, accuracy=${last.accuracy}`);
+
+const m2 = buildCachedMlp2();
+write(CACHED_MLP2_PATH, m2);
+const last2 = m2.curve[m2.curve.length - 1];
+console.log(`wrote public/${CACHED_MLP2_PATH}: ${m2.config.epochs} epochs, loss=${last2.loss.toFixed(4)}, accuracy=${last2.accuracy}`);

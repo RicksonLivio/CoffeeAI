@@ -57,9 +57,26 @@ Charmeleon, Charizard, Squirtle, Wartortle, Blastoise, Bulbasaur, Ivysaur, Venus
    `public/models/mlp_pokemon/model.json`, with the loss curve, the regions per epoch and the weights the
    hidden layer learned.
 
-`tests/mlp.test.ts` checks the claims: the hull argument, the non-convergence of the single perceptron,
-the hand-made network on all nine Pokémon, the backpropagation gradient against a numerical gradient, and
-the trained network getting all nine right.
+Parts added after that:
+
+* **Why derivatives and the gradient vector:** hidden neurons have no target, so the output error has to
+  be carried back with the chain rule, which needs an activation with a derivative; a small demo shows how
+  adding shifted sigmoids makes bumps and curves (universal approximation).
+* **Order of backpropagation:** errors are computed from the output back with the old weights, then all
+  weights are updated at once; the page shows the numbers you would get with the wrong order.
+* **Epochs step by step,** like lesson 1: forward → output error → error backward → mean gradient →
+  update, with the weights on the graph changing in the update phase (`src/components/learn/EpochPlayer.tsx`).
+* **4 · Step size:** gradient descent animated on a toy error surface (`src/lib/landscape.ts`), as contour
+  lines and a rotatable 3D surface: η = 0.1 stops in the local minimum, η = 0.7 bounces, η = 1.5 reaches the
+  global one. The same MLP trained with η = 0.2, 2 and 10 shows slow learning and a plateau.
+* **5 · Two hidden layers:** a 2 → 2 → 2 → 3 network (21 weights, `src/lib/deep.ts`, cached in
+  `public/models/mlp2_pokemon/model.json`) with the same detailed player and the error shrinking layer by
+  layer.
+
+`tests/mlp.test.ts` and `tests/deep.test.ts` check the claims: the hull argument, the non-convergence of the single perceptron,
+the hand-made network on all nine Pokémon, the backpropagation gradient against a numerical gradient (one
+and two hidden layers), the update order, the step-size outcomes and the trained networks getting all nine
+right.
 
 ## How it is built
 
@@ -72,8 +89,10 @@ retraining, the lesson reads a **cached model**:
 ```
 src/lib/perceptron.ts                        the perceptron, written to be read in class
 src/lib/mlp.ts                               the MLP: hand-made step network, sigmoid/softmax, backpropagation
+src/lib/deep.ts                              any number of hidden layers: epochs, gradients, history
+src/lib/landscape.ts                         toy error surface with a local and a global minimum
 src/lib/model.ts                             builds the cached model (config, samples, full trace, final weights)
-scripts/export-model.ts                      writes public/models/{perceptron_pokemon,mlp_pokemon}/model.json
+scripts/export-model.ts                      writes public/models/{perceptron_pokemon,mlp_pokemon,mlp2_pokemon}/model.json
 tests/cached-model.test.ts                   fails if a JSON no longer matches the code
 ```
 

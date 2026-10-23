@@ -1,7 +1,8 @@
 // Static "API": the site has no backend, it reads files published with it (GitHub Pages).
 // Same idea as web_app/frontend/src/api.ts in the NFH app, with files instead of FastAPI routes.
 import {
-  buildCachedMlp, buildCachedModel, CACHED_MLP_PATH, CACHED_MODEL_PATH, type CachedMlp, type CachedModel,
+  buildCachedMlp, buildCachedMlp2, buildCachedModel, CACHED_MLP2_PATH, CACHED_MLP_PATH, CACHED_MODEL_PATH,
+  type CachedMlp, type CachedMlp2, type CachedModel,
 } from './lib/model';
 
 const BASE = import.meta.env.BASE_URL;
@@ -34,3 +35,4 @@ async function load<T>(path: string, fallback: () => T): Promise<Loaded<T>> {
 
 export const loadCachedModel = () => load<CachedModel>(CACHED_MODEL_PATH, () => buildCachedModel());
 export const loadCachedMlp = () => load<CachedMlp>(CACHED_MLP_PATH, () => buildCachedMlp());
+export const loadCachedMlp2 = () => load<CachedMlp2>(CACHED_MLP2_PATH, () => buildCachedMlp2());

@@ -3,10 +3,12 @@ import {
   type EpochSummary, type Sample, type TrainStep, type Weights,
 } from './perceptron.ts';
 import { initNet, SCALE, STARTERS, trainMlp, type MlpTrainResult, type Net, type Poke } from './mlp.ts';
+import { deepCurve, initDeep, type DeepNet } from './deep.ts';
 
 /** Paths of the cached models, relative to the site root (public/ in the repo). */
 export const CACHED_MODEL_PATH = 'models/perceptron_pokemon/model.json';
 export const CACHED_MLP_PATH = 'models/mlp_pokemon/model.json';
+export const CACHED_MLP2_PATH = 'models/mlp2_pokemon/model.json';
 
 export interface CachedModel {
   name: string;
@@ -90,6 +92,52 @@ export function buildCachedMlp(): CachedMlp {
     init,
     curve: r.curve,
     snapshots: r.snapshots,
+    final: r.final,
+  };
+}
+
+/** Two hidden layers (2 → 2 → 2 → 3), same data, inputs and loss as the one-hidden-layer network. */
+export interface CachedMlp2 {
+  name: string;
+  version: number;
+  task: string;
+  config: {
+    seed: number;
+    eta: number;
+    epochs: number;
+    sizes: number[];
+    hidden_activation: 'sigmoid';
+    output: 'softmax';
+    loss: 'cross-entropy';
+    input_scale: number;
+    batch: 'full';
+  };
+  data: Poke[];
+  init: DeepNet;
+  curve: { epoch: number; loss: number; accuracy: number }[];
+  final: DeepNet;
+}
+
+export const MLP2_CONFIG = { seed: 2, eta: 2, epochs: 2000, sizes: [2, 2, 3] };
+
+export function buildCachedMlp2(): CachedMlp2 {
+  const init = initDeep(MLP2_CONFIG.seed, MLP2_CONFIG.sizes);
+  const r = deepCurve(init, STARTERS, MLP2_CONFIG.eta, MLP2_CONFIG.epochs, 5);
+  return {
+    name: 'mlp2_pokemon',
+    version: 1,
+    task: 'Fire, Water or Grass from base Speed and Defense, with two hidden layers',
+    config: {
+      ...MLP2_CONFIG,
+      hidden_activation: 'sigmoid',
+      output: 'softmax',
+      loss: 'cross-entropy',
+      input_scale: SCALE,
+      batch: 'full',
+    },
+    data: STARTERS,
+    init,
+    curve: r.curve,
     final: r.final,
   };
 }

@@ -2,7 +2,9 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
-import { buildCachedMlp, buildCachedModel, CACHED_MLP_PATH, CACHED_MODEL_PATH } from '../src/lib/model.ts';
+import {
+  buildCachedMlp, buildCachedMlp2, buildCachedModel, CACHED_MLP2_PATH, CACHED_MLP_PATH, CACHED_MODEL_PATH,
+} from '../src/lib/model.ts';
 
 const read = (p: string) => JSON.parse(readFileSync(new URL(`../public/${p}`, import.meta.url), 'utf8'));
 
@@ -27,4 +29,8 @@ test('perceptron cache matches src/lib/perceptron.ts (run npm run export-model i
 
 test('MLP cache matches src/lib/mlp.ts (run npm run export-model if this fails)', () => {
   close(read(CACHED_MLP_PATH), JSON.parse(JSON.stringify(buildCachedMlp())));
+});
+
+test('two-hidden-layer MLP cache matches src/lib/deep.ts (run npm run export-model if this fails)', () => {
+  close(read(CACHED_MLP2_PATH), JSON.parse(JSON.stringify(buildCachedMlp2())));
 });
