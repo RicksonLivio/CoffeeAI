@@ -325,3 +325,20 @@ select {
 .nb-card.warn > .nb-kind { background: var(--alert-500); color: #fff; }
 .nb-card p:last-child { margin-bottom: 0; }
 .qed { float: right; color: var(--gold-400); }
+
+/* ---------- Expandable notes (details) ---------- */
+.xnote { margin-top: 10px; border: 1px solid var(--steel-600); background: rgba(13, 27, 42, .9); }
+.xnote[open] { border-color: var(--cyan-400); }
+.xnote > summary {
+  cursor: pointer; list-style: none; padding: 10px 14px; display: flex; gap: 10px; align-items: center;
+  font-family: var(--font-ui); font-weight: 700; text-transform: uppercase; letter-spacing: .1em; font-size: .82rem; color: var(--cyan-300);
+}
+.xnote > summary::-webkit-details-marker { display: none; }
+.xnote > summary::before {
+  content: "+"; display: grid; place-items: center; width: 20px; height: 20px; flex: 0 0 auto;
+  font-family: var(--font-mono); color: var(--navy-900); background: var(--gold-500);
+  clip-path: polygon(25% 5%, 75% 5%, 100% 50%, 75% 95%, 25% 95%, 0 50%);
+}
+.xnote[open] > summary::before { content: "−"; }
+.xnote > .xbody { padding: 4px 18px 16px; }
+.xnote.warn > summary { color: #ff9b9b; }

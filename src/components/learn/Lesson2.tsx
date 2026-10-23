@@ -24,6 +24,7 @@ import BiasExplain from './BiasExplain';
 
 // part 6 brings KaTeX (formulas): loaded only when the lesson is open
 const Notebook = lazy(() => import('./Notebook'));
+const DeltaDerivation = lazy(() => import('./DeltaDerivation'));
 import RegionChart, { type RegionPoint } from './RegionChart';
 
 const TYPE_NAME: Record<Lang, Record<PokeType, string>> = {
@@ -486,6 +487,11 @@ function Learning({ model }: { model: CachedMlp }) {
       </div>
       <LossExplain init={init} final={model.final} eta={eta} />
       <ThreeClassError p={f0.p} h={f0.h} v={init.output.map((n) => n.w)} />
+      <div className="panel" style={{ marginTop: 12 }}>
+        <Suspense fallback={<p className="small muted" style={{ margin: 0 }}>{pt ? 'Carregando as notas…' : 'Loading the notes…'}</p>}>
+          <DeltaDerivation z={f0.zo} />
+        </Suspense>
+      </div>
       <div className="section-head" style={{ marginTop: 36 }}>
         <h2 style={{ fontSize: 'clamp(1rem, 2vw, 1.3rem)' }}>3.4 · {pt ? 'Como diminuir a loss: gradiente e backpropagation' : 'How to reduce the loss: gradient and backpropagation'}</h2>
       </div>
