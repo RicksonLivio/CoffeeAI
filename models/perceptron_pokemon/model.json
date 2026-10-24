@@ -1,0 +1,199 @@
+{
+  "name": "perceptron_pokemon",
+  "version": 1,
+  "task": "Fire (Charizard) vs Water (Blastoise) from base Speed and Defense",
+  "features": {
+    "x1": "speed",
+    "x2": "defense",
+    "x0": "bias input (-1)"
+  },
+  "classes": {
+    "0": "water",
+    "1": "fire"
+  },
+  "config": {
+    "eta": 1,
+    "init": {
+      "w1": 0,
+      "w2": 0,
+      "theta": 0.5
+    },
+    "max_epochs": 20,
+    "activation": "step",
+    "x0": -1
+  },
+  "samples": [
+    {
+      "id": "charizard",
+      "x1": 100,
+      "x2": 78,
+      "d": 1
+    },
+    {
+      "id": "blastoise",
+      "x1": 78,
+      "x2": 100,
+      "d": 0
+    }
+  ],
+  "trace": [
+    {
+      "epoch": 1,
+      "index": 0,
+      "sample": {
+        "id": "charizard",
+        "x1": 100,
+        "x2": 78,
+        "d": 1
+      },
+      "before": {
+        "w1": 0,
+        "w2": 0,
+        "theta": 0.5
+      },
+      "products": [
+        0,
+        0,
+        -0.5
+      ],
+      "net": -0.5,
+      "y": 0,
+      "e": 1,
+      "delta": {
+        "w1": 100,
+        "w2": 78,
+        "theta": -1
+      },
+      "after": {
+        "w1": 100,
+        "w2": 78,
+        "theta": -0.5
+      }
+    },
+    {
+      "epoch": 1,
+      "index": 1,
+      "sample": {
+        "id": "blastoise",
+        "x1": 78,
+        "x2": 100,
+        "d": 0
+      },
+      "before": {
+        "w1": 100,
+        "w2": 78,
+        "theta": -0.5
+      },
+      "products": [
+        7800,
+        7800,
+        0.5
+      ],
+      "net": 15600.5,
+      "y": 1,
+      "e": -1,
+      "delta": {
+        "w1": -78,
+        "w2": -100,
+        "theta": 1
+      },
+      "after": {
+        "w1": 22,
+        "w2": -22,
+        "theta": 0.5
+      }
+    },
+    {
+      "epoch": 2,
+      "index": 0,
+      "sample": {
+        "id": "charizard",
+        "x1": 100,
+        "x2": 78,
+        "d": 1
+      },
+      "before": {
+        "w1": 22,
+        "w2": -22,
+        "theta": 0.5
+      },
+      "products": [
+        2200,
+        -1716,
+        -0.5
+      ],
+      "net": 483.5,
+      "y": 1,
+      "e": 0,
+      "delta": {
+        "w1": 0,
+        "w2": 0,
+        "theta": 0
+      },
+      "after": {
+        "w1": 22,
+        "w2": -22,
+        "theta": 0.5
+      }
+    },
+    {
+      "epoch": 2,
+      "index": 1,
+      "sample": {
+        "id": "blastoise",
+        "x1": 78,
+        "x2": 100,
+        "d": 0
+      },
+      "before": {
+        "w1": 22,
+        "w2": -22,
+        "theta": 0.5
+      },
+      "products": [
+        1716,
+        -2200,
+        -0.5
+      ],
+      "net": -484.5,
+      "y": 0,
+      "e": 0,
+      "delta": {
+        "w1": 0,
+        "w2": 0,
+        "theta": 0
+      },
+      "after": {
+        "w1": 22,
+        "w2": -22,
+        "theta": 0.5
+      }
+    }
+  ],
+  "epochs": [
+    {
+      "epoch": 1,
+      "errors": 2,
+      "weights": {
+        "w1": 22,
+        "w2": -22,
+        "theta": 0.5
+      }
+    },
+    {
+      "epoch": 2,
+      "errors": 0,
+      "weights": {
+        "w1": 22,
+        "w2": -22,
+        "theta": 0.5
+      }
+    }
+  ],
+  "converged": true,
+  "final": {
+    "w1": 22,
+    "w2": -22,
+    "theta": 0.5
+  }
+}
