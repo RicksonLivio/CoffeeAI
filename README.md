@@ -189,7 +189,9 @@ belongs to Capcom. They are used here for teaching, with no commercial purpose.
 
 ## Contributing
 
-Only the owner commits to `main`. `.github/CODEOWNERS` assigns every file to @RicksonLivio, and the
-`main` ruleset on GitHub requires a pull request approved by the code owner, so changes from anyone else
-wait for that approval. Local commits in this clone use the personal GitHub identity
-(`git config --local user.email 50837771+RicksonLivio@users.noreply.github.com`).
+Only the owner commits to `main`. A repository ruleset on `main` blocks deletion and force pushes and
+requires a pull request with one approval from the code owner (`.github/CODEOWNERS` assigns every file to
+@RicksonLivio), so changes from any other account wait for that approval. The owner (repository admin) is
+the only bypass. `gh-pages` is outside the rule: the Pages workflow rewrites it on every deploy, signing the
+commits as RicksonLivio. Local commits in this clone use the personal GitHub identity
+(`50837771+RicksonLivio@users.noreply.github.com`).
