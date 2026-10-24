@@ -36,8 +36,9 @@ jobs:
         run: |
           cd dist
           git init -q -b gh-pages
-          git config user.name "github-actions[bot]"
-          git config user.email "41898283+github-actions[bot]@users.noreply.github.com"
+          # deploy commits are signed with the owner's identity (no github-actions[bot] in the history)
+          git config user.name "Rickson Livio de Souza Gaspar"
+          git config user.email "50837771+RicksonLivio@users.noreply.github.com"
           git add -A
           git commit -q -m "Deploy ${GITHUB_SHA::7} from main"
           git push -q -f "https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" gh-pages
