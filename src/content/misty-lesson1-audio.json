@@ -1,37 +1,47 @@
 {
-  "model": "hexgrad/Kokoro-82M",
-  "voices": {
-    "pt": "pf_dora",
-    "en": "af_heart"
-  },
+  "model": "Qwen/Qwen3-TTS-12Hz-1.7B-CustomVoice",
   "pt": {
-    "duration": 573.92,
+    "duration": 818.18,
     "starts": [
       0.0,
-      37.9,
-      96.72,
-      147.8,
-      203.45,
-      270.3,
-      339.1,
-      414.25,
-      485.07,
-      533.9
-    ]
+      47.18,
+      123.04,
+      199.18,
+      280.42,
+      376.74,
+      480.32,
+      586.42,
+      694.34,
+      760.96
+    ],
+    "checked": {
+      "paragraphs": 29,
+      "number_errors": 0,
+      "max_wer": 0.066,
+      "final_mp3_sections_ok": 10
+    }
   },
   "en": {
-    "duration": 616.23,
+    "duration": 801.8,
     "starts": [
       0.0,
-      40.92,
-      100.4,
-      155.93,
-      220.05,
-      295.43,
-      372.07,
-      451.52,
-      524.88,
-      574.67
-    ]
-  }
+      44.74,
+      116.72,
+      191.92,
+      274.06,
+      372.82,
+      473.32,
+      577.0,
+      674.54,
+      744.32
+    ],
+    "checked": {
+      "paragraphs": 29,
+      "number_errors": 0,
+      "max_wer": 0.077,
+      "final_mp3_sections_ok": 10
+    }
+  },
+  "speaker": "vivian",
+  "asr_check": "whisper large-v3-turbo"
 }

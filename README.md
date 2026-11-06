@@ -98,16 +98,19 @@ Safran & Shamir, 2018). `src/lib/linear.ts` and `tests/linear.test.ts` check eve
 ### Misty's audio lesson
 
 A small item right under lesson 1 (above the mini-game) has a round Misty portrait (`public/misty.jpg`, the face
-cropped from a bust picture): one click plays a ~10 minute audio in which Misty, as a fellow trainer, goes through lesson 1 with
-Pokémon analogies and every calculation (9:33 in Portuguese, 10:16 in English). It also lists chapters that
+cropped from a bust picture): one click plays a ~13 minute audio in which Misty, as a fellow trainer, goes through lesson 1 with
+Pokémon analogies and every calculation (13:38 in Portuguese, 13:21 in English). It also lists chapters that
 jump to each part and the full text. The text is `src/content/misty-lesson1.json`; `tests/misty.test.ts`
 checks every number it says against `src/lib/perceptron.ts`.
 
-The voice is synthetic: [Kokoro-82M](https://huggingface.co/hexgrad/Kokoro-82M) (Apache 2.0), voices
-`pf_dora` (pt-BR) and `af_heart` (en-US), chosen to sound close to Misty's tone. It is not a clone of the
-voice actress. `scripts/misty_tts.py` turns the JSON into `public/audio/misty_lesson1_{pt,en}.mp3` (mono,
-48 kbit/s, about 3.5 MB each, downloaded only when played) and `src/content/misty-lesson1-audio.json`
-(chapter times). Setup and the command are at the top of the script; regenerate after editing the text.
+The voice is synthetic: [Qwen3-TTS](https://huggingface.co/Qwen/Qwen3-TTS-12Hz-1.7B-CustomVoice) 1.7B
+CustomVoice (Apache 2.0), built-in speaker `vivian`, chosen to sound close to Misty's tone. It is not a clone of
+the voice actress. `scripts/misty_tts.py` reads each paragraph with numbers written out in words, transcribes it
+back with Whisper (large-v3-turbo) and regenerates it until every number matches the text; then it transcribes
+the finished MP3 chapter by chapter and checks the numbers again. It writes
+`public/audio/misty_lesson1_{pt,en}.mp3` (mono, 48 kbit/s, about 4.8 MB each, downloaded only when played) and
+`src/content/misty-lesson1-audio.json` (chapter times and the check summary). It needs an NVIDIA GPU; setup and
+the command are at the top of the script. Regenerate after editing the text (only changed paragraphs are redone).
 
 ### Mini-game: Pokédex, phase 1
 

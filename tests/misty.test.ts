@@ -10,7 +10,7 @@ const script = JSON.parse(readFileSync(new URL('../src/content/misty-lesson1.jso
   sections: { id: string; title: [string, string]; text: [string[], string[]] }[];
 };
 const audio = JSON.parse(readFileSync(new URL('../src/content/misty-lesson1-audio.json', import.meta.url), 'utf8')) as Record<
-  'pt' | 'en', { duration: number; starts: number[] }
+  'pt' | 'en', { duration: number; starts: number[]; checked: { paragraphs: number; number_errors: number; final_mp3_sections_ok: number } }
 >;
 
 const said = (id: string, lang: 0 | 1) => script.sections.find((s) => s.id === id)!.text[lang].join(' ');
@@ -74,13 +74,22 @@ test('Venusaur: 1760 − 1826 − 0.5 = −66.5 → Water', () => {
   mentions('venusaur', [1760, 1826, v.net]);
 });
 
-test('audio timings: one start per section, increasing, within the duration, about 10 minutes', () => {
+test('audio timings: one start per section, increasing, within the duration, 10 to 15 minutes', () => {
   for (const lang of ['pt', 'en'] as const) {
     const a = audio[lang];
     assert.equal(a.starts.length, script.sections.length);
     assert.equal(a.starts[0], 0);
     for (let k = 1; k < a.starts.length; k++) assert.ok(a.starts[k] > a.starts[k - 1]);
     assert.ok(a.starts.at(-1)! < a.duration);
-    assert.ok(a.duration > 8.5 * 60 && a.duration < 12 * 60, `${lang} duration ${a.duration}s`);
+    assert.ok(a.duration > 9 * 60 && a.duration < 15 * 60, `${lang} duration ${a.duration}s`);
+  }
+});
+
+test('the generator checked every paragraph and every chapter of the MP3 with no number errors', () => {
+  const paragraphs = script.sections.reduce((n, s) => n + s.text[0].length, 0);
+  for (const lang of ['pt', 'en'] as const) {
+    assert.deepEqual(audio[lang].checked.paragraphs, paragraphs);
+    assert.equal(audio[lang].checked.number_errors, 0);
+    assert.equal(audio[lang].checked.final_mp3_sections_ok, script.sections.length);
   }
 });
