@@ -1,6 +1,7 @@
 import { Fragment, Suspense, useEffect, useState } from 'react';
 import { useLang } from '../i18n';
 import GameCard from './game/GameCard';
+import MistyAudio from './misty/MistyAudio';
 import Lesson1 from './learn/Lesson1';
 import Lesson2 from './learn/Lesson2';
 import PythonButton, { type CodeFile } from './learn/PythonButton';
@@ -155,7 +156,8 @@ export default function LearnSheet({ open, onToggle }: { open: number[]; onToggl
               </div>
             )}
           </section>
-          {/* The mini-game uses lesson 1, so it sits right after it, indented under it. */}
+          {/* Misty's audio and the mini-game use lesson 1, so they sit right after it, indented under it. */}
+          {l.n === 1 && <MistyAudio />}
           {l.n === 1 && <GameCard onLesson={openLesson} />}
           </Fragment>
         );

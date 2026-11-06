@@ -1,0 +1,111 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" role="img" aria-label="Misty">
+  <!-- Misty, chibi portrait with 3D-style shading (CoffeeAI, Lesson 1 audio). Fan art for teaching. -->
+  <defs>
+    <radialGradient id="bg" cx="38%" cy="28%" r="80%">
+      <stop offset="0" stop-color="#bff8ff"/>
+      <stop offset=".35" stop-color="#29d3e8"/>
+      <stop offset=".75" stop-color="#1e5bd8"/>
+      <stop offset="1" stop-color="#0a1424"/>
+    </radialGradient>
+    <linearGradient id="ring" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#ffd25e"/>
+      <stop offset=".55" stop-color="#f5b52a"/>
+      <stop offset="1" stop-color="#b8913a"/>
+    </linearGradient>
+    <radialGradient id="skin" cx="40%" cy="34%" r="75%">
+      <stop offset="0" stop-color="#fff1e2"/>
+      <stop offset=".5" stop-color="#ffd2ad"/>
+      <stop offset="1" stop-color="#e59a74"/>
+    </radialGradient>
+    <linearGradient id="hair" x1="0" y1="0" x2=".3" y2="1">
+      <stop offset="0" stop-color="#ffc061"/>
+      <stop offset=".45" stop-color="#ff7d1f"/>
+      <stop offset="1" stop-color="#c9420c"/>
+    </linearGradient>
+    <linearGradient id="hairBack" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#e8661a"/>
+      <stop offset="1" stop-color="#9c300a"/>
+    </linearGradient>
+    <linearGradient id="top" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#fff07a"/>
+      <stop offset=".5" stop-color="#f7c531"/>
+      <stop offset="1" stop-color="#c98a12"/>
+    </linearGradient>
+    <linearGradient id="strap" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#ff5a4e"/>
+      <stop offset="1" stop-color="#a3161a"/>
+    </linearGradient>
+    <radialGradient id="iris" cx="50%" cy="70%" r="70%">
+      <stop offset="0" stop-color="#b8ffe6"/>
+      <stop offset=".45" stop-color="#2fbf94"/>
+      <stop offset="1" stop-color="#0c5446"/>
+    </radialGradient>
+    <radialGradient id="band" cx="35%" cy="30%" r="70%">
+      <stop offset="0" stop-color="#b9c4ff"/>
+      <stop offset="1" stop-color="#3d3fd1"/>
+    </radialGradient>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="2.5" stdDeviation="2" flood-color="#05080f" flood-opacity=".45"/>
+    </filter>
+    <clipPath id="disc"><circle cx="64" cy="64" r="60"/></clipPath>
+  </defs>
+
+  <circle cx="64" cy="64" r="60" fill="url(#bg)"/>
+  <g clip-path="url(#disc)">
+    <!-- water bubbles -->
+    <circle cx="24" cy="40" r="5" fill="#fff" opacity=".25"/>
+    <circle cx="18" cy="56" r="2.5" fill="#fff" opacity=".3"/>
+    <circle cx="106" cy="76" r="3.5" fill="#fff" opacity=".22"/>
+
+    <g filter="url(#soft)">
+      <!-- body: yellow top with red suspenders -->
+      <path d="M22 130 C24 106 40 97 64 97 C88 97 104 106 106 130 Z" fill="url(#top)"/>
+      <path d="M41 100 L50 98 L55 130 L45 130 Z" fill="url(#strap)"/>
+      <path d="M87 100 L78 98 L73 130 L83 130 Z" fill="url(#strap)"/>
+      <path d="M56 84 L72 84 L71 99 Q64 103 57 99 Z" fill="#eaa883"/>
+
+      <!-- hair behind the head and the side ponytail -->
+      <path d="M28 70 C22 44 38 22 64 22 C90 22 104 42 99 70 L93 84 L90 66 L36 66 L34 84 Z" fill="url(#hairBack)"/>
+      <path d="M90 40 C98 28 110 22 121 10 C119 22 121 30 116 40 C123 38 126 44 124 50 C116 46 108 48 100 54 Z" fill="url(#hair)"/>
+      <path d="M100 30 C108 24 114 18 119 12" stroke="#ffe0a3" stroke-width="1.6" fill="none" stroke-linecap="round" opacity=".7"/>
+      <ellipse cx="94" cy="44" rx="5.5" ry="4.5" transform="rotate(-35 94 44)" fill="url(#band)"/>
+
+      <!-- face -->
+      <ellipse cx="36.5" cy="72" rx="4" ry="6" fill="#efb08b"/>
+      <ellipse cx="91.5" cy="72" rx="4" ry="6" fill="#efb08b"/>
+      <path d="M37 62 C37 86 50 97 64 97 C78 97 91 86 91 62 C91 49 80 41 64 41 C48 41 37 49 37 62 Z" fill="url(#skin)"/>
+
+      <!-- fringe -->
+      <path d="M32 66 C28 40 44 25 64 25 C86 25 99 40 96 66 L90 52 L86 60 L80 45 L74 57 L67 43 L61 57 L53 45 L49 59 L42 50 L38 64 Z" fill="url(#hair)"/>
+      <path d="M44 36 Q60 27 80 33" stroke="#fff" stroke-width="3" fill="none" stroke-linecap="round" opacity=".45"/>
+      <path d="M30 58 L22 72 L35 66 Z" fill="url(#hair)"/>
+    </g>
+
+    <!-- eyes -->
+    <g>
+      <ellipse cx="52" cy="71" rx="7" ry="9" fill="#fff"/>
+      <ellipse cx="52.6" cy="72.4" rx="5.6" ry="7.6" fill="url(#iris)"/>
+      <ellipse cx="52.8" cy="73.4" rx="2.6" ry="3.6" fill="#0b3b33"/>
+      <circle cx="50.4" cy="68.6" r="2.1" fill="#fff"/>
+      <circle cx="55" cy="76" r="1" fill="#fff" opacity=".9"/>
+      <path d="M45 62.5 Q52 58.5 59.5 61.5" stroke="#5a2a10" stroke-width="1.8" fill="none" stroke-linecap="round"/>
+
+      <ellipse cx="76" cy="71" rx="7" ry="9" fill="#fff"/>
+      <ellipse cx="75.4" cy="72.4" rx="5.6" ry="7.6" fill="url(#iris)"/>
+      <ellipse cx="75.2" cy="73.4" rx="2.6" ry="3.6" fill="#0b3b33"/>
+      <circle cx="72.8" cy="68.6" r="2.1" fill="#fff"/>
+      <circle cx="77.4" cy="76" r="1" fill="#fff" opacity=".9"/>
+      <path d="M68.5 61.5 Q76 58.5 83 62.5" stroke="#5a2a10" stroke-width="1.8" fill="none" stroke-linecap="round"/>
+    </g>
+
+    <!-- cheeks, nose, open smile -->
+    <ellipse cx="44" cy="82" rx="5" ry="2.8" fill="#ff7f86" opacity=".5"/>
+    <ellipse cx="84" cy="82" rx="5" ry="2.8" fill="#ff7f86" opacity=".5"/>
+    <path d="M64.5 79 l-1.2 2.2" stroke="#d98a66" stroke-width="1.2" stroke-linecap="round"/>
+    <path d="M56.5 85 Q64 87.5 71.5 85 Q70 93.5 64 93.5 Q58 93.5 56.5 85 Z" fill="#a8233a"/>
+    <path d="M59.5 90.8 Q64 88 68.5 90.8 Q66.5 93.4 64 93.4 Q61.5 93.4 59.5 90.8 Z" fill="#ff8392"/>
+    <path d="M57.5 85.6 Q64 87.6 70.5 85.6 L70 87 Q64 88.6 58 87 Z" fill="#fff"/>
+  </g>
+  <circle cx="64" cy="64" r="60" fill="none" stroke="url(#ring)" stroke-width="4"/>
+  <path d="M26 34 A46 46 0 0 1 64 14" stroke="#fff" stroke-width="3" fill="none" stroke-linecap="round" opacity=".35"/>
+</svg>

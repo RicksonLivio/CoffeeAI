@@ -1,0 +1,163 @@
+{
+  "about": "Misty's audio lesson for Lesson 1. The page shows this text as the transcript and scripts/misty_tts.py reads it to generate public/audio/misty_lesson1_{pt,en}.mp3, so text and audio always match. Every number comes from src/lib/perceptron.ts and tests/misty.test.ts checks them.",
+  "sections": [
+    {
+      "id": "abertura",
+      "title": ["Abertura", "Opening"],
+      "text": [
+        [
+          "Oi, treinador! Eu sou a Misty, líder do Ginásio de Celeste, especialista em Pokémon do tipo Água. O Rick me pediu para conversar com você sobre a Aula 1, e eu aceitei na hora, porque o assunto tem tudo a ver com batalha: saber, só de olhar os números de um Pokémon, de que lado ele está.",
+          "Nos próximos minutos, a gente vai montar juntos o perceptron, o neurônio artificial que Frank Rosenblatt apresentou em 1958, e que foi um dos primeiros a aprender com exemplos. Vamos fazer todas as contas em voz alta, devagar, do primeiro erro até o momento em que ele aprende. Se quiser acompanhar, pegue papel e lápis. Eu espero."
+        ],
+        [
+          "Hi, trainer! I'm Misty, the Cerulean City Gym Leader, and I specialize in Water-type Pokémon. Rick asked me to talk with you about Lesson 1, and I said yes right away, because this topic is all about battling: knowing which side a Pokémon is on just by looking at its numbers.",
+          "Over the next few minutes, we're going to build the perceptron together. It's the artificial neuron Frank Rosenblatt introduced in 1958, one of the first that learned from examples. We'll do every calculation out loud, slowly, from the first mistake to the moment it learns. If you want to follow along, grab a pencil and some paper. I'll wait."
+        ]
+      ]
+    },
+    {
+      "id": "problema",
+      "title": ["O problema", "The problem"],
+      "text": [
+        [
+          "Imagine que você está na Rota 1 com um Pokédex que ainda não sabe nada. Aparecem dois Pokémon. O primeiro é o Charizard, do tipo Fogo, com Velocidade 100 e Defesa 78. O segundo é o Blastoise, do tipo Água, o meu favorito dessa dupla, com Velocidade 78 e Defesa 100.",
+          "Repare numa coisa curiosa: os números são os mesmos, só que trocados. O Charizard é mais rápido do que resistente. O Blastoise é mais resistente do que rápido. Um treinador experiente sente isso na batalha: o Charizard ataca primeiro, e o Blastoise aguenta o golpe com o casco.",
+          "A pergunta da aula é esta: será que uma máquina consegue descobrir essa regra sozinha, só vendo exemplos e corrigindo os próprios erros? Para ela, cada Pokémon vira apenas um par de números. A Velocidade a gente chama de x1. A Defesa a gente chama de x2. E a resposta certa, o rótulo, a gente chama de d, de desejado: d igual a 1 quer dizer Fogo, e d igual a 0 quer dizer Água."
+        ],
+        [
+          "Imagine you're on Route 1 with a Pokédex that doesn't know anything yet. Two Pokémon show up. The first is Charizard, a Fire type, with Speed 100 and Defense 78. The second is Blastoise, a Water type, my favorite of the pair, with Speed 78 and Defense 100.",
+          "Notice something curious: the numbers are the same, just swapped. Charizard is faster than it is sturdy. Blastoise is sturdier than it is fast. An experienced trainer feels this in battle: Charizard strikes first, and Blastoise takes the hit with its shell.",
+          "The question of the lesson is this: can a machine find that rule on its own, just by seeing examples and correcting its own mistakes? To the machine, each Pokémon is only a pair of numbers. We call Speed x1. We call Defense x2. And the right answer, the label, we call d, for desired: d equal to 1 means Fire, and d equal to 0 means Water."
+        ]
+      ]
+    },
+    {
+      "id": "neuronio",
+      "title": ["O neurônio", "The neuron"],
+      "text": [
+        [
+          "Agora, o neurônio. Pense nele como um juiz de batalha que dá uma nota para cada Pokémon. Ele tem um peso para cada atributo. O peso w1 diz o quanto a Velocidade importa, e o peso w2 diz o quanto a Defesa importa. Um peso positivo puxa a nota para cima, um peso negativo puxa para baixo, e um peso zero quer dizer que o juiz simplesmente ignora aquele atributo.",
+          "Existe ainda um terceiro peso, o teta, que é o bias. O bias é como a exigência mínima do juiz: a nota precisa passar dessa barra para o Pokémon ser chamado de Fogo. Para escrever tudo do mesmo jeito, a aula usa um truque: uma entrada extra, x0, que vale sempre menos 1. Assim, o bias entra na conta como teta vezes menos 1, ou seja, menos teta.",
+          "A nota do juiz se chama net, e a fórmula é: net igual a w1 vezes x1, mais w2 vezes x2, menos teta."
+        ],
+        [
+          "Now, the neuron. Think of it as a battle judge who gives each Pokémon a score. It has one weight for each stat. The weight w1 says how much Speed matters, and the weight w2 says how much Defense matters. A positive weight pushes the score up, a negative weight pushes it down, and a weight of zero means the judge simply ignores that stat.",
+          "There's also a third weight, theta, which is the bias. The bias is like the judge's minimum bar: the score has to clear it for the Pokémon to be called Fire. To write everything the same way, the lesson uses a trick: an extra input, x0, that is always minus 1. That way, the bias enters the sum as theta times minus 1, in other words, minus theta.",
+          "The judge's score is called net, and the formula is: net equals w1 times x1, plus w2 times x2, minus theta."
+        ]
+      ]
+    },
+    {
+      "id": "decisao",
+      "title": ["A decisão e o erro", "The decision and the error"],
+      "text": [
+        [
+          "Com a nota na mão, o neurônio decide com a função degrau. A regra é seca, como uma Pokébola, que ou fecha ou abre: se o net for maior ou igual a zero, a saída y vale 1, e o Pokédex diz Fogo. Se o net for menor que zero, a saída y vale 0, e o Pokédex diz Água. Não existe meio-termo.",
+          "E como ele aprende? Comparando o que disse com o que devia ter dito. O erro é e igual a d menos y: o desejado menos o obtido. Se ele acertou, e vale 0, e nada muda. Se ele disse Água para um Pokémon de Fogo, e vale mais 1. Se disse Fogo para um de Água, e vale menos 1.",
+          "A correção é a regra de aprendizado do perceptron: cada peso recebe eta vezes e vezes a sua própria entrada. O eta é a taxa de aprendizado, o tamanho do passo, e na aula ele vale 1. Pense no eta como a firmeza com que você corrige o seu Pokémon quando ele erra um comando: firme demais e ele se perde, suave demais e ele nem percebe."
+        ],
+        [
+          "With the score in hand, the neuron decides with the step function. The rule is blunt, like a Poké Ball that either closes or pops open: if net is greater than or equal to zero, the output y is 1, and the Pokédex says Fire. If net is less than zero, the output y is 0, and the Pokédex says Water. There's no in-between.",
+          "So how does it learn? By comparing what it said with what it should have said. The error is e equals d minus y: the desired output minus the one it got. If it was right, e is 0, and nothing changes. If it said Water for a Fire Pokémon, e is plus 1. If it said Fire for a Water one, e is minus 1.",
+          "The correction is the perceptron learning rule: each weight gets eta times e times its own input added to it. Eta is the learning rate, the size of the step, and in the lesson it's 1. Think of eta as how firmly you correct your Pokémon when it gets a command wrong: too firm and it gets lost, too gentle and it doesn't even notice."
+        ]
+      ]
+    },
+    {
+      "id": "charizard",
+      "title": ["Época 1: Charizard", "Epoch 1: Charizard"],
+      "text": [
+        [
+          "Vamos treinar. Os pesos começam assim: w1 igual a 0, w2 igual a 0, e teta igual a 0,5. Uma época é uma rodada em que o neurônio vê cada Pokémon do treino uma vez.",
+          "Primeiro, o Charizard: x1 igual a 100 e x2 igual a 78. O net fica 0 vezes 100, que dá 0, mais 0 vezes 78, que dá 0, menos 0,5. Resultado: net igual a menos 0,5. Como é menor que zero, y vale 0, e o Pokédex diz Água. Errou! O Charizard é Fogo, então d vale 1, e o erro é 1 menos 0, igual a 1.",
+          "Hora de corrigir. O w1 ganha 1 vezes 1 vezes 100, ou seja, mais 100. O w2 ganha 1 vezes 1 vezes 78, mais 78. E o teta recebe 1 vezes 1 vezes menos 1: perde 1, e cai de 0,5 para menos 0,5. Os novos pesos são w1 igual a 100, w2 igual a 78 e teta igual a menos 0,5.",
+          "Repare na intuição: o neurônio somou o próprio Charizard aos pesos. Ele ficou parecido com o exemplo que errou, e agora tende a dizer Fogo."
+        ],
+        [
+          "Let's train. The weights start like this: w1 equals 0, w2 equals 0, and theta equals 0.5. An epoch is one round in which the neuron sees each training Pokémon once.",
+          "First, Charizard: x1 equals 100 and x2 equals 78. Net is 0 times 100, which is 0, plus 0 times 78, which is 0, minus 0.5. Result: net equals minus 0.5. Since that's less than zero, y is 0, and the Pokédex says Water. Wrong! Charizard is Fire, so d is 1, and the error is 1 minus 0, which is 1.",
+          "Time to correct it. w1 gets 1 times 1 times 100, so plus 100. w2 gets 1 times 1 times 78, plus 78. And theta gets 1 times 1 times minus 1: it loses 1, and drops from 0.5 to minus 0.5. The new weights are w1 equals 100, w2 equals 78, and theta equals minus 0.5.",
+          "Notice the intuition: the neuron added Charizard itself to its weights. It now looks like the example it got wrong, and it leans toward saying Fire."
+        ]
+      ]
+    },
+    {
+      "id": "blastoise",
+      "title": ["Época 1: Blastoise", "Epoch 1: Blastoise"],
+      "text": [
+        [
+          "Só que ele exagerou. Chega o Blastoise: x1 igual a 78 e x2 igual a 100. O net fica 100 vezes 78, que dá 7800, mais 78 vezes 100, mais 7800, menos teta. Como teta vale menos 0,5, menos teta vale mais 0,5. Total: net igual a 15600,5.",
+          "Muito maior que zero, então y vale 1, e o Pokédex diz Fogo. Errou de novo, e com toda a convicção! O Blastoise é Água, d vale 0, e o erro é 0 menos 1, igual a menos 1.",
+          "Agora a correção vai no sentido contrário. O w1 perde 78 e vai de 100 para 22. O w2 perde 100 e vai de 78 para menos 22. E o teta ganha 1, porque menos 1 vezes menos 1 dá mais 1, e volta para 0,5. Novos pesos: w1 igual a 22, w2 igual a menos 22 e teta igual a 0,5.",
+          "Olha que bonito: agora a Velocidade conta pontos a favor de Fogo, e a Defesa conta pontos contra. É exatamente a regra que um treinador sente na batalha, e a máquina chegou nela sozinha, com dois erros."
+        ],
+        [
+          "Except it overdid it. Here comes Blastoise: x1 equals 78 and x2 equals 100. Net is 100 times 78, which is 7800, plus 78 times 100, another 7800, minus theta. Since theta is minus 0.5, minus theta is plus 0.5. Total: net equals 15600.5.",
+          "Way above zero, so y is 1, and the Pokédex says Fire. Wrong again, and with total confidence! Blastoise is Water, d is 0, and the error is 0 minus 1, which is minus 1.",
+          "Now the correction goes the other way. w1 loses 78 and goes from 100 to 22. w2 loses 100 and goes from 78 to minus 22. And theta gains 1, because minus 1 times minus 1 is plus 1, so it goes back to 0.5. New weights: w1 equals 22, w2 equals minus 22, and theta equals 0.5.",
+          "Isn't that nice? Now Speed counts in favor of Fire, and Defense counts against it. That's exactly the rule a trainer feels in battle, and the machine found it on its own, with two mistakes."
+        ]
+      ]
+    },
+    {
+      "id": "convergencia",
+      "title": ["Época 2: a convergência", "Epoch 2: convergence"],
+      "text": [
+        [
+          "Será que aprendeu mesmo? Para saber, a gente roda a época 2 com os mesmos Pokémon. Charizard: 22 vezes 100 dá 2200, menos 22 vezes 78, que dá 1716, menos 0,5. O net fica 483,5. Positivo, y igual a 1, Fogo. Acertou: o erro é zero, e nada muda.",
+          "Blastoise: 22 vezes 78 dá 1716, menos 22 vezes 100, que dá 2200, menos 0,5. O net fica menos 484,5. Negativo, y igual a 0, Água. Acertou de novo. Uma época inteira sem erros: o treino terminou. A gente diz que o perceptron convergiu.",
+          "E dá para enxergar o que ele aprendeu como uma reta no gráfico de Velocidade contra Defesa: 22 vezes a Velocidade, menos 22 vezes a Defesa, igual a 0,5. Dividindo tudo por 22, a Defesa fica igual à Velocidade menos um pouquinho, cerca de 0,02. Na prática, é a diagonal. Abaixo dela, onde o Pokémon é mais rápido do que resistente, fica o lado do Fogo. Acima, o lado da Água. E os pesos 22 e menos 22 formam uma seta, perpendicular à reta, que aponta para o lado do Fogo."
+        ],
+        [
+          "But did it really learn? To find out, we run epoch 2 with the same Pokémon. Charizard: 22 times 100 is 2200, minus 22 times 78, which is 1716, minus 0.5. Net comes out to 483.5. Positive, y equals 1, Fire. Correct: the error is zero, and nothing changes.",
+          "Blastoise: 22 times 78 is 1716, minus 22 times 100, which is 2200, minus 0.5. Net comes out to minus 484.5. Negative, y equals 0, Water. Correct again. A whole epoch with no mistakes: training is over. We say the perceptron has converged.",
+          "You can also see what it learned as a line on the Speed versus Defense chart: 22 times Speed, minus 22 times Defense, equals 0.5. Dividing everything by 22, Defense equals Speed minus a tiny bit, about 0.02. In practice, it's the diagonal. Below it, where a Pokémon is faster than it is sturdy, is the Fire side. Above it, the Water side. And the weights 22 and minus 22 form an arrow, perpendicular to the line, that points to the Fire side."
+        ]
+      ]
+    },
+    {
+      "id": "passo",
+      "title": ["O tamanho do passo e a ordem", "Step size and order"],
+      "text": [
+        [
+          "Agora, duas perguntas que os treinadores sempre me fazem. A primeira: e se o eta for menor? Com eta igual a 0,1, os pesos finais ficam 2,2 e menos 2,2, com o teta ainda em 0,5. Com eta igual a 0,01, ficam 0,22 e menos 0,22. Nos três casos, foram só duas correções e duas épocas, e a reta continua separando os dois Pokémon. O que muda é a importância do bias: com passos pequenos, aquele 0,5 inicial pesa mais, e a reta se afasta um pouco da diagonal.",
+          "A segunda: e se o Blastoise vier primeiro? Com os pesos zerados, o net do Blastoise é menos 0,5, e o Pokédex diz Água: um acerto de sorte. Aí o Charizard erra, depois o Blastoise erra na época 2, e só a época 3 fecha sem erros. São três épocas em vez de duas, mas os pesos finais são os mesmos: 22, menos 22 e 0,5.",
+          "E existe uma garantia por trás de tudo isso. O teorema de convergência do perceptron diz que, se existe uma reta capaz de separar as duas classes, o perceptron encontra uma reta assim depois de um número finito de correções."
+        ],
+        [
+          "Now, two questions trainers always ask me. The first: what if eta is smaller? With eta equal to 0.1, the final weights are 2.2 and minus 2.2, with theta still at 0.5. With eta equal to 0.01, they're 0.22 and minus 0.22. In all three cases, it took just two corrections and two epochs, and the line still separates the two Pokémon. What changes is how much the bias matters: with small steps, that initial 0.5 weighs more, and the line moves a little away from the diagonal.",
+          "The second: what if Blastoise comes first? With the weights at zero, Blastoise's net is minus 0.5, and the Pokédex says Water: a lucky guess. Then Charizard gets it wrong, Blastoise gets it wrong in epoch 2, and only epoch 3 finishes with no mistakes. That's three epochs instead of two, but the final weights are the same: 22, minus 22, and 0.5.",
+          "And there's a guarantee behind all of this. The perceptron convergence theorem says that if some line can separate the two classes, the perceptron finds such a line after a finite number of corrections."
+        ]
+      ]
+    },
+    {
+      "id": "venusaur",
+      "title": ["Venusaur e o limite", "Venusaur and the limit"],
+      "text": [
+        [
+          "Por fim, um desafio. Aparece um Venusaur, do tipo Planta, com Velocidade 80 e Defesa 83. Ele não estava no treino. O net fica 22 vezes 80, que dá 1760, menos 22 vezes 83, que dá 1826, menos 0,5. Resultado: menos 66,5. Negativo, então o Pokédex diz Água.",
+          "Está errado, mas a culpa não é do treino. Esse neurônio tem uma saída só, que vale 0 ou 1, e por isso só conhece os dois lados de uma reta: Fogo ou Água. Um terceiro tipo simplesmente não cabe nele. E, como você vai ver na Aula 2, nem dar mais saídas resolve: com os nove iniciais, o Ivysaur e o Venusaur ficam no meio dos Pokémon de Fogo e de Água, e nenhuma reta isola o tipo Planta. Para isso, a gente vai precisar de uma camada oculta."
+        ],
+        [
+          "Finally, a challenge. A Venusaur shows up, a Grass type, with Speed 80 and Defense 83. It wasn't in the training data. Net is 22 times 80, which is 1760, minus 22 times 83, which is 1826, minus 0.5. Result: minus 66.5. Negative, so the Pokédex says Water.",
+          "That's wrong, but it isn't the training's fault. This neuron has a single output, either 0 or 1, so it only knows the two sides of a line: Fire or Water. A third type simply doesn't fit. And as you'll see in Lesson 2, adding more outputs doesn't fix it either: with the nine starters, Ivysaur and Venusaur sit in the middle of the Fire and Water Pokémon, and no line isolates the Grass type. For that, we'll need a hidden layer."
+        ]
+      ]
+    },
+    {
+      "id": "resumo",
+      "title": ["Resumo", "Recap"],
+      "text": [
+        [
+          "Vamos recapitular, como no fim de uma batalha. Um perceptron recebe as entradas, multiplica cada uma pelo seu peso, soma tudo, desconta o bias e passa o resultado por um degrau: Fogo ou Água. Quando erra, calcula e igual a d menos y, e corrige cada peso com eta vezes e vezes a entrada. Quando acerta, não mexe em nada. No nosso caso, foram dois erros na época 1, nenhum na época 2, e os pesos finais 22, menos 22 e 0,5.",
+          "Agora é com você: abra o Pokédex no minijogo logo abaixo e capture o Charizard e o Blastoise fazendo essas mesmas contas. Eu vou estar torcendo. Até a próxima, treinador!"
+        ],
+        [
+          "Let's recap, like at the end of a battle. A perceptron takes its inputs, multiplies each one by its weight, adds everything up, subtracts the bias, and passes the result through a step: Fire or Water. When it's wrong, it computes e equals d minus y, and corrects each weight by eta times e times the input. When it's right, it leaves everything alone. In our case, there were two mistakes in epoch 1, none in epoch 2, and the final weights were 22, minus 22, and 0.5.",
+          "Now it's your turn: open the Pokédex in the mini-game just below and catch Charizard and Blastoise by doing these same calculations. I'll be cheering for you. See you next time, trainer!"
+        ]
+      ]
+    }
+  ]
+}

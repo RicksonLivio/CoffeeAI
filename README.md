@@ -95,6 +95,20 @@ J = (w₂w₁ − 1)² on contour lines and a 3D surface, Baldi & Hornik (1989),
 that "no bad local minima" does not hold for nonlinear networks in general (Yun, Sra & Jadbabaie, 2019;
 Safran & Shamir, 2018). `src/lib/linear.ts` and `tests/linear.test.ts` check every formula and number.
 
+### Misty's audio lesson
+
+A small item right under lesson 1 (above the mini-game) has a Misty icon (`public/misty.svg`, drawn for the
+site): one click plays a ~10 minute audio in which Misty, as a fellow trainer, goes through lesson 1 with
+Pokémon analogies and every calculation (9:33 in Portuguese, 10:16 in English). It also lists chapters that
+jump to each part and the full text. The text is `src/content/misty-lesson1.json`; `tests/misty.test.ts`
+checks every number it says against `src/lib/perceptron.ts`.
+
+The voice is synthetic: [Kokoro-82M](https://huggingface.co/hexgrad/Kokoro-82M) (Apache 2.0), voices
+`pf_dora` (pt-BR) and `af_heart` (en-US), chosen to sound close to Misty's tone. It is not a clone of the
+voice actress. `scripts/misty_tts.py` turns the JSON into `public/audio/misty_lesson1_{pt,en}.mp3` (mono,
+48 kbit/s, about 3.5 MB each, downloaded only when played) and `src/content/misty-lesson1-audio.json`
+(chapter times). Setup and the command are at the top of the script; regenerate after editing the text.
+
 ### Mini-game: Pokédex, phase 1
 
 A card between lesson 1 and lesson 2 (indented under lesson 1) opens a small Pokédex (`src/components/game/`, loaded only when opened). The

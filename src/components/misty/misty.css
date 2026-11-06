@@ -1,0 +1,59 @@
+/* Misty's audio lesson: a small item indented under Lesson 1, above the mini-game (src/components/misty). */
+
+/* Tree connector: the vertical dashed line runs the full height (it continues into the mini-game's line). */
+.misty-branch { position: relative; margin-left: 56px; }
+.misty-branch::before {
+  content: ""; position: absolute; left: -32px; top: -24px; bottom: 0;
+  border-left: 2px dashed var(--brass-600);
+}
+.misty-branch::after {
+  content: ""; position: absolute; left: -32px; top: 34px; width: 26px;
+  border-bottom: 2px dashed var(--brass-600);
+}
+
+.misty-card {
+  display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 14px; align-items: center;
+  padding: 12px 18px; border-color: var(--teal-500);
+}
+.misty-face {
+  position: relative; width: 48px; height: 48px; padding: 0; border: 0; border-radius: 50%; cursor: pointer;
+  background: none; box-shadow: var(--glow-cyan);
+}
+.misty-face img { display: block; width: 48px; height: 48px; }
+.misty-play {
+  position: absolute; right: -4px; bottom: -4px; width: 20px; height: 20px; display: grid; place-items: center;
+  border-radius: 50%; font-size: .55rem; color: var(--navy-900); background: var(--gold-400); border: 2px solid var(--navy-900);
+}
+.misty-face:hover img, .misty-card.playing .misty-face img { animation: misty-bob 1.2s ease-in-out infinite; }
+.misty-card.playing .misty-face { box-shadow: 0 0 0 3px var(--cyan-400), var(--glow-cyan); }
+.misty-text h3 { margin: 0 0 2px; font-size: .9rem; color: var(--cyan-300); }
+.misty-text p { margin: 0; font-size: .86rem; color: var(--steel-200); }
+.misty-text .label { font-size: .68rem; }
+
+.misty-audio { display: block; width: 100%; margin-top: 10px; }
+.misty-body { margin-top: 8px; }
+.misty-chapters { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px; }
+.misty-chapters button {
+  width: 100%; text-align: left; cursor: pointer; padding: 6px 10px;
+  font-family: var(--font-ui); font-weight: 600; font-size: .85rem; color: var(--steel-200);
+  background: var(--navy-800); border: 1px solid var(--steel-600);
+}
+.misty-chapters button .mono { color: var(--gold-400); margin-right: 6px; font-size: .75rem; }
+.misty-chapters button:hover { border-color: var(--cyan-400); color: var(--cyan-300); }
+.misty-chapters button.on { border-color: var(--cyan-400); color: var(--cyan-300); box-shadow: var(--glow-cyan); }
+.misty-transcript h4 { font-family: var(--font-ui); text-transform: uppercase; letter-spacing: .1em; font-size: .78rem; color: var(--gold-400); margin: 14px 0 4px; }
+.misty-transcript p { font-size: .92rem; color: var(--steel-200); }
+.misty-transcript .on h4 { color: var(--cyan-300); }
+.misty-credit { margin-top: 10px; }
+
+@keyframes misty-bob { 50% { transform: translateY(-2px) rotate(-3deg); } }
+
+@media (max-width: 720px) {
+  .misty-branch { margin-left: 22px; }
+  .misty-branch::before, .misty-branch::after { left: -16px; }
+  .misty-branch::after { width: 12px; }
+  .misty-card { grid-template-columns: auto minmax(0, 1fr); }
+  .misty-card .btn { grid-column: 1 / -1; }
+  .misty-chapters { grid-template-columns: 1fr; }
+}
+@media (prefers-reduced-motion: reduce) { .misty-face img { animation: none !important; } }
