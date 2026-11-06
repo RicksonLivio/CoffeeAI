@@ -10,7 +10,7 @@ export default function GameCard({ onLesson }: { onLesson: (n: number) => void }
   const pt = lang === 'pt';
   const [open, setOpen] = useState(false);
   return (
-    <section className="lesson" id="game" aria-labelledby="game-title">
+    <section className="lesson pd-branch" id="game" aria-labelledby="game-title">
       <div className="panel lesson-card pd-card">
         <span className="pd-icon" aria-hidden="true" />
         <div>

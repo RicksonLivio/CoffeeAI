@@ -1,4 +1,4 @@
-import { Suspense, useEffect, useState } from 'react';
+import { Fragment, Suspense, useEffect, useState } from 'react';
 import { useLang } from '../i18n';
 import GameCard from './game/GameCard';
 import Lesson1 from './learn/Lesson1';
@@ -107,6 +107,11 @@ export default function LearnSheet({ open, onToggle }: { open: number[]; onToggl
     }
   }, [mounted, open]);
 
+  const openLesson = (n: number) => {
+    if (!open.includes(n)) onToggle(n);
+    window.setTimeout(() => document.getElementById(`lesson-${n}`)?.scrollIntoView(), 0);
+  };
+
   return (
     <div className="sheet">
       <section className="section" style={{ marginTop: 0 }}>
@@ -119,15 +124,11 @@ export default function LearnSheet({ open, onToggle }: { open: number[]; onToggl
         </p>
       </section>
 
-      <GameCard onLesson={(n) => {
-        if (!open.includes(n)) onToggle(n);
-        window.setTimeout(() => document.getElementById(`lesson-${n}`)?.scrollIntoView(), 0);
-      }} />
-
       {LESSONS.map((l) => {
         const isOpen = open.includes(l.n);
         return (
-          <section key={l.n} className="lesson" id={`lesson-${l.n}`} aria-labelledby={`lesson-${l.n}-title`}>
+          <Fragment key={l.n}>
+          <section className="lesson" id={`lesson-${l.n}`} aria-labelledby={`lesson-${l.n}-title`}>
             <div className="panel lesson-card">
               <span className="lesson-num hex" aria-hidden="true">{String(l.n).padStart(2, '0')}</span>
               <div>
@@ -154,6 +155,9 @@ export default function LearnSheet({ open, onToggle }: { open: number[]; onToggl
               </div>
             )}
           </section>
+          {/* The mini-game uses lesson 1, so it sits right after it, indented under it. */}
+          {l.n === 1 && <GameCard onLesson={openLesson} />}
+          </Fragment>
         );
       })}
     </div>

@@ -97,7 +97,7 @@ Safran & Shamir, 2018). `src/lib/linear.ts` and `tests/linear.test.ts` check eve
 
 ### Mini-game: Pokédex, phase 1
 
-A card above the lessons opens a small Pokédex (`src/components/game/`, loaded only when opened). The
+A card between lesson 1 and lesson 2 (indented under lesson 1) opens a small Pokédex (`src/components/game/`, loaded only when opened). The
 player is a trainer on Route 1; the Pokédex's brain is the lesson-1 perceptron, and it loads a Fire Ball
 when net ≥ 0 and a Water Ball otherwise. The capture works only when the Ball matches the real type. Each
 encounter asks for net, the Ball, and, when the Pokémon breaks free, e = d − y and the new weights, with

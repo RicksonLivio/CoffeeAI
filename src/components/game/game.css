@@ -1,6 +1,17 @@
 /* Pokédex mini-game (src/components/game). Red Pokédex shell around a Cyber-Net screen. */
 
 .pd-card { border-color: #c8202f; }
+
+/* Indented under lesson 1, with an L-shaped connector from the lesson-1 card. */
+.pd-branch { position: relative; margin-left: 56px; }
+.pd-branch::before {
+  content: ""; position: absolute; left: -32px; top: -24px; width: 26px; height: calc(24px + 50%);
+  border-left: 2px dashed var(--brass-600); border-bottom: 2px dashed var(--brass-600);
+}
+@media (max-width: 720px) {
+  .pd-branch { margin-left: 22px; }
+  .pd-branch::before { left: -16px; width: 12px; }
+}
 .pd-icon, .pd-ball {
   position: relative; display: inline-block; border-radius: 50%; border: 3px solid #111;
   background: linear-gradient(180deg, var(--ball, #e0313c) 0 44%, #111 44% 56%, #f4f4f4 56%);
