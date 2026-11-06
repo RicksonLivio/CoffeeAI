@@ -19,7 +19,11 @@
   position: relative; width: 48px; height: 48px; padding: 0; border: 0; border-radius: 50%; cursor: pointer;
   background: none; box-shadow: var(--glow-cyan);
 }
-.misty-face img { display: block; width: 48px; height: 48px; }
+/* Face crop of misty_rosto_busto (public/misty.jpg, 192 px) shown as a 48 px circle with a gold ring. */
+.misty-face img {
+  display: block; width: 48px; height: 48px; border-radius: 50%; object-fit: cover;
+  border: 2px solid var(--gold-500); background: var(--navy-800);
+}
 .misty-play {
   position: absolute; right: -4px; bottom: -4px; width: 20px; height: 20px; display: grid; place-items: center;
   border-radius: 50%; font-size: .55rem; color: var(--navy-900); background: var(--gold-400); border: 2px solid var(--navy-900);

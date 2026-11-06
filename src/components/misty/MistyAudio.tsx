@@ -52,7 +52,7 @@ export default function MistyAudio() {
     <section className="lesson misty-branch" id="misty" aria-labelledby="misty-title">
       <div className={`panel misty-card ${playing ? 'playing' : ''}`}>
         <button className="misty-face" onClick={toggle} aria-label={playing ? (pt ? 'Pausar o áudio' : 'Pause the audio') : (pt ? 'Ouvir a Misty' : 'Listen to Misty')}>
-          <img src={`${BASE}misty.svg`} alt="" width={48} height={48} />
+          <img src={`${BASE}misty.jpg`} alt="" width={48} height={48} />
           <span className="misty-play" aria-hidden="true">{playing ? '❚❚' : '▶'}</span>
         </button>
         <div className="misty-text">

@@ -97,8 +97,8 @@ Safran & Shamir, 2018). `src/lib/linear.ts` and `tests/linear.test.ts` check eve
 
 ### Misty's audio lesson
 
-A small item right under lesson 1 (above the mini-game) has a Misty icon (`public/misty.svg`, drawn for the
-site): one click plays a ~10 minute audio in which Misty, as a fellow trainer, goes through lesson 1 with
+A small item right under lesson 1 (above the mini-game) has a round Misty portrait (`public/misty.jpg`, the face
+cropped from a bust picture): one click plays a ~10 minute audio in which Misty, as a fellow trainer, goes through lesson 1 with
 Pokémon analogies and every calculation (9:33 in Portuguese, 10:16 in English). It also lists chapters that
 jump to each part and the full text. The text is `src/content/misty-lesson1.json`; `tests/misty.test.ts`
 checks every number it says against `src/lib/perceptron.ts`.
