@@ -1,0 +1,178 @@
+/* Pokédex mini-game (src/components/game). Red Pokédex shell around a Cyber-Net screen. */
+
+.pd-card { border-color: #c8202f; }
+.pd-icon, .pd-ball {
+  position: relative; display: inline-block; border-radius: 50%; border: 3px solid #111;
+  background: linear-gradient(180deg, var(--ball, #e0313c) 0 44%, #111 44% 56%, #f4f4f4 56%);
+}
+.pd-icon { width: 64px; height: 64px; box-shadow: var(--glow-gold); }
+.pd-icon::after, .pd-ball::after {
+  content: ""; position: absolute; left: 50%; top: 50%; width: 30%; height: 30%; transform: translate(-50%, -50%);
+  border-radius: 50%; background: #f4f4f4; border: 3px solid #111;
+}
+.pd-card:hover .pd-icon { animation: pd-wobble .5s ease-in-out 2; }
+
+/* ---------- Device ---------- */
+.pd-dialog {
+  padding: 0; border: 0; background: transparent; color: var(--steel-100);
+  width: min(560px, 96vw); max-width: none; max-height: 96vh; overflow: visible;
+}
+.pd-dialog::backdrop { background: rgba(5, 8, 15, .8); backdrop-filter: blur(3px); }
+.pd {
+  display: flex; flex-direction: column; max-height: 96vh;
+  background: linear-gradient(180deg, #e0313c, #b01d2a); border: 3px solid #5c0b14; border-radius: 18px;
+  padding: 12px 14px 14px; box-shadow: 0 20px 60px rgba(0, 0, 0, .6), inset 0 2px 0 rgba(255, 255, 255, .25);
+}
+.pd-top { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
+.pd-lens {
+  width: 44px; height: 44px; border-radius: 50%; flex: 0 0 auto; margin-right: 6px;
+  background: radial-gradient(circle at 35% 35%, #d9fbff, var(--cyan-400) 32%, var(--blue-600) 68%, var(--navy-900));
+  border: 4px solid #f4f4f4; box-shadow: 0 0 0 2px #5c0b14, var(--glow-cyan);
+}
+.pd-lens.busy { animation: pd-blink .35s steps(2) infinite; }
+.pd-led { width: 12px; height: 12px; border-radius: 50%; border: 2px solid #5c0b14; flex: 0 0 auto; }
+.pd-led.r { background: #ff5a5a; }
+.pd-led.y { background: var(--gold-400); }
+.pd-led.g { background: #3ddc84; }
+.pd-title {
+  margin: 0 0 0 auto; font-size: .85rem; letter-spacing: .14em; color: #fff; text-shadow: 0 2px 0 #5c0b14;
+}
+.pd-close {
+  width: 32px; height: 32px; border: 2px solid #5c0b14; background: #7a0f1a; color: #fff; cursor: pointer; border-radius: 50%;
+}
+.pd-close:hover { background: #5c0b14; }
+
+.pd-screen {
+  position: relative; flex: 1 1 auto; min-height: 0; overflow-y: auto; padding: 14px 16px;
+  background: var(--navy-900); border: 6px solid #e8e8e8; border-radius: 6px 6px 6px 26px;
+  box-shadow: inset 0 0 0 2px var(--steel-600);
+}
+.pd-screen h3 { font-size: 1rem; color: var(--cyan-300); margin: 6px 0 10px; }
+.pd-page p { margin: 0 0 10px; font-size: .93rem; }
+.pd-kicker { display: block; font-family: var(--font-mono); font-size: .72rem; letter-spacing: .1em; color: var(--gold-400); text-transform: uppercase; }
+.pd-small { font-size: .85rem !important; color: var(--steel-200); }
+.pd-center { text-align: center; justify-content: center; }
+.pd-actions { display: flex; gap: 10px; flex-wrap: wrap; justify-content: flex-end; margin-top: 12px; }
+
+.pd-prof { display: flex; gap: 12px; align-items: flex-start; margin-bottom: 10px; }
+.pd-prof img { border-radius: 50%; border: 2px solid var(--cyan-400); flex: 0 0 auto; }
+
+.pd-hud { display: flex; justify-content: space-between; gap: 10px; font-family: var(--font-mono); font-size: .7rem; letter-spacing: .08em; color: var(--gold-400); margin-bottom: 8px; }
+
+/* ---------- Battle field ---------- */
+.pd-field {
+  position: relative; height: 190px; display: grid; place-items: center; overflow: hidden; margin-bottom: 8px;
+  border: 1px solid var(--steel-600);
+  background:
+    radial-gradient(ellipse 60% 22% at 50% 88%, rgba(76, 196, 106, .45), transparent 70%),
+    linear-gradient(180deg, var(--navy-700), var(--navy-800));
+}
+.pd-field::after {
+  content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 26px; pointer-events: none;
+  background: repeating-linear-gradient(100deg, transparent 0 7px, rgba(31, 122, 77, .9) 7px 10px, transparent 10px 15px);
+  -webkit-mask-image: linear-gradient(0deg, #000, transparent); mask-image: linear-gradient(0deg, #000, transparent);
+}
+.pd-wild {
+  position: relative; width: 140px; height: 140px; border-radius: 50%; overflow: hidden;
+  border: 3px solid var(--steel-400); background: var(--navy-900);
+}
+/* The cards are 5:7; this window shows the art band (about 10%–55% of the card height), not the attack text. */
+.pd-wild img { position: absolute; width: 160%; max-width: none; left: -30%; top: -22%; transition: filter .4s var(--ease); }
+.pd-wild.hidden img { filter: brightness(.07) blur(3px); }
+.pd-wild.charizard { border-color: var(--fire); }
+.pd-wild.blastoise { border-color: var(--water); }
+.pd-wild.venusaur { border-color: var(--grass); }
+.pd-qmark { position: absolute; inset: 0; display: grid; place-items: center; font-family: var(--font-display); font-size: 3rem; color: var(--cyan-300); text-shadow: var(--glow-cyan); }
+.pd-wild.absorb { animation: pd-absorb .35s .6s ease-in forwards; }
+.pd-wild.gone { transform: scale(0); opacity: 0; }
+.pd-wild.pop { animation: pd-pop .45s ease-out; }
+
+.pd-ball-path { position: absolute; left: 50%; top: 50%; width: 34px; height: 34px; margin: -17px 0 0 -17px; }
+.pd-ball-path.throw { animation: pd-throw .6s cubic-bezier(.3, .7, .4, 1) both; }
+.pd-ball { width: 34px; height: 34px; border-width: 2px; }
+.pd-ball::after { border-width: 2px; }
+.pd-ball.fire { --ball: var(--fire); }
+.pd-ball.water { --ball: var(--water); }
+.pd-ball.wobble { animation: pd-wobble .5s .95s ease-in-out 3; }
+.pd-stars { position: absolute; left: 50%; top: 50%; }
+.pd-stars i { position: absolute; font-style: normal; color: var(--gold-400); text-shadow: var(--glow-gold); animation: pd-star 1s ease-out forwards; }
+.pd-stars i:nth-child(1) { --sx: -34px; }
+.pd-stars i:nth-child(2) { --sx: -4px; animation-delay: .1s; }
+.pd-stars i:nth-child(3) { --sx: 26px; animation-delay: .2s; }
+
+.pd-appear { font-family: var(--font-ui); font-weight: 700; letter-spacing: .06em; font-size: 1.05rem !important; color: var(--steel-100); text-align: center; }
+
+/* ---------- Scan, brain, questions ---------- */
+.pd-scan { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; margin-bottom: 8px; }
+.pd-scan div { background: var(--navy-800); border: 1px solid var(--steel-600); padding: 4px 8px; }
+.pd-scan span { display: block; font-family: var(--font-ui); text-transform: uppercase; letter-spacing: .1em; font-size: .68rem; color: var(--steel-400); }
+.pd-scan b { font-family: var(--font-mono); font-size: .85rem; color: var(--cyan-300); }
+.pd-brain {
+  font-family: var(--font-mono); font-size: .82rem; color: var(--gold-400); padding: 6px 10px; margin-bottom: 10px;
+  background: rgba(245, 181, 42, .06); border-left: 3px solid var(--gold-500); transition: box-shadow .3s var(--ease);
+}
+.pd-brain.changed { box-shadow: var(--glow-gold); }
+.pd-q { border-top: 1px dashed var(--steel-600); padding-top: 10px; }
+.pd-done { color: var(--steel-200); font-size: .82rem !important; }
+.pd-choices { display: flex; flex-wrap: wrap; gap: 8px; }
+.pd-choice {
+  flex: 1 1 140px; padding: 8px 10px; cursor: pointer; text-align: center;
+  font-family: var(--font-mono); font-size: .82rem; color: var(--steel-100);
+  background: var(--navy-800); border: 1px solid var(--steel-600);
+  transition: border-color .15s var(--ease), color .15s var(--ease);
+}
+.pd-choice:hover:not(:disabled) { border-color: var(--cyan-400); color: var(--cyan-300); }
+.pd-choice.wrong { border-color: var(--alert-500); color: #ff9b9b; text-decoration: line-through; opacity: .6; cursor: not-allowed; }
+.pd-hint { margin-top: 10px !important; padding: 6px 10px; font-size: .85rem !important; background: rgba(232, 49, 47, .08); border-left: 3px solid var(--alert-500); }
+
+/* ---------- End screens ---------- */
+.pd-badge {
+  display: grid; place-items: center; width: 84px; height: 84px; margin: 4px auto 10px;
+  font-family: var(--font-display); font-weight: 900; font-size: 2rem; color: var(--navy-900);
+  background: var(--grad-rank); box-shadow: var(--glow-gold);
+  clip-path: polygon(25% 5%, 75% 5%, 100% 50%, 75% 95%, 25% 95%, 0 50%);
+  animation: pd-badge .8s var(--ease);
+}
+.pd-entry { display: flex; gap: 14px; align-items: center; margin-bottom: 12px; }
+.pd-entry .pd-wild { width: 96px; height: 96px; flex: 0 0 auto; }
+.pd-score { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; margin-bottom: 10px; }
+.pd-score div { background: var(--navy-800); border: 1px solid var(--steel-600); padding: 6px 8px; text-align: center; }
+.pd-score span { display: block; font-family: var(--font-ui); text-transform: uppercase; letter-spacing: .1em; font-size: .68rem; color: var(--steel-400); }
+.pd-score b { font-family: var(--font-display); color: var(--gold-400); font-size: .95rem; }
+
+/* ---------- Pokédex entries ---------- */
+.pd-dex { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin-top: 10px; }
+.pd-slot {
+  display: grid; grid-template-columns: auto minmax(0, 1fr); grid-template-rows: auto auto; column-gap: 8px; align-items: center;
+  padding: 6px 8px; background: #7a0f1a; border: 2px solid #5c0b14; border-radius: 6px; color: #fff;
+}
+.pd-slot-n { display: none; }
+.pd-slot-img { grid-row: 1 / 3; width: 34px; height: 34px; border-radius: 50%; object-fit: cover; object-position: 50% 32%; border: 2px solid #5c0b14; background: var(--navy-900); }
+.pd-slot-img.unknown { display: grid; place-items: center; font-family: var(--font-display); color: var(--steel-400); }
+.pd-slot.seen .pd-slot-img { filter: grayscale(1) brightness(.8); }
+.pd-slot-name { font-family: var(--font-ui); font-weight: 700; font-size: .82rem; letter-spacing: .04em; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pd-slot-state { font-family: var(--font-mono); font-size: .66rem; color: #ffc9c9; }
+.pd-slot.caught { border-color: var(--gold-500); }
+.pd-slot.caught .pd-slot-state { color: var(--gold-400); }
+
+@media (max-width: 520px) {
+  .pd-dex .pd-slot-img { display: none; }
+  .pd-scan b { font-size: .75rem; }
+}
+
+/* ---------- Animations ---------- */
+@keyframes pd-throw {
+  0% { transform: translate(-170px, 110px) rotate(0deg); }
+  50% { transform: translate(-80px, -55px) rotate(-360deg); }
+  100% { transform: translate(0, 0) rotate(-720deg); }
+}
+@keyframes pd-wobble { 0%, 100% { transform: rotate(0); } 25% { transform: rotate(-24deg); } 75% { transform: rotate(24deg); } }
+@keyframes pd-absorb { 0% { filter: brightness(1); } 40% { filter: brightness(3); } 100% { transform: scale(0); opacity: 0; filter: brightness(3); } }
+@keyframes pd-pop { 0% { transform: scale(0); filter: brightness(3); } 70% { transform: scale(1.1); } 100% { transform: scale(1); filter: none; } }
+@keyframes pd-star { from { transform: translate(var(--sx), 0); opacity: 1; } to { transform: translate(var(--sx), -48px); opacity: 0; } }
+@keyframes pd-blink { 50% { filter: brightness(1.8); } }
+@keyframes pd-badge { from { transform: scale(0) rotate(-180deg); } to { transform: scale(1) rotate(0); } }
+
+@media (prefers-reduced-motion: reduce) {
+  .pd-dialog *, .pd-card * { animation: none !important; transition: none !important; }
+}

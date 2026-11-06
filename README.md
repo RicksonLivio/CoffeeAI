@@ -95,6 +95,17 @@ J = (w₂w₁ − 1)² on contour lines and a 3D surface, Baldi & Hornik (1989),
 that "no bad local minima" does not hold for nonlinear networks in general (Yun, Sra & Jadbabaie, 2019;
 Safran & Shamir, 2018). `src/lib/linear.ts` and `tests/linear.test.ts` check every formula and number.
 
+### Mini-game: Pokédex, phase 1
+
+A card above the lessons opens a small Pokédex (`src/components/game/`, loaded only when opened). The
+player is a trainer on Route 1; the Pokédex's brain is the lesson-1 perceptron, and it loads a Fire Ball
+when net ≥ 0 and a Water Ball otherwise. The capture works only when the Ball matches the real type. Each
+encounter asks for net, the Ball, and, when the Pokémon breaks free, e = d − y and the new weights, with
+hints after a wrong answer and 10 XP per first-try answer. The encounters are the lesson's training run
+(Charizard, Blastoise, two epochs, the same numbers as the table above), then a Perceptron Badge and a
+bonus Venusaur that no Ball fits, pointing to lesson 2. `src/lib/game.ts` builds the encounters and
+`tests/game.test.ts` checks them against the lesson.
+
 ### Python examples
 
 Each lesson ends with a **Python code example** button (with a Mega Man style burst of yellow orbs on

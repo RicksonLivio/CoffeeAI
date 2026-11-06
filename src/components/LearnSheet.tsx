@@ -1,5 +1,6 @@
 import { Suspense, useEffect, useState } from 'react';
 import { useLang } from '../i18n';
+import GameCard from './game/GameCard';
 import Lesson1 from './learn/Lesson1';
 import Lesson2 from './learn/Lesson2';
 import PythonButton, { type CodeFile } from './learn/PythonButton';
@@ -117,6 +118,11 @@ export default function LearnSheet({ open, onToggle }: { open: number[]; onToggl
             : 'Short lessons on how neural networks learn, with every calculation in view. Open a lesson to start; close it whenever you like.'}
         </p>
       </section>
+
+      <GameCard onLesson={(n) => {
+        if (!open.includes(n)) onToggle(n);
+        window.setTimeout(() => document.getElementById(`lesson-${n}`)?.scrollIntoView(), 0);
+      }} />
 
       {LESSONS.map((l) => {
         const isOpen = open.includes(l.n);
