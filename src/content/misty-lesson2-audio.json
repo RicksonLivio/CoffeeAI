@@ -1,0 +1,49 @@
+{
+  "model": "Qwen/Qwen3-TTS-12Hz-1.7B-CustomVoice",
+  "pt": {
+    "duration": 994.94,
+    "starts": [
+      0.0,
+      42.36,
+      139.18,
+      217.38,
+      343.88,
+      432.32,
+      513.8,
+      649.82,
+      738.46,
+      839.22,
+      924.92
+    ],
+    "checked": {
+      "paragraphs": 33,
+      "number_errors": 0,
+      "max_wer": 0.061,
+      "final_mp3_sections_ok": 11
+    }
+  },
+  "en": {
+    "duration": 958.66,
+    "starts": [
+      0.0,
+      37.36,
+      135.5,
+      212.02,
+      329.44,
+      412.9,
+      489.78,
+      628.12,
+      711.52,
+      801.38,
+      889.1
+    ],
+    "checked": {
+      "paragraphs": 33,
+      "number_errors": 0,
+      "max_wer": 0.07,
+      "final_mp3_sections_ok": 11
+    }
+  },
+  "speaker": "vivian",
+  "asr_check": "whisper large-v3-turbo"
+}

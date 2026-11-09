@@ -1,0 +1,181 @@
+{
+  "about": "Misty's audio lesson for Lesson 2. The page shows this text as the transcript and scripts/misty_tts.py --lesson 2 reads it to generate public/audio/misty_lesson2_{pt,en}.mp3, so text and audio always match. Every number comes from src/lib/mlp.ts, src/lib/deep.ts and src/lib/model.ts, and tests/misty2.test.ts checks them.",
+  "sections": [
+    {
+      "id": "abertura",
+      "title": ["Abertura", "Opening"],
+      "text": [
+        [
+          "Oi de novo, treinador! Aqui é a Misty, do Ginásio de Celeste. Da última vez, a gente terminou com um problema: o Pokédex olhou para um Venusaur, que é do tipo Planta, e disse Água. A culpa não era do treino. O perceptron tinha uma saída só, e por isso só conhecia dois lados de uma reta.",
+          "Hoje a gente resolve isso. Vamos ver por que uma reta não basta, como uma camada oculta desenha duas retas ao mesmo tempo, e como uma rede descobre os próprios pesos com o backpropagation. Como na Aula 1, vou fazer as contas em voz alta. Pegue o papel e o lápis de novo."
+        ],
+        [
+          "Hi again, trainer! It's Misty, from the Cerulean City Gym. Last time, we ended with a problem: the Pokédex looked at a Venusaur, which is a Grass type, and said Water. It wasn't the training's fault. The perceptron had a single output, so it only knew the two sides of a line.",
+          "Today we fix that. We'll see why one line isn't enough, how a hidden layer draws two lines at once, and how a network finds its own weights with backpropagation. Just like in Lesson 1, I'll do the math out loud. Grab that pencil and paper again."
+        ]
+      ]
+    },
+    {
+      "id": "problema",
+      "title": ["O problema do tipo Planta", "The Grass-type problem"],
+      "text": [
+        [
+          "Agora são nove Pokémon: os três iniciais de cada tipo. Charmander, Charmeleon e Charizard são Fogo. Squirtle, Wartortle e Blastoise são Água. Bulbasaur, Ivysaur e Venusaur são Planta. Como antes, cada um vira dois números: a Velocidade e a Defesa.",
+          "Faça uma conta simples: Velocidade menos Defesa. Para os três de Fogo, dá 22, sempre. Para os três de Água, dá menos 22, sempre. E para os de Planta, dá menos 4 ou menos 3. Ou seja: Fogo de um lado, Água do outro, e Planta bem no meio.",
+          "E é aí que mora o problema. No gráfico de Velocidade contra Defesa, o Charmander, o Charizard, o Blastoise e o Squirtle formam os cantos de uma área. O Ivysaur e o Venusaur ficam dentro dela. Qualquer reta que deixe esses quatro cantos do mesmo lado deixa a área inteira desse lado, com o Ivysaur e o Venusaur juntos. Então nenhuma reta separa Planta do resto.",
+          "Eu até testei: treinei um perceptron que só responde Planta ou não Planta, com a regra da Aula 1, por 100 épocas. Em nenhuma delas ele chegou a zero erros. O melhor que conseguiu foi 1 erro. Quando nenhuma reta separa duas classes, a gente diz que elas não são linearmente separáveis."
+        ],
+        [
+          "Now there are nine Pokémon: the three starters of each type. Charmander, Charmeleon and Charizard are Fire. Squirtle, Wartortle and Blastoise are Water. Bulbasaur, Ivysaur and Venusaur are Grass. As before, each one becomes two numbers: Speed and Defense.",
+          "Try a simple calculation: Speed minus Defense. For the three Fire types, it's 22, every time. For the three Water types, it's minus 22, every time. And for the Grass types, it's minus 4 or minus 3. In other words: Fire on one side, Water on the other, and Grass right in the middle.",
+          "And that's where the trouble is. On the Speed versus Defense chart, Charmander, Charizard, Blastoise and Squirtle form the corners of an area. Ivysaur and Venusaur sit inside it. Any line that keeps those four corners on the same side keeps the whole area on that side, Ivysaur and Venusaur included. So no line separates Grass from the rest.",
+          "I even tested it: I trained a perceptron that only answers Grass or not Grass, with the Lesson 1 rule, for 100 epochs. In none of them did it reach zero errors. The best it managed was 1 error. When no line separates two classes, we say they are not linearly separable."
+        ]
+      ]
+    },
+    {
+      "id": "oculta",
+      "title": ["A camada oculta", "The hidden layer"],
+      "text": [
+        [
+          "Se uma reta não separa o meio, a gente usa duas. É como montar um time: em vez de um Pokémon que faz tudo, você coloca dois especialistas na frente e um treinador atrás, que ouve os dois e decide.",
+          "O primeiro especialista, o h1, é o detector de Fogo: ele responde 1 quando a Velocidade menos a Defesa é pelo menos 11. O segundo, o h2, é o detector de Água: responde 1 quando a Defesa menos a Velocidade é pelo menos 11. Cada um deles é um perceptron igualzinho ao da Aula 1, com pesos, bias e função degrau. O 11 é metade de 22: a reta fica no meio do caminho, com folga dos dois lados.",
+          "Depois vem a camada de saída, com três neurônios, um por tipo. Fogo acende quando h1 acende. Água acende quando h2 acende. E Planta acende quando nenhum dos dois acende. Esses dois especialistas formam a camada oculta. Ela se chama oculta porque os dados não dizem o que h1 e h2 devem responder: só dizem o tipo do Pokémon."
+        ],
+        [
+          "If one line can't separate the middle, we use two. It's like building a team: instead of one Pokémon that does everything, you put two specialists up front and a trainer behind them, who listens to both and decides.",
+          "The first specialist, h1, is the Fire detector: it answers 1 when Speed minus Defense is at least 11. The second, h2, is the Water detector: it answers 1 when Defense minus Speed is at least 11. Each of them is a perceptron just like the one in Lesson 1, with weights, a bias and a step function. The 11 is half of 22: the line sits halfway, with room on both sides.",
+          "Then comes the output layer, with three neurons, one per type. Fire lights up when h1 lights up. Water lights up when h2 lights up. And Grass lights up when neither of them does. Those two specialists make up the hidden layer. It's called hidden because the data doesn't say what h1 and h2 should answer: it only says the Pokémon's type."
+        ]
+      ]
+    },
+    {
+      "id": "mao",
+      "title": ["A rede à mão", "The network by hand"],
+      "text": [
+        [
+          "Vamos testar com o Venusaur, Velocidade 80 e Defesa 83. O h1 calcula 80 menos 83 menos 11, que dá menos 14. Negativo, então h1 vale 0. O h2 calcula 83 menos 80 menos 11, que dá menos 8. Também negativo, então h2 vale 0. Nenhum especialista acendeu.",
+          "Na saída, o neurônio de Fogo calcula h1 menos 0,5, ou seja, menos 0,5: apagado. O de Água calcula h2 menos 0,5: também menos 0,5, apagado. E o de Planta calcula 0,5 menos h1 menos h2, que dá 0,5. Positivo: acendeu! O Venusaur finalmente é Planta.",
+          "Agora o Charizard, Velocidade 100 e Defesa 78. O h1 calcula 100 menos 78 menos 11, que dá 11. Positivo, h1 vale 1. O h2 dá 78 menos 100 menos 11, menos 33, e vale 0. Na saída, Fogo fica 1 menos 0,5, que é 0,5, e acende. Os nove Pokémon passam por essa rede, e ela acerta os nove.",
+          "Repare no truque. Depois da camada oculta, cada Pokémon vira um novo par de números, h1 e h2. Todo Fogo vira 1 e 0. Todo Água vira 0 e 1. Todo Planta vira 0 e 0. Os três tipos viram três cantos, e aí retas simples separam tudo. A camada oculta muda o problema até ele ficar fácil para a camada seguinte."
+        ],
+        [
+          "Let's test it with Venusaur, Speed 80 and Defense 83. h1 works out 80 minus 83 minus 11, which is minus 14. Negative, so h1 is 0. h2 works out 83 minus 80 minus 11, which is minus 8. Also negative, so h2 is 0. Neither specialist lit up.",
+          "At the output, the Fire neuron works out h1 minus 0.5, so minus 0.5: off. The Water neuron works out h2 minus 0.5: also minus 0.5, off. And the Grass neuron works out 0.5 minus h1 minus h2, which is 0.5. Positive: it lights up! Venusaur is finally a Grass type.",
+          "Now Charizard, Speed 100 and Defense 78. h1 works out 100 minus 78 minus 11, which is 11. Positive, so h1 is 1. h2 gives 78 minus 100 minus 11, minus 33, so it's 0. At the output, Fire is 1 minus 0.5, which is 0.5, and it lights up. All nine Pokémon go through this network, and it gets all nine right.",
+          "Notice the trick. After the hidden layer, each Pokémon becomes a new pair of numbers, h1 and h2. Every Fire type becomes 1 and 0. Every Water type becomes 0 and 1. Every Grass type becomes 0 and 0. The three types turn into three corners, and then simple lines separate everything. The hidden layer reshapes the problem until it's easy for the next layer."
+        ]
+      ]
+    },
+    {
+      "id": "sigmoide",
+      "title": ["Da função degrau à sigmoide", "From the step to the sigmoid"],
+      "text": [
+        [
+          "Só que fui eu que escolhi esses pesos. Uma rede de verdade precisa encontrá-los sozinha. E aqui aparece uma dificuldade nova: o h1 e o h2 não têm resposta certa. Os dados dizem o tipo do Pokémon, não o que cada especialista deveria responder. O único erro que a gente mede está na saída.",
+          "Então a pergunta vira: quanto cada peso escondido contribuiu para o erro da saída? Para responder, a gente segue o caminho do peso até o erro e multiplica as derivadas de cada etapa. Isso é a regra da cadeia. E aí o degrau atrapalha: ele é plano em quase todo lugar, a derivada dele é zero, e o produto inteiro vira zero. Nenhum peso escondido aprenderia nada.",
+          "A solução é trocar o degrau por uma versão suave, a sigmoide. Ela vai de 0 a 1 como o degrau, mas faz uma curva em vez de um salto. A derivada dela é h vezes 1 menos h, e nunca passa de 0,25. Mais um detalhe: as entradas são divididas por 100, então uma Velocidade de 80 entra como 0,8. Assim a sigmoide começa longe das pontas, onde ela fica plana."
+        ],
+        [
+          "Except I picked those weights. A real network has to find them on its own. And here a new difficulty shows up: h1 and h2 have no right answer. The data gives the Pokémon's type, not what each specialist should answer. The only error we measure is at the output.",
+          "So the question becomes: how much did each hidden weight contribute to the output error? To answer it, we follow the path from the weight to the error and multiply the derivatives of each step. That's the chain rule. And here the step gets in the way: it's flat almost everywhere, its derivative is zero, and the whole product becomes zero. No hidden weight would learn anything.",
+          "The fix is to swap the step for a smooth version, the sigmoid. It goes from 0 to 1 like the step, but it bends instead of jumping. Its derivative is h times 1 minus h, and it never goes above 0.25. One more detail: the inputs are divided by 100, so a Speed of 80 goes in as 0.8. That way the sigmoid starts away from its ends, where it goes flat."
+        ]
+      ]
+    },
+    {
+      "id": "softmax",
+      "title": ["Softmax e entropia cruzada", "Softmax and cross-entropy"],
+      "text": [
+        [
+          "Na saída, a rede agora dá três notas, uma por tipo. A softmax transforma essas notas em probabilidades que somam 1, como um treinador que divide a confiança entre três palpites. E para medir o erro, a gente usa a entropia cruzada: menos o logaritmo da probabilidade do tipo certo. Se a rede dá 100 por cento ao tipo certo, o erro é zero. Quanto menor a probabilidade certa, maior o erro.",
+          "Os pesos começam sorteados, com uma semente fixa. Com eles, o Venusaur entra, e a rede responde: 14 por cento Fogo, 51 por cento Água e 35 por cento Planta. Ela ainda acha que ele é Água, igual ao perceptron! O erro do Venusaur é menos o logaritmo de 0,35, que dá cerca de 1,05.",
+          "Fazendo a mesma conta para os nove e tirando a média, o erro inicial fica em cerca de 1,21. E a rede acerta só 3 dos 9: os três de Água, porque no começo ela chuta Água para todo mundo. É daqui que o treino parte."
+        ],
+        [
+          "At the output, the network now gives three scores, one per type. Softmax turns those scores into probabilities that add up to 1, like a trainer splitting their confidence among three guesses. And to measure the error, we use cross-entropy: minus the logarithm of the probability of the right type. If the network gives the right type 100 percent, the error is zero. The smaller the right probability, the bigger the error.",
+          "The weights start out random, drawn with a fixed seed. With them, Venusaur goes in, and the network answers: 14 percent Fire, 51 percent Water, and 35 percent Grass. It still thinks it's Water, just like the perceptron! Venusaur's error is minus the logarithm of 0.35, which is about 1.05.",
+          "Doing the same calculation for all nine and taking the average, the starting error is about 1.21. And the network gets only 3 of the 9 right: the three Water types, because at first it guesses Water for everyone. That's where training starts."
+        ]
+      ]
+    },
+    {
+      "id": "backprop",
+      "title": ["O backpropagation", "Backpropagation"],
+      "text": [
+        [
+          "Agora, a parte mais famosa: o backpropagation, a propagação do erro para trás. Começa na saída. O erro de cada saída é a probabilidade que a rede deu menos a resposta desejada. O desejado para o Venusaur é 0 para Fogo, 0 para Água e 1 para Planta. Então os erros ficam 0,14 para Fogo, 0,51 para Água, e 0,35 menos 1, que dá menos 0,65, para Planta. Parece o e igual a d menos y da Aula 1, só que com o sinal trocado.",
+          "Depois, o erro volta para a camada oculta. O erro de cada especialista é a soma dos erros da saída, cada um multiplicado pelo peso que liga o especialista àquela saída, e tudo isso vezes a derivada da sigmoide. Para o Venusaur, dá cerca de menos 0,065 para o h1 e menos 0,046 para o h2. É um sinal bem mais fraco que o da saída.",
+          "Com os erros na mão, cada peso recebe o erro do neurônio onde ele chega, vezes a entrada que ele carrega. Isso é o gradiente. E a ordem importa: primeiro a gente calcula todos os erros, da saída para trás, sempre com os pesos antigos. Só no fim os 15 pesos mudam, todos de uma vez. Cada peso anda contra o gradiente, com passo eta igual a 2.",
+          "Um exemplo: o bias da saída Planta valia 0,2. O gradiente dele é o erro vezes menos 1, ou seja, mais 0,65. O novo valor é 0,2 menos 2 vezes 0,65, que dá menos 1,1. Depois desse único passo, só com o Venusaur, a rede passa a dar 96 por cento para Planta, e o erro dele cai de 1,05 para 0,04."
+        ],
+        [
+          "Now, the most famous part: backpropagation, carrying the error backward. It starts at the output. The error of each output is the probability the network gave minus the desired answer. The desired answer for Venusaur is 0 for Fire, 0 for Water and 1 for Grass. So the errors are 0.14 for Fire, 0.51 for Water, and 0.35 minus 1, which is minus 0.65, for Grass. It looks like e equals d minus y from Lesson 1, just with the sign flipped.",
+          "Then the error goes back to the hidden layer. Each specialist's error is the sum of the output errors, each multiplied by the weight that links the specialist to that output, and all of that times the sigmoid's derivative. For Venusaur, it comes to about minus 0.065 for h1 and minus 0.046 for h2. That's a much weaker signal than at the output.",
+          "With the errors in hand, each weight gets the error of the neuron it feeds, times the input it carries. That's the gradient. And the order matters: first we work out all the errors, from the output backward, always with the old weights. Only at the end do the 15 weights change, all at once. Each weight moves against the gradient, with a step size eta equal to 2.",
+          "An example: the bias of the Grass output was 0.2. Its gradient is the error times minus 1, so plus 0.65. The new value is 0.2 minus 2 times 0.65, which is minus 1.1. After that single step, with Venusaur alone, the network gives Grass 96 percent, and its error drops from 1.05 to 0.04."
+        ]
+      ]
+    },
+    {
+      "id": "treino",
+      "title": ["O treino completo", "The full training run"],
+      "text": [
+        [
+          "Um passo com um Pokémon só é pouco. No treino de verdade, cada época passa pelos nove, tira a média dos gradientes e dá um passo. A gente fez isso por 1500 épocas. Na época 52, a rede acerta os nove pela primeira vez.",
+          "Mas o caminho não é reto. Entre as épocas 109 e 158, ela tropeça: o erro sobe, cai, sobe de novo, e em alguns momentos ela volta a acertar só 3. É como um Pokémon aprendendo um golpe novo, que erra algumas vezes antes de firmar. A partir da época 159, ela acerta os nove em todas as épocas. No fim, o erro médio é 0,0068, e o Venusaur recebe 99 por cento de Planta.",
+          "E o mais bonito é o que a camada oculta aprendeu sozinha. O primeiro neurônio ficou com peso 11,8 para a Velocidade e menos 12,6 para a Defesa: é um detector de Fogo, como o que eu montei à mão. O segundo ficou com menos 10,2 para a Velocidade e 9,9 para a Defesa: um detector de Água. Ninguém disse isso para a rede. Ela reinventou a mesma ideia."
+        ],
+        [
+          "One step with a single Pokémon isn't much. In real training, each epoch goes through all nine, averages the gradients and takes one step. We did that for 1500 epochs. At epoch 52, the network gets all nine right for the first time.",
+          "But the road isn't straight. Between epochs 109 and 158, it stumbles: the error goes up, down, up again, and at some points it's back to getting only 3 right. It's like a Pokémon learning a new move, missing a few times before it sticks. From epoch 159 on, it gets all nine right in every epoch. At the end, the average error is 0.0068, and Venusaur gets 99 percent Grass.",
+          "And the nicest part is what the hidden layer learned on its own. The first neuron ended up with a weight of 11.8 for Speed and minus 12.6 for Defense: it's a Fire detector, like the one I built by hand. The second ended up with minus 10.2 for Speed and 9.9 for Defense: a Water detector. Nobody told the network that. It reinvented the same idea."
+        ]
+      ]
+    },
+    {
+      "id": "passo",
+      "title": ["O tamanho do passo", "Step size"],
+      "text": [
+        [
+          "Agora, o eta. Pense no erro como um relevo: vales são pesos bons, morros são pesos ruins, e treinar é descer. O gradiente só enxerga a inclinação onde você está, não o mapa inteiro. Num relevo de brinquedo da aula, com um vale estreito e outro largo e mais fundo, um passo de 0,1 desce o vale mais próximo e fica preso lá. Com 0,7, a bola passa do fundo e fica quicando de uma parede para a outra. Com 1,5, os passos são longos o bastante para sair do vale estreito e chegar ao mais fundo.",
+          "No nosso MLP, com os mesmos pesos iniciais, o efeito aparece igual. Com eta igual a 0,2, a rede aprende devagar: só acerta os nove na época 507, e termina com erro 0,23. Com eta igual a 2, é o treino que você acabou de ouvir. E com eta igual a 10, ela trava: nunca acerta os nove e termina acertando só 3 dos 9, com erro 2,98. Os passos gigantes empurraram as sigmoides para as pontas planas, a derivada quase sumiu, e o erro não chega mais à camada oculta. Isso é um platô. Passo maior não é sempre melhor."
+        ],
+        [
+          "Now, eta. Think of the error as a landscape: valleys are good weights, hills are bad ones, and training means walking down. The gradient only sees the slope where you are, not the whole map. On the lesson's toy landscape, with one narrow valley and one wide, deeper one, a step of 0.1 goes down the nearest valley and gets stuck there. With 0.7, the ball overshoots the bottom and keeps bouncing from wall to wall. With 1.5, the steps are long enough to leave the narrow valley and reach the deeper one.",
+          "In our MLP, with the same starting weights, the effect shows up the same way. With eta equal to 0.2, the network learns slowly: it only gets all nine right at epoch 507, and ends with an error of 0.23. With eta equal to 2, it's the run you just heard about. And with eta equal to 10, it gets stuck: it never gets all nine right and ends up getting only 3 of the 9, with an error of 2.98. The giant steps pushed the sigmoids out to their flat ends, the derivative nearly vanished, and the error no longer reaches the hidden layer. That's a plateau. A bigger step isn't always better."
+        ]
+      ]
+    },
+    {
+      "id": "duas",
+      "title": ["Duas camadas ocultas e o caderno", "Two hidden layers and the notebook"],
+      "text": [
+        [
+          "A aula ainda mostra uma rede com duas camadas ocultas, de dois neurônios cada. São 21 pesos, contra 15 da rede de uma camada. O algoritmo é o mesmo: o erro anda da saída para a segunda camada, da segunda para a primeira, sempre com os pesos antigos, e no fim todos mudam juntos. Ela também acerta os nove.",
+          "Mas repare no que acontece com o erro no caminho. Na primeira época, para o Venusaur, o maior erro é 0,88 na saída, 0,29 na segunda camada e só 0,06 na primeira. Como a derivada da sigmoide nunca passa de 0,25, cada camada multiplica o sinal por um número pequeno. Em redes muito profundas, ele quase some. É o gradiente que desaparece, e é um dos motivos para as redes modernas usarem outras ativações, como a ReLU.",
+          "E no caderno do fim da aula, as mesmas ideias aparecem com matrizes e derivadas parciais. Lá você vê por que o backpropagation é tão mais rápido do que mexer em cada peso para ver o que acontece, e que o relevo do erro tem pontos de sela: lugares planos que não são o fundo de nenhum vale."
+        ],
+        [
+          "The lesson also shows a network with two hidden layers, two neurons each. That's 21 weights, against 15 in the one-layer network. The algorithm is the same: the error moves from the output to the second layer, from the second to the first, always with the old weights, and at the end they all change together. It also gets all nine right.",
+          "But notice what happens to the error along the way. In the first epoch, for Venusaur, the largest error is 0.88 at the output, 0.29 in the second layer and only 0.06 in the first. Since the sigmoid's derivative never goes above 0.25, each layer multiplies the signal by a small number. In very deep networks, it almost disappears. That's the vanishing gradient, and it's one reason modern networks use other activations, like ReLU.",
+          "And in the notebook at the end of the lesson, the same ideas show up with matrices and partial derivatives. There you'll see why backpropagation is so much faster than nudging each weight to see what happens, and that the error landscape has saddle points: flat places that aren't the bottom of any valley."
+        ]
+      ]
+    },
+    {
+      "id": "resumo",
+      "title": ["Resumo", "Recap"],
+      "text": [
+        [
+          "Vamos recapitular. Uma reta não isola o tipo Planta, porque ele fica no meio dos outros. Uma camada oculta desenha duas retas e transforma o problema: com os detectores de Fogo e de Água, os três tipos viram três cantos. Para a rede aprender esses pesos sozinha, a gente troca o degrau pela sigmoide, usa a softmax e a entropia cruzada, e leva o erro da saída para trás com a regra da cadeia. Todos os erros primeiro, com os pesos antigos, e depois todos os pesos de uma vez. Com eta igual a 2 e 1500 épocas, a rede acerta os nove e reinventa os dois detectores.",
+          "Agora é com você: abra a fase 2 do Pokédex, logo abaixo, e finalmente capture o Venusaur, primeiro com a rede feita à mão e depois com uma rede que aprende com o próprio erro. Eu vou estar torcendo. Até a próxima, treinador!"
+        ],
+        [
+          "Let's recap. One line can't isolate the Grass type, because it sits in the middle of the others. A hidden layer draws two lines and reshapes the problem: with the Fire and Water detectors, the three types turn into three corners. For the network to learn those weights on its own, we swap the step for the sigmoid, use softmax and cross-entropy, and carry the output error backward with the chain rule. All the errors first, with the old weights, and then all the weights at once. With eta equal to 2 and 1500 epochs, the network gets all nine right and reinvents the two detectors.",
+          "Now it's your turn: open phase 2 of the Pokédex, just below, and finally catch Venusaur, first with the hand-made network and then with a network that learns from its own mistakes. I'll be cheering for you. See you next time, trainer!"
+        ]
+      ]
+    }
+  ]
+}

@@ -30,7 +30,7 @@ export default function PortfolioSheet({ onLearn }: { onLearn: () => void }) {
           <img className="avatar" src={assets.avatar} alt={PROFILE.name} width={220} height={220} />
           <span className="navi-tag"><span className="led led--ok" /> {pt ? 'Operador conectado' : 'Operator online'} · {pt ? PROFILE.location.replace('Brazil', 'Brasil') : PROFILE.location}</span>
           <div className="stats">
-            <div className="stat"><b>6+</b><span>{pt ? 'anos em dados & IA' : 'years in data & AI'}</span></div>
+            <div className="stat"><b>7+</b><span>{pt ? 'anos em dados & IA' : 'years in data & AI'}</span></div>
             <div className="stat"><b>7</b><span>{pt ? 'empresas' : 'companies'}</span></div>
             <div className="stat"><b>10% → 4%</b><span>{pt ? 'churn mensal' : 'monthly churn'}</span></div>
             <div className="stat"><b>80B+</b><span>{pt ? 'linhas em ETL' : 'rows in ETL'}</span></div>

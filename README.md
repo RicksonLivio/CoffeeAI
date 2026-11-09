@@ -112,6 +112,15 @@ the finished MP3 chapter by chapter and checks the numbers again. It writes
 `src/content/misty-lesson1-audio.json` (chapter times and the check summary). It needs an NVIDIA GPU; setup and
 the command are at the top of the script. Regenerate after editing the text (only changed paragraphs are redone).
 
+### Misty's audio lesson 2
+
+The same item sits under lesson 2 (`src/content/misty-lesson2.json`, `public/audio/misty_lesson2_{pt,en}.mp3`,
+`src/content/misty-lesson2-audio.json`): the Grass-type problem, the hand-made hidden layer with the Venusaur and
+Charizard calculations, sigmoid, softmax and cross-entropy, one backpropagation step for Venusaur, the full training
+run, step size, two hidden layers and the notebook (16:35 in Portuguese, 15:59 in English, about 5.8 MB each). `tests/misty2.test.ts` checks every number it says against
+`src/lib/mlp.ts`, `src/lib/deep.ts` and `src/lib/model.ts`. It is generated with
+`scripts/misty_tts.py --lesson 2` (same voice and Whisper checks as lesson 1).
+
 ### Mini-game: Pokédex, phase 1
 
 A card between lesson 1 and lesson 2 (indented under lesson 1) opens a small Pokédex (`src/components/game/`, loaded only when opened). The
@@ -122,6 +131,17 @@ hints after a wrong answer and 10 XP per first-try answer. The encounters are th
 (Charizard, Blastoise, two epochs, the same numbers as the table above), then a Perceptron Badge and a
 bonus Venusaur that no Ball fits, pointing to lesson 2. `src/lib/game.ts` builds the encounters and
 `tests/game.test.ts` checks them against the lesson.
+
+### Mini-game: Pokédex, phase 2
+
+A second card, under lesson 2 (`src/components/game/PokedexGame2.tsx`), uses the MLP and adds a Grass Ball. On
+Route 2 the brain is first the hand-made step network of lesson 2: for Charizard, Blastoise and Venusaur the player
+works out the net of h1 and h2 and picks one of three Balls, and Venusaur is caught. Then the brain becomes the
+sigmoid/softmax network with the lesson's initial weights: another Venusaur gets p = (0.14, 0.51, 0.35), the
+Pokédex loads the Water Ball and it breaks free; the player does one backpropagation step (loss −ln 0.35 = 1.05,
+δo = p − d = (0.14, 0.51, −0.65), the order of the calculation, the Grass bias 0.2 − 2·0.65 = −1.1), and the next
+Venusaur gets 96 % Grass and is caught. 15 questions, 10 XP per first-try answer, two badges.
+`src/lib/game2.ts` builds the encounters and `tests/game2.test.ts` checks them against the lesson.
 
 ### Python examples
 

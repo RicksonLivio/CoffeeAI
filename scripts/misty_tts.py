@@ -1,4 +1,4 @@
-"""Generates Misty's audio lesson (Lesson 1) from src/content/misty-lesson1.json and checks every number.
+"""Generates Misty's audio lessons from src/content/misty-lesson{1,2}.json and checks every number.
 
 Voice: Qwen3-TTS 1.7B CustomVoice (Qwen/Qwen3-TTS-12Hz-1.7B-CustomVoice, Apache 2.0), built-in speaker "vivian".
 It is a stock voice, not a clone of Misty's voice actress.
@@ -13,10 +13,12 @@ Setup, outside the repo (once, needs an NVIDIA GPU with ~6 GB free):
     uv pip install -p ~/tts-qwen/.venv/bin/python torch torchaudio --index-url https://download.pytorch.org/whl/cu124
     uv pip install -p ~/tts-qwen/.venv/bin/python qwen-tts soundfile openai-whisper num2words
 Run from the repo root (needs ffmpeg):
-    ~/tts-qwen/.venv/bin/python scripts/misty_tts.py          # or: ... misty_tts.py pt
+    ~/tts-qwen/.venv/bin/python scripts/misty_tts.py              # lesson 1, both languages
+    ~/tts-qwen/.venv/bin/python scripts/misty_tts.py --lesson 2   # lesson 2; a language (pt, en) can follow
 
-Writes public/audio/misty_lesson1_{pt,en}.mp3 (mono, 48 kbit/s), src/content/misty-lesson1-audio.json (duration and
-start of each section) and ~/tts-qwen/work/report_{lang}.json (transcript and check of every paragraph).
+Writes public/audio/misty_lesson{N}_{pt,en}.mp3 (mono, 48 kbit/s), src/content/misty-lesson{N}-audio.json (duration and
+start of each section) and ~/tts-qwen/work/report_{lang}.json (lesson 1) or report_l{N}_{lang}.json (transcript and
+check of every paragraph).
 """
 import difflib
 import gc
@@ -35,10 +37,23 @@ import torch
 from num2words import num2words
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
-SRC = ROOT / 'src/content/misty-lesson1.json'
-META = ROOT / 'src/content/misty-lesson1-audio.json'
 OUT = ROOT / 'public/audio'
 WORK = pathlib.Path.home() / 'tts-qwen/work'
+LESSON = 1
+TITLES = {1: 'Misty explains the perceptron (CoffeeAI, Lesson 1)', 2: 'Misty explains the MLP (CoffeeAI, Lesson 2)'}
+
+
+def src_path() -> pathlib.Path:
+    return ROOT / f'src/content/misty-lesson{LESSON}.json'
+
+
+def meta_path() -> pathlib.Path:
+    return ROOT / f'src/content/misty-lesson{LESSON}-audio.json'
+
+
+def report_file(lang: str) -> pathlib.Path:
+    # lesson 1 keeps its original report name, so its cache stays valid
+    return WORK / (f'report_{lang}.json' if LESSON == 1 else f'report_l{LESSON}_{lang}.json')
 
 MODEL = 'Qwen/Qwen3-TTS-12Hz-1.7B-CustomVoice'
 SPEAKER = 'vivian'
@@ -77,7 +92,7 @@ def squeeze(a: np.ndarray, sr: int) -> np.ndarray:
 # ---------- what the voice reads: numbers and symbols written out, so nothing is left to guess ----------
 
 LETTER_VARS = {'pt': {'y'}, 'en': set()}  # variable letters that must not go missing
-LETTER = {'pt': {'x': 'xis', 'w': 'dáblio'}, 'en': {'x': 'x', 'w': 'w'}}
+LETTER = {'pt': {'x': 'xis', 'w': 'dáblio', 'h': 'agá'}, 'en': {'x': 'x', 'w': 'w', 'h': 'h'}}
 
 
 def say_number(tok: str, lang: str) -> str:
@@ -108,7 +123,7 @@ def spoken(text: str, lang: str) -> str:
     """Text as the voice reads it (and as the check compares it): x1 → 'xis um', 15600,5 → words."""
     def var(m):
         return f"{LETTER[lang][m.group(1).lower()]} {say_number(m.group(2), lang)}"
-    text = re.sub(r'\b([xwXW])\s*([0-9])\b', var, text)
+    text = re.sub(r'\b([xwhXWH])\s*([0-9])\b', var, text)
     if lang == 'pt':
         text = re.sub(r'(?<![\w-])y(?![\w-])', 'ípsilon', text)  # the Portuguese voice tends to swallow a bare "y"
     return re.sub(NUM_PT if lang == 'pt' else NUM_EN, lambda m: say_number(m.group(0), lang), text)
@@ -116,16 +131,19 @@ def spoken(text: str, lang: str) -> str:
 
 # ---------- the check ----------
 
+POKEMON = {'charmander', 'charmeleon', 'charizard', 'squirtle', 'wartortle', 'blastoise', 'bulbasaur', 'ivysaur', 'venusaur'}
+
 SUB = str.maketrans('₀₁₂₃₄₅₆₇₈₉', '0123456789')
 
 
 def normalize(text: str, lang: str) -> list[str]:
     text = text.translate(SUB).replace('θ', ' theta ').replace('η', ' eta ').replace('−', ' menos ' if lang == 'pt' else ' minus ')
+    text = text.replace('%', ' por cento ' if lang == 'pt' else ' percent ')
     text = spoken(text, lang).lower()
     text = ''.join(c for c in unicodedata.normalize('NFD', text) if unicodedata.category(c) != 'Mn')
     text = re.sub(r"[^a-z0-9' ]", ' ', text)
     words = text.split()
-    alias = {'pt': {'teta': 'theta', 'ipsilon': 'y', 'de': 'de', 'dablio': 'dablio', 'w': 'dablio', 'x': 'xis', 'pokebola': 'pokebola'},
+    alias = {'pt': {'teta': 'theta', 'ipsilon': 'y', 'de': 'de', 'dablio': 'dablio', 'w': 'dablio', 'x': 'xis', 'h': 'aga', 'pokebola': 'pokebola'},
              'en': {'zeta': 'theta'}}[lang]
     return [alias.get(w, w) for w in words]
 
@@ -149,10 +167,15 @@ def check(expected: str, heard: str, lang: str, edges: bool = True) -> dict:
     for op, i1, i2, j1, j2 in sm.get_opcodes():
         if op == 'equal':
             continue
-        edits += max(i2 - i1, j2 - j1)
         exp, got = a[i1:i2], b[j1:j2]
+        # Whisper spells Pokémon names its own way ("Ivisal", "Squirtail"): a replaced name is not a reading error
+        names = sum(w in POKEMON for w in exp) if op == 'replace' else 0
+        edits += max(len(exp) - names, len(got) - names, 0)
         # a number word changed (articles/joiners like "um", "e", "and" only count next to another number word)
         touched = [w for w in exp + got if w in vocab and w not in ignore]
+        # a name heard as pieces ("Blastoise" → "blast dois"): the sound matches the name, no number was said
+        if exp and all(w in POKEMON for w in exp) and difflib.SequenceMatcher(a=''.join(exp), b=''.join(got)).ratio() >= 0.6:
+            touched = []
         touched += [w for w in exp if w in LETTER_VARS[lang]]
         if touched:
             errors.append(f"{' '.join(exp) or '∅'} → {' '.join(got) or '∅'}")
@@ -169,7 +192,7 @@ def check(expected: str, heard: str, lang: str, edges: bool = True) -> dict:
 
 def paragraphs(lang: str):
     li = list(LANGS).index(lang)
-    for s in json.loads(SRC.read_text(encoding='utf-8'))['sections']:
+    for s in json.loads(src_path().read_text(encoding='utf-8'))['sections']:
         yield s['id'], s['text'][li]
 
 
@@ -186,7 +209,7 @@ def run(lang: str) -> dict:
     name, _, instruct = LANGS[lang]
     work = WORK / lang
     work.mkdir(parents=True, exist_ok=True)
-    report_path = WORK / f'report_{lang}.json'
+    report_path = report_file(lang)
     report = json.loads(report_path.read_text()) if report_path.exists() else {}
     items = [(sid, j, p) for sid, ps in paragraphs(lang) for j, p in enumerate(ps)]
     def cached_ok(p: str) -> bool:
@@ -230,7 +253,7 @@ def run(lang: str) -> dict:
         sys.exit(f'[{lang}] {len(pending)} paragraph(s) still fail after {MAX_ROUNDS} rounds; see {report_path}')
 
     # assemble
-    chunks, starts, total, sr = [], [], 0, None
+    chunks, starts, spans, total, sr = [], [], [], 0, None
     last = None
     for sid, j, p in items:
         if sid != last:
@@ -244,17 +267,18 @@ def run(lang: str) -> dict:
         if a.ndim > 1:
             a = a.mean(axis=1)
         a = squeeze(a, sr)
+        spans.append((total / sr, (total + len(a)) / sr))
         chunks += [a, np.zeros(int(sr * PAUSE_PARAGRAPH), dtype=np.float32)]
         total += len(a) + int(sr * PAUSE_PARAGRAPH)
     wav = np.concatenate(chunks)
     wav = 0.9 * wav / max(1e-6, float(np.abs(wav).max()))
-    mp3 = OUT / f'misty_lesson1_{lang}.mp3'
+    mp3 = OUT / f'misty_lesson{LESSON}_{lang}.mp3'
     with tempfile.NamedTemporaryFile(suffix='.wav') as tmp:
         sf.write(tmp.name, wav, sr)
         subprocess.run(['ffmpeg', '-y', '-loglevel', 'error', '-i', tmp.name, '-ac', '1', '-b:a', '48k',
-                        '-metadata', 'title=Misty explains the perceptron (CoffeeAI, Lesson 1)',
+                        '-metadata', f'title={TITLES[LESSON]}',
                         '-metadata', f'comment=Qwen3-TTS CustomVoice, speaker {SPEAKER}', str(mp3)], check=True)
-    final = verify_mp3(mp3, lang, starts, len(wav) / sr)
+    final = verify_mp3(mp3, lang, starts, len(wav) / sr, spans)
     checked = [report[item_key(p, lang)] for _, _, p in items]
     print(f'{lang}: {len(wav) / sr / 60:.2f} min, {mp3.stat().st_size // 1024} KiB, {len(checked)} paragraphs checked, '
           f'max wer {max(c["wer"] for c in checked)}', flush=True)
@@ -263,13 +287,16 @@ def run(lang: str) -> dict:
                         'final_mp3_sections_ok': final}}
 
 
-def verify_mp3(mp3: pathlib.Path, lang: str, starts: list[float], duration: float) -> int:
-    """Transcribes the finished MP3 chapter by chapter and checks every number of the chapter again."""
+def verify_mp3(mp3: pathlib.Path, lang: str, starts: list[float], duration: float, spans: list[tuple[float, float]]) -> int:
+    """Transcribes the finished MP3 chapter by chapter and checks every number of the chapter again.
+
+    On a long chapter Whisper sometimes skips a sentence that is in the audio; then the chapter is transcribed again
+    paragraph by paragraph (still from the finished MP3, using the paragraph positions) and passes only if all do."""
     import whisper
     asr = whisper.load_model(WHISPER)
     secs = list(paragraphs(lang))
     audio = whisper.load_audio(str(mp3))
-    ok = 0
+    ok, first = 0, 0
     for k, (sid, ps) in enumerate(secs):
         end = starts[k + 1] if k + 1 < len(starts) else duration
         piece = audio[int(starts[k] * 16000): int(end * 16000)]
@@ -278,7 +305,17 @@ def verify_mp3(mp3: pathlib.Path, lang: str, starts: list[float], duration: floa
         res = check(' '.join(ps), heard, lang, edges=False)
         print(f'  final {lang} {sid}: {"ok" if not res["number_errors"] else "BAD"} wer={res["wer"]} {res["number_errors"]}', flush=True)
         if res['number_errors']:
-            sys.exit(f'[{lang}] final MP3 check failed in {sid}: {res["number_errors"]}')
+            bad = []
+            for j, p in enumerate(ps):
+                t0, t1 = spans[first + j]
+                piece = audio[max(0, int((t0 - 0.2) * 16000)): int((t1 + 0.2) * 16000)]
+                heard = asr.transcribe(piece, language=lang, temperature=0, condition_on_previous_text=False)['text'].strip()
+                r = check(p, heard, lang, edges=False)
+                print(f'    paragraph {sid}#{j}: {"ok" if not r["number_errors"] else "BAD"} {r["number_errors"]}', flush=True)
+                bad += r['number_errors']
+            if bad:
+                sys.exit(f'[{lang}] final MP3 check failed in {sid}: {bad}')
+        first += len(ps)
         ok += 1
     del asr
     gc.collect()
@@ -287,13 +324,21 @@ def verify_mp3(mp3: pathlib.Path, lang: str, starts: list[float], duration: floa
 
 
 def main() -> None:
+    global LESSON
+    args = sys.argv[1:]
+    if args[:1] == ['--lesson']:
+        LESSON = int(args[1])
+        args = args[2:]
+    if LESSON not in TITLES:
+        sys.exit(f'unknown lesson {LESSON}')
     OUT.mkdir(parents=True, exist_ok=True)
-    meta = json.loads(META.read_text()) if META.exists() else {}
+    meta_file = meta_path()
+    meta = json.loads(meta_file.read_text()) if meta_file.exists() else {}
     meta.update({'model': MODEL, 'speaker': SPEAKER, 'asr_check': f'whisper {WHISPER}'})
     meta.pop('voices', None)
-    for lang in (sys.argv[1:] or list(LANGS)):
+    for lang in (args or list(LANGS)):
         meta[lang] = run(lang)
-        META.write_text(json.dumps(meta, indent=2) + '\n', encoding='utf-8')
+        meta_file.write_text(json.dumps(meta, indent=2) + '\n', encoding='utf-8')
 
 
 if __name__ == '__main__':

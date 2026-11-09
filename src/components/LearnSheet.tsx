@@ -8,7 +8,7 @@ import PythonButton, { type CodeFile } from './learn/PythonButton';
 
 
 interface LessonInfo {
-  n: number;
+  n: 1 | 2;
   title: [string, string];
   summary: [string, string];
   Body: React.ComponentType;
@@ -156,9 +156,9 @@ export default function LearnSheet({ open, onToggle }: { open: number[]; onToggl
               </div>
             )}
           </section>
-          {/* Misty's audio and the mini-game use lesson 1, so they sit right after it, indented under it. */}
-          {l.n === 1 && <MistyAudio />}
-          {l.n === 1 && <GameCard onLesson={openLesson} />}
+          {/* Misty's audio and the mini-game of each lesson sit right after it, indented under it. */}
+          {(l.n === 1 || l.n === 2) && <MistyAudio lesson={l.n} />}
+          {(l.n === 1 || l.n === 2) && <GameCard phase={l.n} onLesson={openLesson} />}
           </Fragment>
         );
       })}

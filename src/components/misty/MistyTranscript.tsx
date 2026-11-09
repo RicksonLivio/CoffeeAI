@@ -1,5 +1,8 @@
 import { useLang } from '../../i18n';
-import script from '../../content/misty-lesson1.json';
+import script1 from '../../content/misty-lesson1.json';
+import script2 from '../../content/misty-lesson2.json';
+
+const SCRIPTS = { 1: script1, 2: script2 } as const;
 
 function clock(s: number): string {
   const t = Math.max(0, Math.floor(s));
@@ -7,9 +10,12 @@ function clock(s: number): string {
 }
 
 /** Chapters (click to jump) and the full text the audio reads, with the current chapter highlighted. */
-export default function MistyTranscript({ current, starts, onSeek }: { current: number; starts: number[]; onSeek: (i: number) => void }) {
+export default function MistyTranscript({ lesson, current, starts, onSeek }: {
+  lesson: 1 | 2; current: number; starts: number[]; onSeek: (i: number) => void;
+}) {
   const { lang } = useLang();
   const i = lang === 'pt' ? 0 : 1;
+  const script = SCRIPTS[lesson];
   return (
     <>
       <ol className="misty-chapters">

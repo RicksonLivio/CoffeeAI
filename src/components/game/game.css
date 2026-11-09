@@ -187,3 +187,18 @@
 @media (prefers-reduced-motion: reduce) {
   .pd-dialog *, .pd-card * { animation: none !important; transition: none !important; }
 }
+
+/* ---------- Phase 2 (PokedexGame2): a third Ball and long answers ---------- */
+.pd-ball.grass { --ball: var(--grass); }
+.pd-choices.wide .pd-choice { flex-basis: 100%; text-align: left; font-family: var(--font-ui); font-size: .88rem; }
+.pd-probs { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; margin-bottom: 10px; }
+.pd-probs div { background: var(--navy-800); border: 1px solid var(--steel-600); padding: 4px 8px; }
+.pd-probs span { display: block; font-family: var(--font-ui); text-transform: uppercase; letter-spacing: .1em; font-size: .68rem; color: var(--steel-400); }
+.pd-probs b { font-family: var(--font-mono); font-size: .85rem; }
+.pd-probs .fire b { color: var(--fire); }
+.pd-probs .water b { color: var(--water); }
+.pd-probs .grass b { color: var(--grass); }
+.pd-probs i { display: block; height: 4px; margin-top: 3px; background: currentColor; opacity: .7; }
+.pd-probs .fire i { color: var(--fire); }
+.pd-probs .water i { color: var(--water); }
+.pd-probs .grass i { color: var(--grass); }

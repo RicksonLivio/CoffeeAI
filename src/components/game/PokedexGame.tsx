@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { assets } from '../../api';
 import { num, par, useLang, type Lang } from '../../i18n';
 import {
@@ -6,6 +6,7 @@ import {
 } from '../../lib/game';
 import { LESSON_ETA, type Weights } from '../../lib/perceptron';
 import { pokeName, sumExpr } from '../learn/CalcPanel';
+import { ballName, Choices, reducedMotion, typeName, Wild } from './parts';
 
 type Screen = 'intro' | 'play' | 'epoch' | 'badge' | 'end';
 /** net → ball → aim → throw → result → (error → update → learned when it breaks free) */
@@ -17,56 +18,8 @@ const DEX_ORDER: PokeId[] = ['charizard', 'blastoise', 'venusaur'];
 const NEW_DEX: Dex = { charizard: 'unknown', blastoise: 'unknown', venusaur: 'unknown' };
 const THROW_MS = 2600;
 
-const reducedMotion = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-
 function weights(w: Weights, lang: Lang): string {
   return `w1 = ${num(w.w1, lang)}, w2 = ${num(w.w2, lang)}, θ = ${num(w.theta, lang)}`;
-}
-
-function typeName(t: 'fire' | 'water' | 'grass', pt: boolean): string {
-  if (t === 'fire') return pt ? 'Fogo' : 'Fire';
-  if (t === 'water') return pt ? 'Água' : 'Water';
-  return pt ? 'Planta' : 'Grass';
-}
-
-/** Same name in both languages, like the game's item names. */
-function ballName(b: Ball): string {
-  return b === 'fire' ? 'Fire Ball 🔥' : 'Water Ball 💧';
-}
-
-interface ChoicesProps<T> {
-  options: T[];
-  keyOf: (o: T) => string;
-  label: (o: T) => ReactNode;
-  isRight: (o: T) => boolean;
-  wrong: string[];
-  onPick: (right: boolean, key: string) => void;
-}
-
-function Choices<T>({ options, keyOf, label, isRight, wrong, onPick }: ChoicesProps<T>) {
-  return (
-    <div className="pd-choices">
-      {options.map((o) => {
-        const k = keyOf(o);
-        const bad = wrong.includes(k);
-        return (
-          <button key={k} className={`pd-choice ${bad ? 'wrong' : ''}`} disabled={bad} onClick={() => onPick(isRight(o), k)}>
-            {label(o)}
-          </button>
-        );
-      })}
-    </div>
-  );
-}
-
-/** Small Pokémon portrait cropped from the card art; dark until the Pokédex has seen it. */
-function Wild({ id, revealed, className = '' }: { id: PokeId; revealed: boolean; className?: string }) {
-  return (
-    <div className={`pd-wild ${revealed ? id : 'hidden'} ${className}`}>
-      <img src={assets.card(id)} alt={revealed ? pokeName(id) : '???'} draggable={false} />
-      {!revealed && <span className="pd-qmark" aria-hidden="true">?</span>}
-    </div>
-  );
 }
 
 export default function PokedexGame({ onClose, onLesson }: { onClose: () => void; onLesson: (n: number) => void }) {
