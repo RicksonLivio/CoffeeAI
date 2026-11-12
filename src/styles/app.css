@@ -342,3 +342,45 @@ select {
 .xnote[open] > summary::before { content: "−"; }
 .xnote > .xbody { padding: 4px 18px 16px; }
 .xnote.warn > summary { color: #ff9b9b; }
+.diploma-actions { align-items: center; margin-top: 14px; gap: 8px; }
+
+/* ---------- Lesson 3 (CNN) ---------- */
+.blk-grid { display: grid; gap: 2px; width: max-content; max-width: 100%; }
+.blk-cell {
+  display: grid; place-items: center; font-family: var(--font-mono); color: var(--steel-100);
+  border: 1px solid var(--steel-600); transition: outline-color .2s var(--ease);
+}
+.blk-cell.on { outline: 2px solid var(--gold-400); outline-offset: -2px; box-shadow: var(--glow-gold); z-index: 1; }
+.blk-cell.pad { border-style: dashed; color: var(--steel-400); }
+.blk-cell.pick { cursor: pointer; }
+.conv-row .panel { overflow-x: auto; }
+.conv-row .label { display: block; margin-bottom: 8px; }
+.map { image-rendering: pixelated; border: 1px solid var(--steel-600); display: block; }
+.fmaps { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; margin: 8px 0 12px; }
+.fmaps figcaption { text-align: center; }
+.arrow-big { font-family: var(--font-mono); color: var(--gold-400); font-size: 1.3rem; }
+.fstrip { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
+.fstrip figure { margin: 0; display: grid; justify-items: center; gap: 6px; }
+.fstrip figcaption { font-family: var(--font-mono); font-size: .7rem; color: var(--steel-200); text-align: center; }
+.fgrid { display: grid; gap: 3px; }
+.arch { max-height: 240px; }
+.probs { display: grid; gap: 6px; width: 100%; }
+.prob { display: grid; grid-template-columns: 64px 1fr 64px; gap: 8px; align-items: center; font-family: var(--font-mono); font-size: .8rem; }
+.prob .bar { height: 10px; background: var(--navy-900); border: 1px solid var(--steel-600); }
+.prob .bar i { display: block; height: 100%; }
+.prob .bar i.fire { background: var(--fire); }
+.prob .bar i.water { background: var(--water); }
+.prob .bar i.grass { background: var(--grass); }
+.prob output { text-align: right; color: var(--steel-200); }
+.prob.best output { color: var(--gold-400); font-weight: 700; }
+.deck { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; }
+.deck figure { margin: 0; width: 76px; font-size: .64rem; text-align: center; color: var(--steel-200); }
+.deck figure img { width: 70px; height: auto; border: 1px solid var(--steel-600); }
+.deck figure.test img { border-color: var(--gold-500); }
+.deck--pick button { padding: 2px; background: var(--navy-800); border: 1px solid var(--steel-600); cursor: pointer; }
+.deck--pick button img { display: block; width: 58px; height: auto; }
+.deck--pick button.active { border-color: var(--gold-500); box-shadow: var(--glow-gold); }
+.pokedex { border-left: 4px solid var(--cyan-400); }
+.pokedex.fire { border-left-color: var(--fire); }
+.pokedex.water { border-left-color: var(--water); }
+.pokedex.grass { border-left-color: var(--grass); }

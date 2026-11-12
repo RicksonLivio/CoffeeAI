@@ -25,6 +25,15 @@ export default function PortfolioSheet({ onLearn }: { onLearn: () => void }) {
             <button className="btn" onClick={onLearn}>{pt ? 'Aprenda comigo' : 'Learn with me'}</button>
             <a className="btn btn--ghost" href={PROFILE.github} target="_blank" rel="noopener noreferrer">GitHub ↗</a>
           </div>
+          <div className="hero-actions diploma-actions">
+            <span className="label">{pt ? 'Diploma · Bacharel em Estatística' : 'Diploma · B.Sc. in Statistics'}</span>
+            <a className="btn btn--ghost btn--sm" href={assets.diploma} target="_blank" rel="noopener noreferrer">
+              {pt ? 'Ver' : 'View'}
+            </a>
+            <a className="btn btn--ghost btn--sm" href={assets.diploma} download="Diploma_Estatistica_Rickson_Livio.pdf">
+              ⬇ {pt ? 'Baixar' : 'Download'}
+            </a>
+          </div>
         </div>
         <div className="hero-card">
           <img className="avatar" src={assets.avatar} alt={PROFILE.name} width={220} height={220} />

@@ -13,3 +13,6 @@ Thumbs.db
 
 # local preview (PID and log)
 .run/
+
+# lesson 3: original card downloads (the published versions are in public/pokemon/cnn/)
+new_files/cards/

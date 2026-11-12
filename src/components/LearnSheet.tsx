@@ -1,4 +1,4 @@
-import { Fragment, Suspense, useEffect, useState } from 'react';
+import { Fragment, lazy, Suspense, useEffect, useState } from 'react';
 import { useLang } from '../i18n';
 import GameCard from './game/GameCard';
 import MistyAudio from './misty/MistyAudio';
@@ -6,9 +6,12 @@ import Lesson1 from './learn/Lesson1';
 import Lesson2 from './learn/Lesson2';
 import PythonButton, { type CodeFile } from './learn/PythonButton';
 
+// Lesson 3 (CNN) loads its cards and feature-map code only when opened.
+const Lesson3 = lazy(() => import('./learn/Lesson3'));
+
 
 interface LessonInfo {
-  n: 1 | 2;
+  n: 1 | 2 | 3;
   title: [string, string];
   summary: [string, string];
   Body: React.ComponentType;
@@ -92,9 +95,38 @@ const LESSONS: LessonInfo[] = [
       },
     ],
   },
+  {
+    n: 3,
+    title: ['A CNN (rede neural convolucional)', 'The CNN (convolutional neural network)'],
+    summary: [
+      'Agora a rede olha a carta: convolução, padding, stride, ReLU e pooling em blocos, do quadrado grande ao pequeno, o backpropagation na convolução e uma Pokédex que descobre o tipo (Fogo, Água ou Planta) de cartas que ela nunca viu.',
+      'Now the network looks at the card: convolution, padding, stride, ReLU and pooling in blocks, from the big square to the small one, backpropagation through a convolution and a Pokédex that discovers the type (Fire, Water or Grass) of cards it never saw.',
+    ],
+    Body: Lesson3,
+    code: [
+      {
+        file: 'cnn_pokemon.py',
+        label: ['sem bibliotecas', 'no libraries'],
+        about: [
+          'Python puro: a convolução em blocos com padding e stride, os três poolings, o backpropagation da convolução à mão e a Pokédex classificando as 24 cartas de teste com os pesos treinados (baixa as cartas e o modelo do site).',
+          'Plain Python: block convolution with padding and stride, the three poolings, backpropagation through the convolution by hand, and the Pokédex classifying the 24 test cards with the trained weights (it downloads the cards and the model from the site).',
+        ],
+        run: 'python3 cnn_pokemon.py',
+      },
+      {
+        file: 'cnn_pokemon_torch.py',
+        label: ['PyTorch', 'PyTorch'],
+        about: [
+          'A mesma rede com nn.Conv2d, nn.MaxPool2d e nn.Linear: confere que os pesos do site dão as mesmas probabilidades, compara o gradiente da convolução com o autograd e treina do zero com aumento de dados.',
+          'The same network with nn.Conv2d, nn.MaxPool2d and nn.Linear: checks that the site’s weights give the same probabilities, compares the convolution gradient with autograd and trains from scratch with data augmentation.',
+        ],
+        run: 'pip install torch && python3 cnn_pokemon_torch.py',
+      },
+    ],
+  },
 ];
 
-/** Lessons start closed; `open` comes from the URL (#learn/1, #learn/2). Closed lessons are not rendered. */
+/** Lessons start closed; `open` comes from the URL (#learn/1, #learn/2, #learn/3). Closed lessons are not rendered. */
 export default function LearnSheet({ open, onToggle }: { open: number[]; onToggle: (n: number) => void }) {
   const { lang } = useLang();
   const pt = lang === 'pt';

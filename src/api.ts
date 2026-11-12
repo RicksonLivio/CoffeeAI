@@ -11,6 +11,7 @@ export const assets = {
   photo: `${BASE}Rick.jpeg`,
   avatar: `${BASE}Rick_avatar.jpg`,
   resume: `${BASE}Resume_updated_2026.pdf`,
+  diploma: `${BASE}Diploma_Estatistica_Rickson_Livio.pdf`,
   card: (id: string) =>
     id === 'venusaur' ? `${BASE}pokemon/venusaur_card.png` : `${BASE}pokemon/${id}_card.jpg`,
 };

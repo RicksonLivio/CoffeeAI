@@ -11,8 +11,8 @@ reference screen in [`docs/design/megaman_theme.png`](docs/design/megaman_theme.
 
 | Tab | What it has |
 |---|---|
-| **01 Portfolio** | hero with photo, story as a quest log, work history timeline, skill gauges, certificates, master's research (Neural Fourier Head), education and contact |
-| **02 Learn with me** | collapsible lessons (closed until you open them; `#learn/1`, `#learn/2` open them from a link). Lesson 1: the perceptron. Lesson 2: the MLP, ending with a notebook on gradient descent, backpropagation and the optimization landscape |
+| **01 Portfolio** | hero with photo, a small button to view or download the Statistics diploma (`public/Diploma_Estatistica_Rickson_Livio.pdf`), story as a quest log, work history timeline, skill gauges, certificates, master's research (Neural Fourier Head), education and contact |
+| **02 Learn with me** | collapsible lessons (closed until you open them; `#learn/1`, `#learn/2`, `#learn/3` open them from a link). Lesson 1: the perceptron. Lesson 2: the MLP, ending with a notebook on gradient descent, backpropagation and the optimization landscape. Lesson 3: the CNN, ending with a Pokédex that reads the type from a card picture |
 | **03 Resume** | the PDF in the page, with download |
 
 The resume (`public/Resume_updated_2026.pdf`) can also be downloaded from the top bar on every tab.
@@ -95,6 +95,41 @@ J = (w₂w₁ − 1)² on contour lines and a 3D surface, Baldi & Hornik (1989),
 that "no bad local minima" does not hold for nonlinear networks in general (Yun, Sra & Jadbabaie, 2019;
 Safran & Shamir, 2018). `src/lib/linear.ts` and `tests/linear.test.ts` check every formula and number.
 
+### Lesson 3: the CNN
+
+Lesson 3 (`src/components/learn/Lesson3.tsx`, loaded only when opened) moves from two stats to the card picture
+and predicts the type (Fire, Water, Grass) from the image:
+
+1. **An image is a grid of numbers:** the card squeezed to 32 × 32 × 3 = 3072 numbers, its R, G, B channels, and
+   why a dense layer is a poor fit (9219 weights just for the output; no notion of neighbouring pixels).
+2. **Convolution:** a 3 × 3 filter slides over a 6 × 6 patch drawn as squares, with play/step, click-to-inspect,
+   padding 0/1, stride 1/2, the output-size formula, ReLU on the result, and the same filters on a real card.
+3. **ReLU and pooling:** max, average and min pooling on a 4 × 4 map, and the error going back only to the winner.
+4. **From the big square to the small one:** 32×32×3 → conv 5×5 ×6 → 28×28×6 → pool → 14×14×6 → conv 3×3 ×8 →
+   12×12×8 → pool → 6×6×8 → 288 → 3, as shrinking squares and as the real feature maps of a card;
+   456 + 440 + 867 = 1763 weights.
+5. **How it learns:** backpropagation through pooling, ReLU and a convolution worked out by hand (3 × 3 input,
+   2 × 2 filter), the training run, confusion matrix, the six learned first-layer filters, and an honest note: an
+   average-colour classifier with no convolution gets 22/24 test cards, the CNN 23/24, so the network mostly reads
+   the card colour.
+6. **Pokédex:** pick one of the 24 test cards or upload a photo (processed in the browser, nothing is sent) and
+   see the prediction and every feature map.
+7. **Other techniques:** dilation, 1×1 convolution, batch norm, dropout, augmentation, global average pooling,
+   residual connections, transfer learning, LeNet/AlexNet/VGG/ResNet, validation sets.
+
+The data: 90 single-type Basic Pokémon cards (30 per type) from 20 Pokémon TCG sets (1999–2023), picked from
+the public [pokemon-tcg-data](https://github.com/PokemonTCG/pokemon-tcg-data) list and downloaded from
+images.pokemontcg.io, plus the three lesson cards: 93 cards, 69 train / 24 test (8 per type).
+`scripts/prepare_cnn_cards.py` downloads them (originals in `new_files/cards/`, not published), writes the
+page versions to `public/pokemon/cnn/` and the 32×32 network input to `public/models/cnn_pokemon/cards32.json`.
+`npm run train-cnn` (`scripts/train-cnn.ts`, about 10 s) trains `src/lib/cnn.ts` (SGD with momentum, η = 0.002,
+momentum 0.9, 40 epochs, seed 11, shift/mirror/brightness augmentation) and writes
+`public/models/cnn_pokemon/model.json`: 69/69 train, 23/24 test (the miss is Orbeetle V, a full-art Grass card
+with a red Pokémon covering it). If the model file can't be loaded, the page trains it in the browser.
+`tests/cnn.test.ts` checks the block examples, output sizes, the hand backprop, the network gradient against
+finite differences, the dataset split, that a fresh training run reproduces the cached weights, and the
+colour baseline.
+
 ### Misty's audio lesson
 
 A small item right under lesson 1 (above the mini-game) has a round Misty portrait (`public/misty.jpg`, the face
@@ -154,10 +189,12 @@ click) that downloads a plain-Python simulation, no extra libraries:
 | `public/code/perceptron_pokemon_torch.py` | the same with tensors: manual version printing vectors and products, plus a quick vectorized one |
 | `public/code/mlp_pokemon.py` | lesson 2 parts 1–5; `--plot` draws the curves and the 3D surface if matplotlib is installed |
 | `public/code/backprop_notebook.py`, `backprop_notebook_torch.py` | lesson 2, part 6: backprop with matrices vs finite differences, the toy saddle, the bad saddle; eq. 8 vs autograd and exact Hessians in PyTorch |
+| `public/code/cnn_pokemon.py` | lesson 3: block convolution with padding/stride, the three poolings, the hand backprop, and the Pokédex classifying the 24 test cards with the site's weights (downloads them; `--dir` for local files) |
+| `public/code/cnn_pokemon_torch.py` | the same network with `nn.Conv2d`/`nn.MaxPool2d`/`nn.Linear`: loads the site's weights, checks the hand gradient against autograd, trains from scratch |
 | `public/code/mlp_pokemon_torch.py` | manual PyTorch with matrices (prints X, W, Z, A, δ and gradients, checked against autograd) and a quick `nn.Sequential` + `CrossEntropyLoss` + `SGD` version, 1 and 2 hidden layers, with metrics |
 
 The `*_torch.py` files need `pip install torch`. `tests/python-scripts.test.ts` runs the scripts and
-checks their output against the lesson numbers (all six; the PyTorch ones are skipped where torch is not installed;
+checks their output against the lesson numbers (all eight; the PyTorch ones are skipped where torch is not installed;
 `PYTHON_TORCH=/path/to/python npm test` points them at another interpreter).
 
 Lesson 2 also reports, at the chosen epoch, the confusion matrix, accuracy, precision, recall (sensitivity),
@@ -181,6 +218,7 @@ src/lib/perceptron.ts                        the perceptron, written to be read 
 src/lib/mlp.ts                               the MLP: hand-made step network, sigmoid/softmax, backpropagation
 src/lib/deep.ts                              any number of hidden layers: epochs, gradients, history
 src/lib/landscape.ts                         toy error surface with a local and a global minimum
+src/lib/cnn.ts                               the CNN: convolution, ReLU, pooling, backprop, training, lesson-3 examples
 src/lib/model.ts                             builds the cached model (config, samples, full trace, final weights)
 scripts/export-model.ts                      writes public/models/{perceptron_pokemon,mlp_pokemon,mlp2_pokemon}/model.json
 tests/cached-model.test.ts                   fails if a JSON no longer matches the code
@@ -210,6 +248,7 @@ npm test               # perceptron, MLP and cached-model tests
 npm run build          # typecheck + build to dist/
 npm run preview        # serves dist/ on http://127.0.0.1:4174
 npm run export-model   # regenerate the cached model after changing src/lib/perceptron.ts
+npm run train-cnn      # retrain the lesson-3 CNN after changing src/lib/cnn.ts or the cards
 ```
 
 On WSL, use a Linux Node (for example `export PATH="$HOME/.local/node/bin:$PATH"`); the Windows Node
@@ -232,7 +271,8 @@ GitHub Pages is free for public repositories.
 
 ## Credits
 
-Pokémon card images and names belong to Nintendo, Creatures and GAME FREAK; Mega Man Battle Network
+Pokémon card images and names belong to Nintendo, Creatures and GAME FREAK (lesson 3 card pictures via the
+Pokémon TCG API, images.pokemontcg.io); Mega Man Battle Network
 belongs to Capcom. They are used here for teaching, with no commercial purpose.
 
 ## Contributing

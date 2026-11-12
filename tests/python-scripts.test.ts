@@ -68,3 +68,23 @@ test('backprop_notebook_torch.py: eq. 8 equals autograd; Hessians at the saddles
   assert.ok(out.includes('autovalores tensor([-2.,  2.]) -> sela estrita'));
   assert.ok(out.includes('autovalores tensor([0., 0., 0.]) -> sela ruim'));
 });
+
+// Lesson 3: the scripts read the local cards and model (--dir) instead of downloading them from the site.
+const CNN_DIR = ['--dir', '../models/cnn_pokemon'];
+
+test('cnn_pokemon.py prints the lesson 3 numbers and the Pokédex gets 23/24', { skip: !py && 'python3 not found' }, () => {
+  const r = spawnSync(py!, ['cnn_pokemon.py', ...CNN_DIR], { cwd: dir, encoding: 'utf8', timeout: 120_000 });
+  assert.equal(r.status, 0, r.stderr);
+  for (const s of ['posição (0, 0): net = 9·1 + 9·0 + 9·-1 + 9·1 + 9·0 + 9·-1 + 9·1 + 9·0 + 8·-1 = 1', '= 23',
+    'padding 1, stride 2: saída = ⌊(6 + 2·1 − 3)/2⌋ + 1 = 3  (conferido: 3)', '∂L/∂K[1][1] = 0.5·1 + -1·3 + 0·1 + 0.25·1 = -2.25',
+    'K[1][1] = 2 − 0.1·(-2.25) = 2.225', '1763 pesos', 'Orbeetle V             real Planta  Pokédex Fogo', 'acertos no teste: 23/24']) assert.ok(r.stdout.includes(s), s);
+  assert.ok(Number(/probabilidades do site: ([0-9.e+-]+)/.exec(r.stdout)![1]) < 1e-4);
+});
+
+test('cnn_pokemon_torch.py: site weights give the same probabilities; hand gradient equals autograd', { skip: !hasTorch && 'torch not installed' }, () => {
+  const r = spawnSync(pyTorch, ['cnn_pokemon_torch.py', ...CNN_DIR], { cwd: dir, encoding: 'utf8', timeout: 300_000, env: { ...process.env, CUDA_VISIBLE_DEVICES: '' } });
+  assert.equal(r.status, 0, r.stderr);
+  assert.ok(Number(/site \(93 cartas\): ([0-9.e+-]+)/.exec(r.stdout)![1]) < 1e-4);
+  for (const s of ['pesos: 1763', 'acertos: treino 69/69, teste 23/24', '∂L/∂K (autograd) = [[-1.25, 1.75], [-0.75, -2.25]]',
+    '∂L/∂x (autograd) = [[0.5, -1.5, 1.0], [0.0, 1.25, -2.25], [0.0, 0.0, 0.5]]']) assert.ok(r.stdout.includes(s), s);
+});

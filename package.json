@@ -9,6 +9,7 @@
     "build": "tsc --noEmit -p tsconfig.json && vite build",
     "typecheck": "tsc --noEmit -p tsconfig.json",
     "test": "node --experimental-strip-types --no-warnings --test \"tests/**/*.test.ts\"",
+    "train-cnn": "node --experimental-strip-types --no-warnings scripts/train-cnn.ts",
     "export-model": "node --experimental-strip-types --no-warnings scripts/export-model.ts",
     "preview": "vite preview",
     "audit": "npm audit --omit=dev"
