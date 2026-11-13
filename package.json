@@ -3,7 +3,7 @@
   "private": true,
   "version": "1.0.0",
   "type": "module",
-  "description": "CoffeeAI: web portfolio of Rickson Livio, with a Learn-with-me lesson on the perceptron",
+  "description": "CoffeeAI: web portfolio of Rickson Gaspar, with a Learn-with-me lesson on the perceptron",
   "scripts": {
     "dev": "vite",
     "build": "tsc --noEmit -p tsconfig.json && vite build",

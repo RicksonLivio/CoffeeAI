@@ -1,6 +1,6 @@
 # CoffeeAI
 
-Web portfolio of **Rickson Livio de Souza Gaspar**, Staff AI & MLOps Engineer, with a **Learn with me**
+Web portfolio of **Rickson Gaspar** (Rickson Lívio de Souza Gaspar), Staff AI & MLOps Engineer, with a **Learn with me**
 section that teaches how neural networks learn, starting with the perceptron.
 
 The look is a retro "Cyber-Net" HUD (navy, steel gray, cyan and gold), inspired by Mega Man Battle
@@ -11,7 +11,7 @@ reference screen in [`docs/design/megaman_theme.png`](docs/design/megaman_theme.
 
 | Tab | What it has |
 |---|---|
-| **01 Portfolio** | hero with photo, a small button to view or download the Statistics diploma (`public/Diploma_Estatistica_Rickson_Livio.pdf`), story as a quest log, work history timeline, skill gauges, certificates, master's research (Neural Fourier Head), education and contact |
+| **01 Portfolio** | hero with photo, story as a quest log, work history timeline, skill gauges, certificates, academic experience (the Neural Fourier Head master's research and the ICEIS 2025 paper, with download and links), education (with View / Download buttons for the Statistics diploma, `public/Diploma_Estatistica_Rickson_Gaspar.pdf`) and contact |
 | **02 Learn with me** | collapsible lessons (closed until you open them; `#learn/1`, `#learn/2`, `#learn/3` open them from a link). Lesson 1: the perceptron. Lesson 2: the MLP, ending with a notebook on gradient descent, backpropagation and the optimization landscape. Lesson 3: the CNN, ending with a Pokédex that reads the type from a card picture |
 | **03 Resume** | the PDF in the page, with download |
 
@@ -178,6 +178,30 @@ Pokédex loads the Water Ball and it breaks free; the player does one backpropag
 Venusaur gets 96 % Grass and is caught. 15 questions, 10 XP per first-try answer, two badges.
 `src/lib/game2.ts` builds the encounters and `tests/game2.test.ts` checks them against the lesson.
 
+### Misty's audio lesson 3
+
+Under lesson 3 (`src/content/misty-lesson3.json`, `public/audio/misty_lesson3_{pt,en}.mp3`,
+`src/content/misty-lesson3-audio.json`), told as the Pokédex getting a camera: the card as 3072 numbers, the
+vertical-edge filter worked out window by window (27 − 26 = 1, 27 − 4 = 23), padding, stride and the output-size rule,
+ReLU and max pooling as a tournament, the 32 → 28 → 14 → 12 → 6 → 288 → 3 network and its 1763 weights, the hand
+backpropagation through a 2 × 2 filter (−2.25, 2 → 2.225), the 93-card training run, the Orbeetle miss and the colour
+shortcut (17:21 in Portuguese, 16:51 in English, about 6 MB each). `tests/misty3.test.ts` checks every number against
+`src/lib/cnn.ts` and the cached model. It is generated with `scripts/misty_tts.py --lesson 3`; the number check reads
+Whisper's "6x6" and "32-5" back as "6 by 6" and "32 minus 5". The item stays hidden while the audio metadata has no duration.
+
+### Mini-game: Pokédex, phase 3
+
+A third card, under lesson 3 (`src/components/game/PokedexGame3.tsx`): on Route 3 the Pokédex gets a camera and reads
+the type from the card picture with the lesson-3 CNN (it loads the cached model and the 32 × 32 cards). Three test
+cards the network never saw (Fennekin, Totodile, Rowlet) each ask for two pieces of the CNN, with the usual mistakes
+as wrong options: 32 · 32 · 3 = 3072 inputs, the vertical-edge net 27 − 4 = 23, the output size 32 − 5 + 1 = 28, max
+pooling of (1, 3, 5, 6), ReLU(−18) = 0 and 6 · 75 + 6 = 456 first-layer weights; then the softmax Ball, and all three
+are caught. The last card is Orbeetle V, the one test card the CNN gets wrong: the Fire Ball fails and the player
+follows the error back (loss −ln p_Grass = 23.15, δ = (1, 0, −1), the error only to the pooling winner, the hand
+gradient −2.25 and the update 2 → 2.225) and finds the cause: a colour-only classifier gets 22 of 24, so the network
+mostly reads the card colour. 16 questions, 10 XP each. `src/lib/game3.ts` builds the encounters and
+`tests/game3.test.ts` checks them against the model and the cards.
+
 ### Python examples
 
 Each lesson ends with a **Python code example** button (with a Mega Man style burst of yellow orbs on
@@ -229,13 +253,13 @@ yourself" section always trains live, since it takes microseconds.
 
 | Path | Contents |
 |---|---|
-| `src/App.tsx` | top bar, tabs with hash routing (`#portfolio`, `#learn/1,2`, `#resume`), EN/PT switch |
-| `src/content/profile.ts` | all portfolio text, in English and Portuguese, taken from the resume |
+| `src/App.tsx` | top bar, tabs with hash routing (`#portfolio`, `#learn/1,2,3`, `#resume`), EN/PT switch |
+| `src/content/profile.ts` | all portfolio text, in English and Portuguese, taken from the resume, the NFH README and the ICEIS 2025 paper |
 | `src/components/PortfolioSheet.tsx`, `ResumeSheet.tsx` | portfolio and resume tabs |
 | `src/components/LearnSheet.tsx` | lesson index with collapsible lessons |
 | `src/components/learn/*` | Lesson1, Lesson2, animated perceptron and MLP graphs, calculations, charts, lab, notes |
 | `src/styles/tokens.css`, `app.css` | Cyber-Net tokens (unchanged) and the site layout |
-| `public/` | photo, resume PDF, Pokémon cards, cached models, Python examples (`code/`), favicons |
+| `public/` | photo, resume, diploma and paper PDFs, Pokémon cards, cached models, audio, Python examples (`code/`), favicons |
 
 ## Run locally
 

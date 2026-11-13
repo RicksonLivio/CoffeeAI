@@ -4,6 +4,7 @@ import './game.css';
 
 const PokedexGame = lazy(() => import('./PokedexGame'));
 const PokedexGame2 = lazy(() => import('./PokedexGame2'));
+const PokedexGame3 = lazy(() => import('./PokedexGame3'));
 
 const TEXT = {
   1: {
@@ -22,17 +23,25 @@ const TEXT = {
       'On Route 2, the Pokédex gets a hidden layer and the Grass Ball. First you catch with the hand-made network of Lesson 2; then, when the learning network gets it wrong, you do one backpropagation step.',
     ],
   },
+  3: {
+    label: ['Minijogo · fase 3', 'Mini-game · phase 3'],
+    title: ['Pokédex: a câmera que lê cartas', 'Pokédex: the camera that reads cards'],
+    about: [
+      'Na Rota 3, o Pokédex fotografa a carta e descobre o tipo com a CNN da Aula 3. Você confere cada peça (pixels, filtro, pooling, ReLU) e, quando a rede errar uma carta, segue o erro de volta até um peso do filtro.',
+      'On Route 3, the Pokédex takes a picture of the card and finds the type with the CNN of Lesson 3. You check each piece (pixels, filter, pooling, ReLU) and, when the network gets a card wrong, you follow the error back to a filter weight.',
+    ],
+  },
 } as const;
 
 /** Entry card on the Learn sheet; the Pokédex itself loads only when it is opened. */
-export default function GameCard({ phase = 1, onLesson }: { phase?: 1 | 2; onLesson: (n: number) => void }) {
+export default function GameCard({ phase = 1, onLesson }: { phase?: 1 | 2 | 3; onLesson: (n: number) => void }) {
   const { lang } = useLang();
   const pt = lang === 'pt';
   const i = pt ? 0 : 1;
   const [open, setOpen] = useState(false);
   const t = TEXT[phase];
-  const id = phase === 1 ? 'game' : 'game-2';
-  const Game = phase === 1 ? PokedexGame : PokedexGame2;
+  const id = phase === 1 ? 'game' : `game-${phase}`;
+  const Game = phase === 1 ? PokedexGame : phase === 2 ? PokedexGame2 : PokedexGame3;
   return (
     <section className="lesson pd-branch" id={id} aria-labelledby={`${id}-title`}>
       <div className="panel lesson-card pd-card">

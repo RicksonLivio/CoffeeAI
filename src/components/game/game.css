@@ -202,3 +202,15 @@
 .pd-probs .fire i { color: var(--fire); }
 .pd-probs .water i { color: var(--water); }
 .pd-probs .grass i { color: var(--grass); }
+
+/* ---------- Phase 3 (PokedexGame3): the camera reads card pictures ---------- */
+.pd-wild.fire { border-color: var(--fire); }
+.pd-wild.water { border-color: var(--water); }
+.pd-wild.grass { border-color: var(--grass); }
+.pd-scanline {
+  position: absolute; left: 0; right: 0; top: 0; height: 18%; pointer-events: none;
+  background: linear-gradient(180deg, transparent, rgba(41, 211, 232, .55), transparent);
+  box-shadow: var(--glow-cyan); animation: pd-scan 1.1s linear infinite;
+}
+@keyframes pd-scan { from { transform: translateY(-20%); } to { transform: translateY(560%); } }
+.pd-dex--4 { grid-template-columns: repeat(4, minmax(0, 1fr)); }

@@ -342,7 +342,9 @@ select {
 .xnote[open] > summary::before { content: "−"; }
 .xnote > .xbody { padding: 4px 18px 16px; }
 .xnote.warn > summary { color: #ff9b9b; }
-.diploma-actions { align-items: center; margin-top: 14px; gap: 8px; }
+.doc-actions { align-items: center; margin-top: 10px; gap: 8px; }
+.acad-title { margin: 6px 0 2px; font-size: 1.02rem; line-height: 1.3; }
+.acad-summary { margin: 6px 0 4px; }
 
 /* ---------- Lesson 3 (CNN) ---------- */
 .blk-grid { display: grid; gap: 2px; width: max-content; max-width: 100%; }

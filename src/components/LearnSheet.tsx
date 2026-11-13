@@ -189,8 +189,8 @@ export default function LearnSheet({ open, onToggle }: { open: number[]; onToggl
             )}
           </section>
           {/* Misty's audio and the mini-game of each lesson sit right after it, indented under it. */}
-          {(l.n === 1 || l.n === 2) && <MistyAudio lesson={l.n} />}
-          {(l.n === 1 || l.n === 2) && <GameCard phase={l.n} onLesson={openLesson} />}
+          <MistyAudio lesson={l.n} />
+          <GameCard phase={l.n} onLesson={openLesson} />
           </Fragment>
         );
       })}

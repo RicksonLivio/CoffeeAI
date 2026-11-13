@@ -75,7 +75,7 @@ export default function App() {
             ))}
           </nav>
           <div className="status">
-            <a className="btn btn--gold btn--sm" href={assets.resume} download="Rickson_Livio_Resume_2026.pdf">
+            <a className="btn btn--gold btn--sm" href={assets.resume} download="Rickson_Gaspar_Resume_2026.pdf">
               ⬇ {lang === 'pt' ? 'Currículo' : 'Resume'}
             </a>
             <button className="btn btn--ghost btn--sm" onClick={toggle} aria-label={lang === 'pt' ? 'Switch to English' : 'Mudar para português'}>

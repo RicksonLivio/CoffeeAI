@@ -1,0 +1,179 @@
+{
+  "about": "Misty's audio lesson for Lesson 3 (the CNN). The page shows this text as the transcript and scripts/misty_tts.py --lesson 3 reads it to generate public/audio/misty_lesson3_{pt,en}.mp3, so text and audio always match. Every number comes from src/lib/cnn.ts and public/models/cnn_pokemon/, and tests/misty3.test.ts checks them.",
+  "sections": [
+    {
+      "id": "abertura",
+      "title": ["Abertura", "Opening"],
+      "text": [
+        [
+          "Oi, treinador! É a Misty de novo, do Ginásio de Celeste. Na última aula o Venusaur finalmente entrou na Grass Ball. Mas repare numa coisa: o Pokédex nunca viu o Venusaur. Ele só recebia dois números, a Velocidade e a Defesa, que alguém tinha anotado antes.",
+          "Hoje o Pokédex ganha uma câmera. Em vez de dois números, ele recebe a foto de uma carta do Pokémon e tem que dizer se é Fogo, Água ou Planta só olhando. Para isso existe um tipo de rede feito para imagens: a rede neural convolucional, ou CNN. A aula vai do quadrado grande, a foto, até o quadrado pequeno, a resposta. E, como sempre, com as contas em voz alta. Pegue o papel e o lápis."
+        ],
+        [
+          "Hi, trainer! It's Misty again, from the Cerulean City Gym. In the last lesson Venusaur finally went into the Grass Ball. But notice one thing: the Pokédex never actually saw Venusaur. It only got two numbers, Speed and Defense, that someone had written down beforehand.",
+          "Today the Pokédex gets a camera. Instead of two numbers, it gets a picture of a Pokémon card and has to say Fire, Water or Grass just by looking. There's a kind of network built for pictures: the convolutional neural network, or CNN. The lesson goes from the big square, the picture, down to the small square, the answer. And, as always, with the math out loud. Grab your pencil and paper."
+        ]
+      ]
+    },
+    {
+      "id": "imagem",
+      "title": ["Uma imagem é uma grade de números", "A picture is a grid of numbers"],
+      "text": [
+        [
+          "Para o computador, uma foto é uma grade de pixels, e cada pixel são três números de 0 a 255: quanto de vermelho, quanto de verde e quanto de azul. A gente espreme cada carta em 32 por 32 pixels. São 32 vezes 32 pixels, vezes 3 cores: 3072 números por carta. É bem mais do que os dois números da Aula 2!",
+          "Olhe a carta do Charizard. O pixel do canto vale 130, 130 e 132: os três quase iguais, um cinza da borda. O pixel do meio vale 91, 47 e 35: muito mais vermelho que verde e azul, a cor do fogo. A rede recebe cada número como o valor dividido por 255, menos 0,5. Assim tudo fica entre menos 0,5 e 0,5, do mesmo jeito que a Aula 2 dividia os atributos por 100.",
+          "E por que não usar o MLP da Aula 2? Primeiro, pesos demais. Numa camada densa, cada neurônio se liga aos 3072 números. Só a saída, com 3 neurônios, já teria 9219 pesos. Segundo, o MLP não sabe quem é vizinho de quem. Para ele, um pixel e o pixel ao lado são tão diferentes quanto dois pixels em cantos opostos. Se a carta andar um pixel para o lado, todas as entradas mudam."
+        ],
+        [
+          "To a computer, a picture is a grid of pixels, and each pixel is three numbers from 0 to 255: how much red, how much green and how much blue. We squeeze each card into 32 by 32 pixels. That's 32 times 32 pixels, times 3 colours: 3072 numbers per card. A lot more than the two numbers of Lesson 2!",
+          "Look at the Charizard card. The corner pixel is 130, 130 and 132: all three almost the same, a grey from the border. The pixel in the middle is 91, 47 and 35: much more red than green or blue, the colour of fire. The network gets each number as the value divided by 255, minus 0.5. That keeps everything between minus 0.5 and 0.5, the same way Lesson 2 divided the stats by 100.",
+          "So why not use the MLP from Lesson 2? First, too many weights. In a dense layer, every neuron connects to all 3072 numbers. Just the output, with 3 neurons, would already have 9219 weights. Second, the MLP doesn't know which pixel is next to which. To it, one pixel and the pixel beside it are as unrelated as two pixels in opposite corners. If the card moves one pixel sideways, every input changes."
+        ]
+      ]
+    },
+    {
+      "id": "convolucao",
+      "title": ["Convolução: o filtro que desliza", "Convolution: the sliding filter"],
+      "text": [
+        [
+          "A CNN resolve isso com duas ideias. A primeira é a conexão local: cada neurônio olha só uma janelinha da imagem. A segunda são os pesos compartilhados: a mesma janelinha de pesos, que a gente chama de filtro, desliza pela imagem inteira. É como procurar um Pokémon no mato alto: você não olha o campo todo de uma vez, vai passando a lupa de pedaço em pedaço, sempre com o mesmo olhar.",
+          "Em cada posição o filtro faz a conta da Aula 1: multiplica cada pixel da janela pelo peso que está em cima dele e soma tudo. Vamos usar um filtro de 3 por 3 que acha bordas verticais. A coluna da esquerda tem pesos 1, a do meio tem pesos 0 e a da direita tem pesos menos 1. Ou seja: ele soma a coluna da esquerda e subtrai a da direita.",
+          "A imagem é um pedaço de 6 por 6, claro à esquerda e escuro à direita. Na primeira janela, a coluna da esquerda soma 9 mais 9 mais 9, que dá 27, e a da direita soma 9 mais 9 mais 8, que dá 26. O resultado é 27 menos 26: só 1. Ali a imagem é lisa, não tem borda. Agora o filtro anda uma casa. A coluna da esquerda continua somando 27, mas a da direita agora soma 1 mais 1 mais 2, que dá 4. O resultado é 27 menos 4: 23. Ali o claro encontra o escuro.",
+          "Depois de passar por todas as posições, sai um mapa de 4 por 4, o mapa de características. As duas colunas do meio ficam entre 18 e 23, e as das pontas entre 1 e 5. O mapa acende exatamente onde está a borda. Nesta aula os pesos do filtro foram escolhidos à mão; na CNN de verdade eles começam aleatórios e o backpropagation encontra os pesos, como na Aula 2."
+        ],
+        [
+          "A CNN solves this with two ideas. The first is local connections: each neuron looks at only a small window of the picture. The second is shared weights: the same small window of weights, which we call a filter, slides over the whole picture. It's like looking for a Pokémon in tall grass: you don't scan the whole field at once, you move your magnifying glass from patch to patch, always looking the same way.",
+          "At each position the filter does the Lesson 1 calculation: it multiplies each pixel in the window by the weight on top of it and adds everything up. Let's use a 3 by 3 filter that finds vertical edges. The left column has weights of 1, the middle column has weights of 0 and the right column has weights of minus 1. In other words: it adds the left column and subtracts the right one.",
+          "The picture is a 6 by 6 patch, light on the left and dark on the right. In the first window, the left column adds up to 9 plus 9 plus 9, which is 27, and the right column adds up to 9 plus 9 plus 8, which is 26. The result is 27 minus 26: just 1. The picture is flat there, no edge. Now the filter moves one square. The left column still adds up to 27, but the right one is now 1 plus 1 plus 2, which is 4. The result is 27 minus 4: 23. That's where light meets dark.",
+          "After every position, out comes a 4 by 4 map, the feature map. The two middle columns are between 18 and 23, and the outer ones between 1 and 5. The map lights up exactly where the edge is. In this lesson the filter weights were picked by hand; in a real CNN they start random and backpropagation finds them, just like in Lesson 2."
+        ]
+      ]
+    },
+    {
+      "id": "tamanho",
+      "title": ["Padding, stride e o tamanho da saída", "Padding, stride and the output size"],
+      "text": [
+        [
+          "Por que a saída ficou com 4 por 4, se a imagem tinha 6 por 6? Porque um filtro de 3 por 3 só cabe em 4 posições em cada linha. A regra geral é: o lado da imagem, mais 2 vezes o padding, menos o lado do filtro, dividido pelo stride, e mais 1. Aqui: 6 mais 0, menos 3, dá 3; dividido por 1 dá 3; mais 1 dá 4.",
+          "O padding é uma moldura de zeros em volta da imagem. Com padding 1, a imagem vira 8 por 8 e a saída volta a ter 6 por 6, o mesmo tamanho da entrada. O stride é o tamanho do pulo do filtro. Com stride 2, ele pula de duas em duas casas e a saída fica com 2 por 2. Com padding 1 e stride 2 juntos, a saída fica com 3 por 3.",
+          "Na rede das cartas a primeira camada usa filtros de 5 por 5, sem padding e com stride 1. Então a imagem de 32 por 32 vira 32 menos 5, mais 1: um mapa de 28 por 28."
+        ],
+        [
+          "Why did the output come out 4 by 4, if the picture was 6 by 6? Because a 3 by 3 filter fits in only 4 positions along each row. The general rule is: the side of the picture, plus 2 times the padding, minus the side of the filter, divided by the stride, plus 1. Here: 6 plus 0, minus 3, is 3; divided by 1 is 3; plus 1 is 4.",
+          "Padding is a frame of zeros around the picture. With padding 1, the picture becomes 8 by 8 and the output is 6 by 6 again, the same size as the input. The stride is how far the filter jumps. With stride 2, it jumps two squares at a time and the output is 2 by 2. With padding 1 and stride 2 together, the output is 3 by 3.",
+          "In the card network, the first layer uses 5 by 5 filters, with no padding and stride 1. So the 32 by 32 picture becomes 32 minus 5, plus 1: a 28 by 28 map."
+        ]
+      ]
+    },
+    {
+      "id": "relu_pool",
+      "title": ["ReLU e pooling", "ReLU and pooling"],
+      "text": [
+        [
+          "Depois da convolução vem a ativação. Nas CNNs a favorita é a ReLU: o maior entre 0 e o net. Se o net é negativo, que quer dizer não achei o padrão aqui, ele vira 0. Se é positivo, passa do jeito que está. A derivada é simples: vale 1 onde o net é positivo e 0 no resto.",
+          "Depois vem o pooling, que encolhe o mapa. Pense num torneio: os Pokémon são divididos em grupos de quatro, e só o mais forte de cada grupo vai para a próxima fase. O max pooling faz isso com blocos de 2 por 2: troca cada bloco pelo maior número dele. Num mapa de 4 por 4, o primeiro bloco tem 1, 3, 5 e 6, e o vencedor é o 6. Os quatro blocos dão 6, 9, 7 e 8. O mapa de 4 por 4 vira um de 2 por 2.",
+          "Existem outras versões. O average pooling tira a média: o primeiro bloco daria 3,75. O min pooling fica com o menor, que seria o 1, mas quase não se usa, porque depois da ReLU o menor costuma ser 0. O pooling não tem pesos para aprender. E dá uma tolerância: se a chama andar um pixel dentro do bloco, o vencedor continua o mesmo. Na rede das cartas, o pooling leva o mapa de 28 por 28 para 14 por 14."
+        ],
+        [
+          "After the convolution comes the activation. In CNNs the favourite is ReLU: the larger of 0 and the net. If the net is negative, which means pattern not found here, it becomes 0. If it's positive, it passes through unchanged. The derivative is simple: it's 1 where the net is positive and 0 everywhere else.",
+          "Then comes pooling, which shrinks the map. Think of a tournament: the Pokémon are split into groups of four, and only the strongest of each group moves on to the next round. Max pooling does that with 2 by 2 blocks: it replaces each block with its largest number. On a 4 by 4 map, the first block has 1, 3, 5 and 6, and the winner is 6. The four blocks give 6, 9, 7 and 8. The 4 by 4 map becomes a 2 by 2 one.",
+          "There are other versions. Average pooling takes the mean: the first block would give 3.75. Min pooling keeps the smallest, which would be 1, but it's rarely used, because after ReLU the smallest is usually 0. Pooling has no weights to learn. And it gives some tolerance: if the flame moves one pixel inside the block, the winner stays the same. In the card network, pooling takes the 28 by 28 map down to 14 by 14."
+        ]
+      ]
+    },
+    {
+      "id": "arquitetura",
+      "title": ["Do quadrado grande ao pequeno", "From the big square to the small one"],
+      "text": [
+        [
+          "Agora a rede inteira. A carta entra com 32 por 32 pixels e 3 cores. A primeira convolução tem 6 filtros de 5 por 5 e gera 6 mapas de 28 por 28. O pooling leva para 14 por 14. A segunda convolução tem 8 filtros de 3 por 3: 14 menos 3, mais 1, dá 12, então são 8 mapas de 12 por 12. Outro pooling, e ficam 8 mapas de 6 por 6.",
+          "A cada passo o quadrado fica menor e mais fundo: menos pixels, mais canais. No fim, 6 vezes 6 vezes 8 dá 288 números. Eles entram em fila numa camada densa com 3 saídas e softmax, a mesma saída Fogo, Água e Planta da Aula 2.",
+          "E quantos pesos são? Cada filtro da primeira camada olha as 3 cores numa janela de 5 por 5: são 75 pesos, mais um bias. Com 6 filtros: 6 vezes 75, mais 6, dá 456. Na segunda camada, cada filtro tem 6 canais vezes 3 por 3, que dá 54 pesos: 8 vezes 54, mais 8, dá 440. A camada densa tem 3 vezes 288, mais 3: 867. No total, 1763 pesos. Lembra que só a saída do MLP precisaria de 9219? Com os pesos compartilhados, a CNN vê a carta inteira com bem menos."
+        ],
+        [
+          "Now the whole network. The card comes in at 32 by 32 pixels with 3 colours. The first convolution has 6 filters of 5 by 5 and makes 6 maps of 28 by 28. Pooling takes them to 14 by 14. The second convolution has 8 filters of 3 by 3: 14 minus 3, plus 1, is 12, so that's 8 maps of 12 by 12. Another pooling, and we have 8 maps of 6 by 6.",
+          "At every step the square gets smaller and deeper: fewer pixels, more channels. At the end, 6 times 6 times 8 is 288 numbers. They're lined up and go into a dense layer with 3 outputs and softmax, the same Fire, Water and Grass output as in Lesson 2.",
+          "And how many weights is that? Each first-layer filter looks at the 3 colours in a 5 by 5 window: that's 75 weights, plus one bias. With 6 filters: 6 times 75, plus 6, is 456. In the second layer, each filter has 6 channels times 3 by 3, which is 54 weights: 8 times 54, plus 8, is 440. The dense layer has 3 times 288, plus 3: 867. In total, 1763 weights. Remember that just the MLP output would need 9219? With shared weights, the CNN sees the whole card with far fewer."
+        ]
+      ]
+    },
+    {
+      "id": "backprop",
+      "title": ["Backpropagation na convolução", "Backpropagation through a convolution"],
+      "text": [
+        [
+          "Como a CNN aprende? Com o mesmo backpropagation da Aula 2. O erro sai da softmax como p menos d, volta camada por camada pela regra da cadeia, e cada peso anda contra o seu gradiente. No caminho de volta só tem três peças novas. No max pooling, o erro vai só para o vencedor de cada bloco, como o prêmio do torneio, que só o campeão leva. Na ReLU, o erro passa onde o net era positivo e para onde era negativo. E na convolução, como o mesmo peso foi usado em todas as janelas, o gradiente dele soma a contribuição de todas.",
+          "Vamos fazer uma à mão. A entrada tem 3 por 3: na primeira linha 1, 2 e 0; na segunda 0, 1 e 3; na terceira 2, 1 e 1. O filtro tem 2 por 2: em cima 1 e menos 1, embaixo 0 e 2. A saída tem 2 por 2, e o erro que chegou nela é: em cima 0,5 e menos 1, embaixo 0 e 0,25.",
+          "O gradiente de um peso é a soma, em todas as janelas, do erro daquela janela vezes o pixel que o peso tocou. Para o peso do canto de cima, à esquerda: 0,5 vezes 1, mais menos 1 vezes 2, mais 0 vezes 0, mais 0,25 vezes 1. Dá 0,5 menos 2 mais 0,25: menos 1,25. Para o peso de baixo, à direita, que vale 2: 0,5 vezes 1, mais menos 1 vezes 3, mais 0 vezes 1, mais 0,25 vezes 1. Dá menos 2,25.",
+          "Agora a atualização, com passo 0,1: o peso novo é o antigo menos o passo vezes o gradiente. 2 menos 0,1 vezes menos 2,25 é 2 mais 0,225: o peso vira 2,225. O gradiente negativo dizia que aumentar esse peso diminui o erro, e foi isso que a gente fez."
+        ],
+        [
+          "How does a CNN learn? With the same backpropagation as Lesson 2. The error leaves the softmax as p minus d, goes back layer by layer with the chain rule, and each weight moves against its gradient. On the way back there are only three new pieces. In max pooling, the error goes only to the winner of each block, like the tournament prize, which only the champion takes home. In ReLU, the error passes where the net was positive and stops where it was negative. And in the convolution, since the same weight was used in every window, its gradient adds up the contribution of all of them.",
+          "Let's do one by hand. The input is 3 by 3: the first row is 1, 2 and 0; the second 0, 1 and 3; the third 2, 1 and 1. The filter is 2 by 2: on top 1 and minus 1, at the bottom 0 and 2. The output is 2 by 2, and the error that reached it is: on top 0.5 and minus 1, at the bottom 0 and 0.25.",
+          "The gradient of a weight is the sum, over every window, of that window's error times the pixel the weight touched. For the top left weight: 0.5 times 1, plus minus 1 times 2, plus 0 times 0, plus 0.25 times 1. That's 0.5 minus 2 plus 0.25: minus 1.25. For the bottom right weight, which is 2: 0.5 times 1, plus minus 1 times 3, plus 0 times 1, plus 0.25 times 1. That's minus 2.25.",
+          "Now the update, with a step of 0.1: the new weight is the old one minus the step times the gradient. 2 minus 0.1 times minus 2.25 is 2 plus 0.225: the weight becomes 2.225. The negative gradient said that raising this weight lowers the error, and that's what we did."
+        ]
+      ]
+    },
+    {
+      "id": "treino",
+      "title": ["O treino com 93 cartas", "Training on 93 cards"],
+      "text": [
+        [
+          "Para treinar, juntamos 93 cartas: 90 de 20 coleções do jogo de cartas, de 1999 até 2023, mais as três das aulas. São 31 de cada tipo. Separamos 69 para o treino e guardamos 24 para o teste, 8 de cada tipo. A rede nunca vê as cartas de teste enquanto aprende. É como a prova do ginásio: não vale treinar com as perguntas da prova.",
+          "Com tão poucas cartas, usamos um truque chamado aumento de dados. A cada época, cada carta entra deslocada até 2 pixels, às vezes espelhada, e com o brilho mudado. Assim as 69 cartas parecem muitas mais. O otimizador é o gradiente com momento: uma carta por vez, passo 0,002, momento 0,9, durante 40 épocas, com a semente 11. O momento funciona como um Pokémon que pegou embalo: ele guarda parte do passo anterior e não muda de direção a cada carta.",
+          "Na primeira época o erro médio é 0,93. Na quinta, a rede já acerta 23 das 24 cartas de teste. No fim das 40 épocas, ela acerta as 69 cartas do treino e 23 das 24 do teste."
+        ],
+        [
+          "To train it, we gathered 93 cards: 90 from 20 sets of the card game, from 1999 to 2023, plus the three from the lessons. That's 31 of each type. We set 69 aside for training and kept 24 for testing, 8 of each type. The network never sees the test cards while it learns. It's like a gym exam: you don't get to practise with the exam questions.",
+          "With so few cards, we use a trick called data augmentation. Every epoch, each card comes in shifted by up to 2 pixels, sometimes mirrored, and with its brightness changed. That way the 69 cards look like many more. The optimizer is gradient descent with momentum: one card at a time, a step of 0.002, momentum 0.9, for 40 epochs, with seed 11. Momentum works like a Pokémon that has built up speed: it keeps part of the previous step and doesn't change direction with every card.",
+          "In the first epoch the mean loss is 0.93. By the fifth, the network already gets 23 of the 24 test cards right. At the end of the 40 epochs, it gets all 69 training cards right and 23 of the 24 test cards."
+        ]
+      ]
+    },
+    {
+      "id": "honestidade",
+      "title": ["O que ela aprendeu de verdade", "What it really learned"],
+      "text": [
+        [
+          "A carta que ela errou é a do Orbeetle, que é Planta. É uma carta de arte cheia: o casco vermelho do Pokémon cobre quase a carta toda, e a moldura verde quase não aparece. A rede respondeu Fogo, com quase 100 por cento de certeza.",
+          "Esse erro conta uma história. Cada tipo tem a sua cor de carta: laranja para Fogo, azul para Água e verde para Planta. Testamos um classificador sem convolução nenhuma, que só compara a cor média da carta com a cor média de cada tipo. Ele acerta 22 das 24 cartas de teste. A CNN acerta 23. Ou seja, a rede está lendo principalmente a cor, e não o desenho do Pokémon. Esse atalho funciona aqui, mas falharia em cartas de outro estilo.",
+          "E tem mais um detalhe. Nas primeiras coleções, o Ekans e o Koffing são do tipo Planta no jogo de cartas, apesar de serem Veneno nos jogos de videogame. A rede segue o que está escrito na carta, porque foi isso que a gente ensinou."
+        ],
+        [
+          "The card it got wrong is Orbeetle, which is Grass. It's a full-art card: the Pokémon's red shell covers almost the whole card, and the green frame barely shows. The network said Fire, almost 100 percent sure.",
+          "That mistake tells a story. Each type has its own card colour: orange for Fire, blue for Water and green for Grass. We tested a classifier with no convolution at all, which only compares the card's average colour with the average colour of each type. It gets 22 of the 24 test cards right. The CNN gets 23. So the network is mostly reading colour, not the drawing of the Pokémon. That shortcut works here, but it would fail on cards of another style.",
+          "And there's one more detail. In the early sets, Ekans and Koffing are Grass types in the card game, even though they're Poison types in the video games. The network follows what the card says, because that's what we taught it."
+        ]
+      ]
+    },
+    {
+      "id": "pokedex",
+      "title": ["A Pokédex das cartas", "The card Pokédex"],
+      "text": [
+        [
+          "No fim da aula tem uma Pokédex para você testar. Escolha uma das 24 cartas de teste ou envie a foto de uma carta sua. A foto é processada no seu navegador, nada sai do seu computador. A Pokédex espreme a imagem em 32 por 32, passa pelas duas convoluções e pelos dois poolings, e a softmax dá a probabilidade de cada tipo.",
+          "Um aviso de líder de ginásio: 100 por cento não é certeza. A softmax sempre escolhe um dos três tipos, mesmo para uma foto que nem é carta. Ela não tem a opção não sei. E como a rede lê cor, uma carta de Planta com fundo vermelho pode virar Fogo, igual ao Orbeetle. Fotos tortas, com reflexo ou com fundo também confundem, porque ela só treinou com imagens limpas e retas."
+        ],
+        [
+          "At the end of the lesson there's a Pokédex for you to try. Pick one of the 24 test cards or upload a photo of one of your own cards. The photo is processed in your browser; nothing leaves your computer. The Pokédex squeezes the picture to 32 by 32, runs it through the two convolutions and the two poolings, and the softmax gives the probability of each type.",
+          "A word of warning from a Gym Leader: 100 percent is not certainty. Softmax always picks one of the three types, even for a photo that isn't a card at all. It has no I don't know option. And since the network reads colour, a Grass card with a red background may come out as Fire, just like Orbeetle. Tilted photos, glare or backgrounds confuse it too, because it only trained on clean, straight pictures."
+        ]
+      ]
+    },
+    {
+      "id": "encerramento",
+      "title": ["Encerramento", "Wrapping up"],
+      "text": [
+        [
+          "Vamos recapitular. Uma imagem é uma grade de números. Um filtro é um perceptron que anda pela imagem e acende onde encontra o seu padrão. A ReLU guarda o que importa, o pooling encolhe, e a rede vai do quadrado grande ao pequeno até sobrar a resposta. E o backpropagation é o mesmo da Aula 2, com três peças novas no caminho de volta.",
+          "Se quiser ir além, a última parte da aula fala de técnicas que você vai encontrar por aí: dropout, batch normalization, conexões residuais e transferência de aprendizado, que é o jeito prático de fazer a rede ler o desenho, e não só a cor. Depois, abra o minijogo da fase 3: a câmera do Pokédex vai precisar de você para cada conta. Bom treino, e até a próxima!"
+        ],
+        [
+          "Let's recap. A picture is a grid of numbers. A filter is a perceptron that walks over the picture and lights up where it finds its pattern. ReLU keeps what matters, pooling shrinks, and the network goes from the big square to the small one until only the answer is left. And backpropagation is the same as in Lesson 2, with three new pieces on the way back.",
+          "If you want to go further, the last part of the lesson covers techniques you'll run into out there: dropout, batch normalization, residual connections and transfer learning, which is the practical way to make the network read the drawing and not just the colour. Then, open the phase 3 mini-game: the Pokédex camera will need you for every calculation. Happy training, and see you next time!"
+        ]
+      ]
+    }
+  ]
+}

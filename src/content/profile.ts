@@ -1,12 +1,12 @@
-// Portfolio content. Every fact here comes from public/Resume_updated_2026.pdf or, for the
-// master's research, from the Neural Fourier Head repository README (dissertation v3).
+// Portfolio content. Every fact here comes from public/Resume_updated_2026.pdf or, for the academic
+// experience, from the Neural Fourier Head repository README (dissertation v3) and the ICEIS 2025 paper.
 import type { Lang } from '../i18n';
 
 export type T = Record<Lang, string>;
 
 export const PROFILE = {
   name: 'Rickson Livio de Souza Gaspar',
-  short: 'Rickson Livio',
+  short: 'Rickson Gaspar',
   role: { en: 'Staff AI & MLOps Engineer', pt: 'Staff AI & MLOps Engineer' } as T,
   tagline: {
     en: 'Building agents and production ML, from data lakes to GPU-optimized models. Always learning, always testing the latest tech, and a proud dog dad.',
@@ -139,7 +139,7 @@ export const JOBS: Job[] = [
   },
   {
     period: { en: 'Aug 2021 – Feb 2022', pt: 'ago 2021 – fev 2022' },
-    company: 'Conjecto.AI',
+    company: 'Petz',
     role: 'Data Scientist',
     items: [
       { en: 'KPIs and Power BI analytics for Iguatemi mall from PostgreSQL on AWS and Google Calendar APIs.', pt: 'KPIs e análises em Power BI para o shopping Iguatemi, a partir de PostgreSQL na AWS e APIs do Google Calendar.' },
@@ -164,6 +164,8 @@ export interface School {
   school: T;
   degree: T;
   current?: boolean;
+  /** shows the View / Download buttons for public/Diploma_Estatistica_Rickson_Gaspar.pdf */
+  diploma?: boolean;
 }
 
 export const EDUCATION: School[] = [
@@ -177,6 +179,7 @@ export const EDUCATION: School[] = [
     period: '03/2017 – 03/2023',
     school: { en: 'Federal University of Ceará (UFC)', pt: 'Universidade Federal do Ceará (UFC)' },
     degree: { en: "Bachelor's Degree in Statistics", pt: 'Bacharelado em Estatística' },
+    diploma: true,
   },
 ];
 
@@ -192,8 +195,8 @@ export const STORY: { title: T; text: T }[] = [
   {
     title: { en: 'Level 2 · Data at scale', pt: 'Fase 2 · Dados em escala' },
     text: {
-      en: 'Forecasting and fraud detection at Conjecto.AI, then ETL on tables with more than 80 billion rows for Grupo Mateus and Hapvida at Tecla T.',
-      pt: 'Previsão e detecção de fraude na Conjecto.AI, depois ETL em tabelas de mais de 80 bilhões de linhas para o Grupo Mateus e a Hapvida na Tecla T.',
+      en: 'Forecasting and fraud detection at Petz, then ETL on tables with more than 80 billion rows for Grupo Mateus and Hapvida at Tecla T.',
+      pt: 'Previsão e detecção de fraude na Petz, depois ETL em tabelas de mais de 80 bilhões de linhas para o Grupo Mateus e a Hapvida na Tecla T.',
     },
   },
   {
@@ -212,31 +215,85 @@ export const STORY: { title: T; text: T }[] = [
   },
 ];
 
-/** Master's research. Numbers from the NFH README (dissertation v3, Cap. 4 and Tables 6, 10, 13). */
-export const THESIS = {
-  title: 'Neural Fourier Head (NFH)',
-  subtitle: {
-    en: 'Intrinsic explainability through spectral decomposition for multi-step time-series forecasting, with formal guarantees from abductive explanations.',
-    pt: 'Explicabilidade intrínseca via decomposição espectral para previsão de séries temporais multi-passo, com garantias formais por explicações abdutivas.',
-  } as T,
-  program: { en: 'PPGCC · IFCE', pt: 'PPGCC · IFCE' } as T,
-  points: [
-    {
-      en: 'An output layer that replaces the final dense layer of any forecaster and splits each forecast exactly into trend + Fourier cycles + residual: ŷ = T + S + R, with energy shares adding up to 100%.',
-      pt: 'Uma camada de saída que substitui a densa final de qualquer modelo de previsão e divide cada previsão, de forma exata, em tendência + ciclos de Fourier + resíduo: ŷ = T + S + R, com participações de energia somando 100%.',
+/**
+ * Academic experience, shown like the work history. NFH numbers from the NFH README (dissertation v3, Cap. 4 and
+ * Tables 6, 10, 13); paper numbers from the ICEIS 2025 paper (public/ICEIS2025_Predicting_B2B_Customer_Churn_Rickson_Gaspar.pdf).
+ */
+export interface AcademicLink { label: T; href: string; download?: string }
+export interface AcademicItem {
+  period: T;
+  kind: T;
+  title: string;
+  where: T;
+  current?: boolean;
+  summary: T;
+  items: T[];
+  wins?: T[];
+  stack: string[];
+  /** 'paper' adds the download button for the PDF in public/ */
+  paper?: boolean;
+  links?: AcademicLink[];
+}
+
+export const ACADEMIC: AcademicItem[] = [
+  {
+    period: { en: 'Mar 2025 – Present', pt: 'mar 2025 – atual' },
+    kind: { en: "Master's research", pt: 'Pesquisa de mestrado' },
+    title: 'Neural Fourier Head (NFH)',
+    where: { en: 'PPGCC · Federal Institute of Ceará (IFCE)', pt: 'PPGCC · Instituto Federal do Ceará (IFCE)' },
+    current: true,
+    summary: {
+      en: 'An explainable output layer for multi-step time-series forecasting, with formal guarantees from abductive explanations.',
+      pt: 'Uma camada de saída explicável para previsão de séries temporais multi-passo, com garantias formais por explicações abdutivas.',
     },
-    {
-      en: 'Same number of parameters as nn.Linear. A trained dense layer converts exactly into an NFH, and the safe selection never picks a model with worse validation RMSE than the dense one.',
-      pt: 'O mesmo número de parâmetros de uma nn.Linear. A densa treinada é convertida exatamente em NFH, e a seleção segura nunca escolhe um modelo com RMSE de validação pior que o da densa.',
+    items: [
+      {
+        en: 'Replaces the final dense layer of any forecaster and splits each forecast exactly into trend + Fourier cycles + residual (ŷ = T + S + R), with the same number of parameters as nn.Linear.',
+        pt: 'Substitui a densa final de qualquer modelo de previsão e divide cada previsão, de forma exata, em tendência + ciclos de Fourier + resíduo (ŷ = T + S + R), com o mesmo número de parâmetros de uma nn.Linear.',
+      },
+      {
+        en: 'Lower RMSE than the dense layer in 17 of 24 dataset–backbone pairs (median −0.81%, Wilcoxon p = 0.084, not significant); non-inferior within a 1% margin.',
+        pt: 'RMSE menor que o da densa em 17 de 24 pares de conjunto e backbone (mediana −0,81%, Wilcoxon p = 0,084, sem significância); não inferior com margem de 1%.',
+      },
+      {
+        en: 'The explanation comes with the forecast in 18.3 ms; Integrated Gradients per component cost 83 ms, 23 times less than KernelSHAP.',
+        pt: 'A explicação sai com a previsão em 18,3 ms; os Integrated Gradients por componente custam 83 ms, 23 vezes menos que o KernelSHAP.',
+      },
+    ],
+    stack: ['PyTorch', 'FastAPI', 'MLflow', 'React', 'TypeScript'],
+  },
+  {
+    period: { en: 'Apr 2025', pt: 'abr 2025' },
+    kind: { en: 'Published paper · co-author', pt: 'Artigo publicado · coautor' },
+    title: 'Predicting B2B Customer Churn and Measuring the Impact of Machine Learning-Based Retention Strategies',
+    where: {
+      en: 'ICEIS 2025 · 27th International Conference on Enterprise Information Systems · Porto, Portugal',
+      pt: 'ICEIS 2025 · 27th International Conference on Enterprise Information Systems · Porto, Portugal',
     },
-    {
-      en: 'In the dissertation: lower RMSE than the dense layer in 17 of 24 dataset–backbone pairs (median −0.81%, not significant: Wilcoxon p = 0.084); non-inferior within a 1% margin. On test, it was worse than the dense layer in 25 of 120 runs, by up to 11.9%.',
-      pt: 'Na dissertação: RMSE menor que o da densa em 17 de 24 pares de conjunto e backbone (mediana −0,81%, sem significância: Wilcoxon p = 0,084); não inferior com margem de 1%. No teste, foi pior que a densa em 25 de 120 execuções, em até 11,9%.',
+    summary: {
+      en: 'Published in the ICEIS 2025 proceedings (SCITEPRESS, vol. 1, pp. 572–581), from the work of the Data Science Laboratory (SOLAB) at Sólides.',
+      pt: 'Publicado nos anais do ICEIS 2025 (SCITEPRESS, vol. 1, pp. 572–581), a partir do trabalho do Laboratório de Ciência de Dados (SOLAB) da Sólides.',
     },
-    {
-      en: 'The structural explanation comes with the forecast in 18.3 ms; Integrated Gradients per component cost 83 ms, 23 times less than KernelSHAP.',
-      pt: 'A explicação estrutural sai com a previsão em 18,3 ms; os Integrated Gradients por componente custam 83 ms, 23 vezes menos que o KernelSHAP.',
-    },
-  ] as T[],
-  stack: ['PyTorch', 'FastAPI', 'MLflow', 'React', 'TypeScript', 'Vite', 'Recharts'],
-};
+    items: [
+      {
+        en: 'Churn prediction for 8,878 small and medium business customers of an HR Tech platform, with a linear SVM and features chosen by logistic regression and Sequential Forward Floating Selection.',
+        pt: 'Previsão de churn para 8.878 clientes empresariais de pequeno e médio porte de uma plataforma de RH, com SVM linear e atributos escolhidos por regressão logística e Sequential Forward Floating Selection.',
+      },
+      {
+        en: 'Evaluated every 15 days over six months: when recall on new data fell below 60%, the model was retrained, because customer behaviour changes and a static model loses recall.',
+        pt: 'Avaliado a cada 15 dias por seis meses: quando o recall nos dados novos caía abaixo de 60%, o modelo era retreinado, porque o comportamento dos clientes muda e um modelo estático perde recall.',
+      },
+      {
+        en: 'Long periods without logins, job postings or positive interactions were the strongest churn signals, which turned into retention actions.',
+        pt: 'Longos períodos sem login, sem criar vagas ou sem interações positivas foram os sinais de churn mais fortes, e viraram ações de retenção.',
+      },
+    ],
+    wins: [{ en: 'AUC 0.90 and Gini 0.81 on the test set.', pt: 'AUC de 0,90 e Gini de 0,81 no teste.' }],
+    stack: ['SVM', 'Logistic Regression', 'SFFS', 'FastAPI', 'Streamlit'],
+    paper: true,
+    links: [
+      { label: { en: 'View on INSTICC ↗', pt: 'Ver no INSTICC ↗' }, href: 'https://www.insticc.org/node/TechnicalProgram/iceis/2025/presentationDetails/134363' },
+      { label: { en: 'DOI 10.5220/0013436300003929 ↗', pt: 'DOI 10.5220/0013436300003929 ↗' }, href: 'https://doi.org/10.5220/0013436300003929' },
+    ],
+  },
+];

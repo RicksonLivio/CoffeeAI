@@ -1,4 +1,4 @@
-"""Generates Misty's audio lessons from src/content/misty-lesson{1,2}.json and checks every number.
+"""Generates Misty's audio lessons from src/content/misty-lesson{1,2,3}.json and checks every number.
 
 Voice: Qwen3-TTS 1.7B CustomVoice (Qwen/Qwen3-TTS-12Hz-1.7B-CustomVoice, Apache 2.0), built-in speaker "vivian".
 It is a stock voice, not a clone of Misty's voice actress.
@@ -15,6 +15,7 @@ Setup, outside the repo (once, needs an NVIDIA GPU with ~6 GB free):
 Run from the repo root (needs ffmpeg):
     ~/tts-qwen/.venv/bin/python scripts/misty_tts.py              # lesson 1, both languages
     ~/tts-qwen/.venv/bin/python scripts/misty_tts.py --lesson 2   # lesson 2; a language (pt, en) can follow
+    ~/tts-qwen/.venv/bin/python scripts/misty_tts.py --lesson 3   # lesson 3 (the CNN)
 
 Writes public/audio/misty_lesson{N}_{pt,en}.mp3 (mono, 48 kbit/s), src/content/misty-lesson{N}-audio.json (duration and
 start of each section) and ~/tts-qwen/work/report_{lang}.json (lesson 1) or report_l{N}_{lang}.json (transcript and
@@ -40,7 +41,8 @@ ROOT = pathlib.Path(__file__).resolve().parent.parent
 OUT = ROOT / 'public/audio'
 WORK = pathlib.Path.home() / 'tts-qwen/work'
 LESSON = 1
-TITLES = {1: 'Misty explains the perceptron (CoffeeAI, Lesson 1)', 2: 'Misty explains the MLP (CoffeeAI, Lesson 2)'}
+TITLES = {1: 'Misty explains the perceptron (CoffeeAI, Lesson 1)', 2: 'Misty explains the MLP (CoffeeAI, Lesson 2)',
+          3: 'Misty explains the CNN (CoffeeAI, Lesson 3)'}
 
 
 def src_path() -> pathlib.Path:
@@ -131,12 +133,16 @@ def spoken(text: str, lang: str) -> str:
 
 # ---------- the check ----------
 
-POKEMON = {'charmander', 'charmeleon', 'charizard', 'squirtle', 'wartortle', 'blastoise', 'bulbasaur', 'ivysaur', 'venusaur'}
+POKEMON = {'charmander', 'charmeleon', 'charizard', 'squirtle', 'wartortle', 'blastoise', 'bulbasaur', 'ivysaur', 'venusaur',
+           'orbeetle', 'ekans', 'koffing'}
 
 SUB = str.maketrans('₀₁₂₃₄₅₆₇₈₉', '0123456789')
 
 
 def normalize(text: str, lang: str) -> list[str]:
+    # Whisper writes "6 by 6" as "6x6" and "32 minus 5" as "32-5": read them back as words
+    text = re.sub(r'(\d)\s*[x×]\s*(\d)', r'\1 ' + ('por' if lang == 'pt' else 'by') + r' \2', text)
+    text = re.sub(r'(\d)\s*-\s*(\d)', r'\1 ' + ('menos' if lang == 'pt' else 'minus') + r' \2', text)
     text = text.translate(SUB).replace('θ', ' theta ').replace('η', ' eta ').replace('−', ' menos ' if lang == 'pt' else ' minus ')
     text = text.replace('%', ' por cento ' if lang == 'pt' else ' percent ')
     text = spoken(text, lang).lower()

@@ -1,5 +1,5 @@
 import { assets } from '../api';
-import { CERTIFICATES, EDUCATION, JOBS, LEVEL_LABEL, LEVEL_SEGMENTS, PROFILE, SKILLS, STORY, THESIS } from '../content/profile';
+import { ACADEMIC, CERTIFICATES, EDUCATION, JOBS, LEVEL_LABEL, LEVEL_SEGMENTS, PROFILE, SKILLS, STORY } from '../content/profile';
 import { useLang } from '../i18n';
 import Gauge from './Gauge';
 
@@ -19,20 +19,11 @@ export default function PortfolioSheet({ onLearn }: { onLearn: () => void }) {
           <p className="hero-role"><span className="bracket">{PROFILE.role[lang]}</span></p>
           <p className="lead">{PROFILE.tagline[lang]}</p>
           <div className="hero-actions">
-            <a className="btn btn--gold" href={assets.resume} download="Rickson_Livio_Resume_2026.pdf">
+            <a className="btn btn--gold" href={assets.resume} download="Rickson_Gaspar_Resume_2026.pdf">
               {pt ? 'Baixar currículo' : 'Download resume'}
             </a>
             <button className="btn" onClick={onLearn}>{pt ? 'Aprenda comigo' : 'Learn with me'}</button>
             <a className="btn btn--ghost" href={PROFILE.github} target="_blank" rel="noopener noreferrer">GitHub ↗</a>
-          </div>
-          <div className="hero-actions diploma-actions">
-            <span className="label">{pt ? 'Diploma · Bacharel em Estatística' : 'Diploma · B.Sc. in Statistics'}</span>
-            <a className="btn btn--ghost btn--sm" href={assets.diploma} target="_blank" rel="noopener noreferrer">
-              {pt ? 'Ver' : 'View'}
-            </a>
-            <a className="btn btn--ghost btn--sm" href={assets.diploma} download="Diploma_Estatistica_Rickson_Livio.pdf">
-              ⬇ {pt ? 'Baixar' : 'Download'}
-            </a>
           </div>
         </div>
         <div className="hero-card">
@@ -121,21 +112,49 @@ export default function PortfolioSheet({ onLearn }: { onLearn: () => void }) {
         </section>
       </div>
 
-      {/* ---------- Research ---------- */}
-      <section className="section" aria-labelledby="research">
+      {/* ---------- Academic experience ---------- */}
+      <section className="section" aria-labelledby="academic">
         <div className="section-head">
-          <h2 id="research">{pt ? 'Pesquisa de mestrado' : "Master's research"}</h2>
-          <span className="label">{THESIS.program[lang]}</span>
+          <h2 id="academic">{pt ? 'Experiência acadêmica' : 'Academic experience'}</h2>
+          <span className="label">{pt ? 'pesquisa e publicações' : 'research and publications'}</span>
         </div>
         <div className="grid grid-side">
-          <article className="panel panel--gold">
-            <h3>{THESIS.title}</h3>
-            <p className="lead" style={{ fontSize: '1rem' }}>{THESIS.subtitle[lang]}</p>
-            <ul className="arrows">
-              {THESIS.points.map((p, i) => <li key={i}>{p[lang]}</li>)}
-            </ul>
-            <div className="chips">{THESIS.stack.map((s) => <span key={s} className="chip chip--gold">{s}</span>)}</div>
-          </article>
+          <div className="panel panel--gold">
+            <div className="timeline">
+              {ACADEMIC.map((a) => (
+                <article key={a.title} className="job">
+                  <span className={`node ${a.current ? 'current' : ''}`} aria-hidden="true" />
+                  <div className="job-head">
+                    <span className="job-role">{a.kind[lang]}</span>
+                    <span className="job-period">{a.period[lang]}</span>
+                  </div>
+                  <h3 className="acad-title">{a.title}</h3>
+                  <span className="job-company">{a.where[lang]}</span>
+                  <p className="small acad-summary">{a.summary[lang]}</p>
+                  <ul className="arrows">
+                    {a.items.map((it, i) => <li key={i}>{it[lang]}</li>)}
+                  </ul>
+                  {a.wins?.map((w, i) => <div key={i} className="win">{w[lang]}</div>)}
+                  <div className="chips">{a.stack.map((s) => <span key={s} className="chip chip--gold">{s}</span>)}</div>
+                  {(a.paper || a.links) && (
+                    <div className="hero-actions doc-actions">
+                      {a.paper && (
+                        <>
+                          <a className="btn btn--gold btn--sm" href={assets.paper} download="ICEIS2025_Predicting_B2B_Customer_Churn_Rickson_Gaspar.pdf">
+                            ⬇ {pt ? 'Baixar o artigo (PDF)' : 'Download the paper (PDF)'}
+                          </a>
+                          <a className="btn btn--ghost btn--sm" href={assets.paper} target="_blank" rel="noopener noreferrer">{pt ? 'Ler' : 'Read'}</a>
+                        </>
+                      )}
+                      {a.links?.map((l) => (
+                        <a key={l.href} className="btn btn--ghost btn--sm" href={l.href} target="_blank" rel="noopener noreferrer">{l.label[lang]}</a>
+                      ))}
+                    </div>
+                  )}
+                </article>
+              ))}
+            </div>
+          </div>
           <article className="panel">
             <h3>{pt ? 'Por que "Aprenda comigo"?' : 'Why "Learn with me"?'}</h3>
             <p>
@@ -153,6 +172,11 @@ export default function PortfolioSheet({ onLearn }: { onLearn: () => void }) {
                 {pt
                   ? 'Aula 2: um MLP com camada oculta e backpropagation reconhece o tipo Planta, que nenhum perceptron sozinho consegue isolar.'
                   : 'Lesson 2: an MLP with a hidden layer and backpropagation recognizes the Grass type, which no single perceptron can isolate.'}
+              </li>
+              <li>
+                {pt
+                  ? 'Aula 3: uma CNN olha a foto da carta e descobre o tipo, com convolução, pooling e backpropagation em blocos.'
+                  : 'Lesson 3: a CNN looks at the card picture and finds the type, with convolution, pooling and backpropagation in blocks.'}
               </li>
             </ul>
             <button className="btn" onClick={onLearn}>{pt ? 'Começar a aula' : 'Start the lesson'} →</button>
@@ -176,6 +200,17 @@ export default function PortfolioSheet({ onLearn }: { onLearn: () => void }) {
                     <span className="job-company">{e.school[lang]}</span>
                     <span className="job-period">{e.period}</span>
                   </div>
+                  {e.diploma && (
+                    <div className="hero-actions doc-actions">
+                      <span className="label">{pt ? 'Diploma' : 'Diploma'}</span>
+                      <a className="btn btn--ghost btn--sm" href={assets.diploma} target="_blank" rel="noopener noreferrer">
+                        {pt ? 'Ver' : 'View'}
+                      </a>
+                      <a className="btn btn--ghost btn--sm" href={assets.diploma} download="Diploma_Estatistica_Rickson_Gaspar.pdf">
+                        ⬇ {pt ? 'Baixar' : 'Download'}
+                      </a>
+                    </div>
+                  )}
                 </article>
               ))}
             </div>
@@ -188,11 +223,11 @@ export default function PortfolioSheet({ onLearn }: { onLearn: () => void }) {
             <ul className="arrows" style={{ margin: 0 }}>
               <li><span className="label">E-mail</span>{' '}<a href={`mailto:${PROFILE.email}`}>{PROFILE.email}</a></li>
               <li><span className="label">GitHub</span>{' '}<a href={PROFILE.github} target="_blank" rel="noopener noreferrer">@RicksonLivio</a></li>
-              <li><span className="label">LinkedIn</span>{' '}<a href={PROFILE.linkedin} target="_blank" rel="noopener noreferrer">Rickson Livio</a></li>
+              <li><span className="label">LinkedIn</span>{' '}<a href={PROFILE.linkedin} target="_blank" rel="noopener noreferrer">Rickson Gaspar</a></li>
               <li><span className="label">{pt ? 'Local' : 'Location'}</span>{' '}{pt ? PROFILE.location.replace('Brazil', 'Brasil') : PROFILE.location}</li>
             </ul>
             <div className="hero-actions">
-              <a className="btn btn--gold" href={assets.resume} download="Rickson_Livio_Resume_2026.pdf">
+              <a className="btn btn--gold" href={assets.resume} download="Rickson_Gaspar_Resume_2026.pdf">
                 {pt ? 'Baixar currículo (PDF)' : 'Download resume (PDF)'}
               </a>
             </div>

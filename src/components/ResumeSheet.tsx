@@ -12,7 +12,7 @@ export default function ResumeSheet() {
         <span className="label">Resume_updated_2026.pdf</span>
       </div>
       <div className="hero-actions" style={{ marginTop: 0, marginBottom: 18 }}>
-        <a className="btn btn--gold" href={assets.resume} download="Rickson_Livio_Resume_2026.pdf">
+        <a className="btn btn--gold" href={assets.resume} download="Rickson_Gaspar_Resume_2026.pdf">
           {pt ? 'Baixar PDF' : 'Download PDF'}
         </a>
         <a className="btn btn--ghost" href={assets.resume} target="_blank" rel="noopener noreferrer">
@@ -24,7 +24,7 @@ export default function ResumeSheet() {
         <object className="pdf-frame" data={assets.resume} type="application/pdf" aria-label={pt ? 'Currículo em PDF' : 'Resume PDF'}>
           <p style={{ padding: 20 }}>
             {pt ? 'Seu navegador não mostra PDFs aqui. ' : 'Your browser cannot show PDFs here. '}
-            <a href={assets.resume} download="Rickson_Livio_Resume_2026.pdf">{pt ? 'Baixe o arquivo.' : 'Download the file.'}</a>
+            <a href={assets.resume} download="Rickson_Gaspar_Resume_2026.pdf">{pt ? 'Baixe o arquivo.' : 'Download the file.'}</a>
           </p>
         </object>
       </div>

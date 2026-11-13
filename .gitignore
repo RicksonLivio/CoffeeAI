@@ -16,3 +16,7 @@ Thumbs.db
 
 # lesson 3: original card downloads (the published versions are in public/pokemon/cnn/)
 new_files/cards/
+
+# local material: originals of the diploma and the paper (published copies are in public/),
+# lesson-2 teaching PDF and script, and cards
+new_files/
